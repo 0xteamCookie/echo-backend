@@ -12,8 +12,10 @@ export const provisionService = {
     const claims: RescuerJwtClaims = {
       sub: body.sub,
       role: body.role,
-      ...(body.org !== undefined ? { org: body.org } : {}),
-      ...(body.name !== undefined ? { name: body.name } : {}),
+      name: body.name,
+      radius_m: body.radius_m,
+      lat: body.lat,
+      lng: body.lng,
     };
 
     const token = await signRescuerJwt(claims, expiresInSeconds);

@@ -6,6 +6,15 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+function parseFiniteNumber(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
 export const provisionController = {
   issueToken: (async (req, res) => {
     const body = req.body;
@@ -24,22 +33,39 @@ export const provisionController = {
       res.status(400).json({ error: "role is required and must be a non-empty string" });
       return;
     }
+    if (typeof body.name !== "string" || !body.name.trim()) {
+      res.status(400).json({ error: "name is required and must be a non-empty string (agent name)" });
+      return;
+    }
 
-    const patch: IssueTokenBody = { sub: sub.trim(), role: role.trim() };
-    if (body.org !== undefined) {
-      if (typeof body.org !== "string") {
-        res.status(400).json({ error: "org must be a string" });
-        return;
-      }
-      patch.org = body.org;
+    const radius_m = parseFiniteNumber(body.radius_m);
+    if (radius_m === null || radius_m <= 0) {
+      res.status(400).json({ error: "radius_m must be a positive number (metres)" });
+      return;
     }
-    if (body.name !== undefined) {
-      if (typeof body.name !== "string") {
-        res.status(400).json({ error: "name must be a string" });
-        return;
-      }
-      patch.name = body.name;
+
+    const lat = parseFiniteNumber(body.lat);
+    if (lat === null || lat < -90 || lat > 90) {
+      res.status(400).json({ error: "lat must be a number between -90 and 90" });
+      return;
     }
+
+    const lngRaw = body.lng !== undefined ? body.lng : body.long;
+    const lng = parseFiniteNumber(lngRaw);
+    if (lng === null || lng < -180 || lng > 180) {
+      res.status(400).json({ error: "lng (or long) must be a number between -180 and 180" });
+      return;
+    }
+
+    const patch: IssueTokenBody = {
+      sub: sub.trim(),
+      role: role.trim(),
+      name: body.name.trim(),
+      radius_m,
+      lat,
+      lng,
+    };
+
     if (body.expiresInSeconds !== undefined) {
       if (typeof body.expiresInSeconds !== "number" || !Number.isFinite(body.expiresInSeconds)) {
         res.status(400).json({ error: "expiresInSeconds must be a finite number" });

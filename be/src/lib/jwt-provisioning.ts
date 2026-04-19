@@ -18,9 +18,16 @@ export type VerifiedRescuerPayload = {
   exp?: number;
   iat?: number;
   nbf?: number;
+  /** Role slug (e.g. medic, fire). */
   role?: string;
-  org?: string;
+  /** Display name of the agent. */
   name?: string;
+  /** Authorized radius in metres. */
+  radius_m?: number;
+  /** Latitude (WGS84). */
+  lat?: number;
+  /** Longitude (WGS84). */
+  lng?: number;
   [claim: string]: unknown;
 };
 
@@ -71,8 +78,10 @@ export async function getProvisioningPublicJwk(): Promise<ProvisioningJwk> {
 export type RescuerJwtClaims = {
   sub: string;
   role: string;
-  org?: string;
-  name?: string;
+  name: string;
+  radius_m: number;
+  lat: number;
+  lng: number;
 };
 
 export async function signRescuerJwt(
@@ -85,8 +94,10 @@ export async function signRescuerJwt(
 
   const token = await new SignJWT({
     role: claims.role,
-    ...(claims.org !== undefined ? { org: claims.org } : {}),
-    ...(claims.name !== undefined ? { name: claims.name } : {}),
+    name: claims.name,
+    radius_m: claims.radius_m,
+    lat: claims.lat,
+    lng: claims.lng,
   })
     .setProtectedHeader({ alg: ALG, kid: config.jwtKeyId, typ: "JWT" })
     .setIssuer(config.jwtIssuer)

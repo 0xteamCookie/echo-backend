@@ -2,13 +2,14 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Activity, 
-  Map, 
+import {
+  Activity,
+  Map,
   Settings,
   Folder,
   LayoutGrid,
-  ShieldAlert
+  ShieldAlert,
+  QrCode,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -29,6 +30,18 @@ export default function Sidebar() {
             <NavItem href="/" icon={<LayoutGrid size={16} />} label="Overview" active={pathname === "/"} />
             <NavItem href="/live-feed" icon={<Activity size={16} />} label="Live Feed" active={pathname === "/live-feed"} />
             <NavItem href="/map" icon={<Map size={16} />} label="Operations Map" active={pathname === "/map"} />
+          </nav>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">Field access</p>
+          <nav className="flex flex-col gap-0.5">
+            <NavItem
+              href="/provision"
+              icon={<QrCode size={16} />}
+              label="Rescuer QR"
+              active={pathname === "/provision"}
+            />
           </nav>
         </div>
 
