@@ -110,6 +110,19 @@ function timestampToIso(v: unknown): string {
   return new Date().toISOString();
 }
 
+/** Ensure `meta.triage.categories` is always a normalized array for API clients. */
+function normalizeMeta(raw: Record<string, unknown>): Record<string, unknown> {
+  const meta = { ...raw };
+  const tri = meta.triage;
+  if (tri && typeof tri === "object" && !Array.isArray(tri)) {
+    meta.triage = {
+      ...(tri as Record<string, unknown>),
+      categories: categoriesFromTriageMeta(tri),
+    };
+  }
+  return meta;
+}
+
 function docToDevice(id: string, data: FirebaseFirestore.DocumentData): DeviceData {
   const rawGps = data.gps;
   const gps =
@@ -123,7 +136,7 @@ function docToDevice(id: string, data: FirebaseFirestore.DocumentData): DeviceDa
   const rawMeta = data.meta;
   const meta =
     rawMeta && typeof rawMeta === "object" && !Array.isArray(rawMeta)
-      ? (rawMeta as Record<string, unknown>)
+      ? normalizeMeta(rawMeta as Record<string, unknown>)
       : undefined;
 
   return {

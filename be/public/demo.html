@@ -252,18 +252,38 @@
         setHeat(data.points || []);
       }
 
+      /** Labels for table: supports categories[], legacy category string, array-like objects, comma-separated. */
+      function formatTriageCategories(tri) {
+        if (!tri || typeof tri !== "object") return "—";
+        if (typeof tri.categories === "string" && tri.categories.trim() !== "") {
+          return tri.categories.trim();
+        }
+        let list = tri.categories;
+        if (list && typeof list === "object" && !Array.isArray(list)) {
+          list = Object.values(list);
+        }
+        if (Array.isArray(list) && list.length > 0) {
+          return list
+            .map((x) => (x == null ? "" : String(x).trim()))
+            .filter(Boolean)
+            .join(", ");
+        }
+        if (typeof tri.category === "string" && tri.category.trim() !== "") {
+          return tri.category.trim();
+        }
+        return "—";
+      }
+
       async function refreshList() {
         const rows = await fetchJson("/api/data?limit=25");
         const tb = $("listBody");
         tb.innerHTML = "";
         for (const r of rows) {
           const tr = document.createElement("tr");
-          const tri = (r.meta && r.meta.triage) || {};
-          const cat =
-            Array.isArray(tri.categories) && tri.categories.length
-              ? tri.categories.join(", ")
-              : tri.category || "—";
-          const sev = tri.severity != null ? tri.severity : "—";
+          const tri = r.meta && r.meta.triage;
+          const cat = formatTriageCategories(tri);
+          const sev =
+            tri && typeof tri === "object" && tri.severity != null ? tri.severity : "—";
           tr.innerHTML =
             "<td>" +
             (r.time || "").slice(11, 19) +
