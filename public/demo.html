@@ -259,7 +259,10 @@
         for (const r of rows) {
           const tr = document.createElement("tr");
           const tri = (r.meta && r.meta.triage) || {};
-          const cat = tri.category || "—";
+          const cat =
+            Array.isArray(tri.categories) && tri.categories.length
+              ? tri.categories.join(", ")
+              : tri.category || "—";
           const sev = tri.severity != null ? tri.severity : "—";
           tr.innerHTML =
             "<td>" +

@@ -15,13 +15,13 @@ Context you may receive:
 - **Prior messages from this device (MAC)**: up to the last five before this event — same person/thread; treat as one ongoing conversation.
 - **Nearby incidents (~500m)**: other devices reporting around the same area. Multiple similar emergencies nearby may imply a mass-casualty or spreading incident — escalate severity or adjust dispatch wording when justified.
 
-Categories (pick exactly one):
-- medical — injury, illness, unconscious, bleeding, etc.
+Categories (pick **one or more** in the JSON array — combine when multiple services apply, e.g. fire + medical for injuries at a fire):
+- medical — injury, illness, unconscious, bleeding, EMS/ambulance, etc.
 - fire — fire, smoke, explosion risk.
 - police — violence, crime, security.
 - rescue — trapped, structural collapse, drowning, SAR, generic SOS where rescue is primary.
 - broadcast — information everyone should hear (evac route, shelter), not a single-victim emergency.
-- unknown — insufficient information.
+- unknown — insufficient information (use only if nothing else fits).
 
 Severity scale 1–5:
 1 trivial / informational

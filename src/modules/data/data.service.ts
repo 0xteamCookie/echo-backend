@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { FieldValue, getFirestoreDb } from "../../lib/firebase";
+import { categoriesFromTriageMeta } from "../triage/triage.schema";
 import type { CreateDeviceDataBody, DeviceData, HeatmapPoint } from "./data.schema";
 
 const COLLECTION = "device_entries";
@@ -45,41 +46,47 @@ function categoryMultiplier(category: string): number {
   return CATEGORY_WEIGHT[category] ?? CATEGORY_WEIGHT.unknown;
 }
 
-function triageFromMeta(meta?: Record<string, unknown>): { severity: number; category: string } {
+function triageFromMeta(meta?: Record<string, unknown>): { severity: number; categories: string[] } {
   let severity = 1;
-  let category = "unknown";
+  let categories: string[] = ["unknown"];
 
   const triage = meta?.triage;
   if (triage && typeof triage === "object" && !Array.isArray(triage)) {
     const t = triage as Record<string, unknown>;
-    const s = t.severity;
-    const c = t.category;
-    if (typeof s === "number" && Number.isFinite(s)) {
-      severity = Math.min(5, Math.max(1, Math.round(s)));
+    if (typeof t.severity === "number" && Number.isFinite(t.severity)) {
+      severity = Math.min(5, Math.max(1, Math.round(t.severity)));
     }
-    if (typeof c === "string" && c.trim() !== "") category = c.trim().toLowerCase();
+    categories = categoriesFromTriageMeta(triage);
+  } else if (meta && typeof meta.category === "string" && meta.category.trim() !== "") {
+    categories = meta.category
+      .split(",")
+      .map((x) => x.trim().toLowerCase())
+      .filter((x) => x !== "");
+    if (categories.length === 0) categories = ["unknown"];
   }
 
   if (meta && typeof meta.severity === "number" && Number.isFinite(meta.severity)) {
     severity = Math.min(5, Math.max(1, Math.round(meta.severity)));
   }
-  if (meta && typeof meta.category === "string" && meta.category.trim() !== "") {
-    category = meta.category.trim().toLowerCase();
-  }
 
-  return { severity, category };
+  return { severity, categories };
 }
 
 function heatmapPointFromDevice(d: DeviceData): HeatmapPoint | null {
   if (!d.gps) return null;
-  const { severity, category } = triageFromMeta(d.meta);
-  const weight = severity * categoryMultiplier(category);
+  const { severity, categories } = triageFromMeta(d.meta);
+  const maxMult = Math.max(
+    ...categories.map((c) => categoryMultiplier(c)),
+    CATEGORY_WEIGHT.unknown,
+  );
+  const weight = severity * maxMult;
   return {
     id: d.id,
     lat: d.gps.lat,
     lon: d.gps.lon,
     weight,
-    category,
+    categories,
+    category: categories.join(", "),
     severity,
     receivedAt: d.receivedAt,
     macAddress: d.macAddress,
@@ -249,7 +256,7 @@ export const dataService = {
       .filter((p): p is HeatmapPoint => p !== null);
 
     if (categoryFilter) {
-      points = points.filter((p) => p.category === categoryFilter);
+      points = points.filter((p) => p.categories.includes(categoryFilter));
     }
 
     return points;

@@ -5,7 +5,12 @@ import { haversineMeters } from "../../lib/geo";
 import { dataService } from "../data/data.service";
 import type { DeviceData } from "../data/data.schema";
 import { TRIAGE_SYSTEM_INSTRUCTION } from "./system-instruction";
-import { TRIAGE_CATEGORIES, type TriageCategory, type TriageSnapshot } from "./triage.schema";
+import {
+  TRIAGE_CATEGORIES,
+  categoriesFromTriageMeta,
+  type TriageCategory,
+  type TriageSnapshot,
+} from "./triage.schema";
 
 /** Prior MAC thread messages to include in the user prompt (plus the current event in its own section). */
 const PRIOR_MESSAGES_FOR_TRIAGE = 5;
@@ -15,10 +20,15 @@ const MAC_THREAD_FETCH_LIMIT = PRIOR_MESSAGES_FOR_TRIAGE + 15;
 const triageJsonSchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    category: {
-      type: SchemaType.STRING,
-      format: "enum",
-      enum: [...TRIAGE_CATEGORIES],
+    categories: {
+      type: SchemaType.ARRAY,
+      description:
+        "One or more incident types (e.g. fire and medical). Order does not matter; no duplicates.",
+      items: {
+        type: SchemaType.STRING,
+        format: "enum",
+        enum: [...TRIAGE_CATEGORIES],
+      },
     },
     severity: {
       type: SchemaType.INTEGER,
@@ -32,12 +42,25 @@ const triageJsonSchema: Schema = {
     dispatchMessage: { type: SchemaType.STRING },
     reasoning: { type: SchemaType.STRING },
   },
-  required: ["category", "severity", "summary", "victimInstructions", "dispatchMessage", "reasoning"],
+  required: ["categories", "severity", "summary", "victimInstructions", "dispatchMessage", "reasoning"],
 };
 
 function normalizeCategory(raw: string): TriageCategory {
   const c = raw.trim().toLowerCase();
   return (TRIAGE_CATEGORIES as readonly string[]).includes(c) ? (c as TriageCategory) : "unknown";
+}
+
+function normalizeCategoriesList(raw: unknown): TriageCategory[] {
+  const parts: string[] = [];
+  if (Array.isArray(raw)) {
+    for (const x of raw) parts.push(String(x));
+  } else if (typeof raw === "string" && raw.trim() !== "") {
+    for (const seg of raw.split(",")) parts.push(seg);
+  }
+  if (parts.length === 0) return ["unknown"];
+  const mapped = parts.map((p) => normalizeCategory(p.trim()));
+  const deduped = [...new Set(mapped)];
+  return deduped.length ? deduped : ["unknown"];
 }
 
 function clampSeverity(n: unknown): number {
@@ -47,7 +70,8 @@ function clampSeverity(n: unknown): number {
 
 function parseTriageJson(text: string): TriageSnapshot {
   const parsed = JSON.parse(text) as Record<string, unknown>;
-  const category = normalizeCategory(String(parsed.category ?? "unknown"));
+  const fromCategories = parsed.categories ?? parsed.category;
+  const categories = normalizeCategoriesList(fromCategories);
   const severity = clampSeverity(parsed.severity);
   const summary = String(parsed.summary ?? "").trim() || "(no summary)";
   const victimInstructions = Array.isArray(parsed.victimInstructions)
@@ -56,7 +80,7 @@ function parseTriageJson(text: string): TriageSnapshot {
   const dispatchMessage = String(parsed.dispatchMessage ?? "").trim() || summary;
   const reasoning = String(parsed.reasoning ?? "").trim() || "(no reasoning)";
   return {
-    category,
+    categories,
     severity,
     summary,
     victimInstructions,
@@ -150,13 +174,7 @@ function buildUserPayload(current: DeviceData, history: DeviceData[], nearby: De
           macAddress: n.macAddress,
           time: n.time,
           summary: triageSummaryForNearby(n),
-          category:
-            n.meta?.triage &&
-            typeof n.meta.triage === "object" &&
-            n.meta.triage !== null &&
-            "category" in n.meta.triage
-              ? String((n.meta.triage as { category?: unknown }).category ?? "unknown")
-              : "unknown",
+          categories: categoriesFromTriageMeta(n.meta?.triage),
           severity:
             n.meta?.triage &&
             typeof n.meta.triage === "object" &&

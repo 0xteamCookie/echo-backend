@@ -27,8 +27,11 @@ export type HeatmapPoint = {
   id: string;
   lat: number;
   lon: number;
-  /** severity (1–5) × category weight; use for heatmap intensity */
+  /** severity (1–5) × max category weight across labels; use for heatmap intensity */
   weight: number;
+  /** All triage labels (e.g. fire + medical). */
+  categories: string[];
+  /** Comma-separated copy of `categories` for simple clients. */
   category: string;
   severity: number;
   receivedAt: string;
