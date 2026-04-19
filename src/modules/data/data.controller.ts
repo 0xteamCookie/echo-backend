@@ -13,7 +13,7 @@ function toNumber(v: unknown): number | undefined {
 }
 
 export const dataController = {
-  create: ((req, res) => {
+  create: (async (req, res) => {
     const body = req.body;
     if (!isRecord(body)) {
       res.status(400).json({ error: "Invalid JSON body" });
@@ -41,7 +41,7 @@ export const dataController = {
 
     const meta = isRecord(body.meta) ? body.meta : undefined;
 
-    const record = dataService.create({
+    const record = await dataService.create({
       macAddress,
       message,
       time,
@@ -52,7 +52,7 @@ export const dataController = {
     res.status(201).json(record);
   }) satisfies RequestHandler,
 
-  list: ((req, res) => {
+  list: (async (req, res) => {
     const macAddress =
       typeof req.query.macAddress === "string" ? req.query.macAddress : undefined;
     const limit =
@@ -60,7 +60,7 @@ export const dataController = {
         ? Number(req.query.limit)
         : undefined;
 
-    const items = dataService.list({
+    const items = await dataService.list({
       macAddress,
       limit: typeof limit === "number" && Number.isFinite(limit) ? limit : undefined,
     });
@@ -68,4 +68,3 @@ export const dataController = {
     res.json(items);
   }) satisfies RequestHandler,
 };
-

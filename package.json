@@ -16,12 +16,13 @@
   },
   "dependencies": {
     "@prisma/client": "^7.7.0",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "firebase-admin": "^13.8.0",
+    "prisma": "^7.7.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.2",
-    "prisma": "^7.7.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }

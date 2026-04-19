@@ -8,6 +8,8 @@ declare global {
     interface Request {
       user?: {
         type: UserType;
+        /** Stable user id for Firestore `users/{id}` (e.g. Firebase Auth uid); override with `x-user-id`. */
+        id: string;
       };
     }
   }
@@ -22,7 +24,8 @@ declare global {
 export const identifyUser: RequestHandler = (req, _res, next) => {
   const raw = String(req.header("x-user-type") ?? "").toLowerCase();
   const type: UserType = raw === "official" ? "official" : "user";
-  req.user = { type };
+  const idRaw = String(req.header("x-user-id") ?? "demo").trim();
+  req.user = { type, id: idRaw || "demo" };
   next();
 };
 

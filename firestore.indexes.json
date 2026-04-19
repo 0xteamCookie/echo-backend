@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "device_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "macAddress", "order": "ASCENDING" },
+        { "fieldPath": "receivedAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
