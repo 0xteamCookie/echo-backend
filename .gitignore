@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# Firebase Admin SDK service account keys (never commit)
+*-firebase-adminsdk-*.json
 .env
 .env.*
 !.env.example

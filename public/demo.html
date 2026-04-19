@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echo — ingest & heatmap (API poll)</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <style>
+      :root {
+        font-family: system-ui, sans-serif;
+        color: #e8eaed;
+        background: #12141a;
+      }
+      body {
+        margin: 0;
+        padding: 1rem;
+        max-width: 1200px;
+        margin-inline: auto;
+      }
+      h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+      }
+      label {
+        font-size: 0.85rem;
+        color: #9aa0a6;
+      }
+      input[type="text"] {
+        min-width: 220px;
+        padding: 0.35rem 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #3c4043;
+        background: #1e2128;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid #5f6368;
+        background: #30343c;
+        color: #e8eaed;
+        font-size: 0.875rem;
+      }
+      button:hover {
+        background: #3c4043;
+      }
+      button.primary {
+        background: #1a73e8;
+        border-color: #1a73e8;
+      }
+      #map {
+        height: 380px;
+        border-radius: 8px;
+        border: 1px solid #3c4043;
+        margin: 1rem 0;
+      }
+      pre,
+      .panel {
+        background: #1e2128;
+        border: 1px solid #3c4043;
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-size: 0.8rem;
+        overflow: auto;
+        max-height: 280px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      @media (max-width: 800px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .muted {
+        color: #9aa0a6;
+        font-size: 0.8rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.35rem 0.5rem;
+        border-bottom: 1px solid #3c4043;
+      }
+      .pill {
+        display: inline-block;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        background: #30343c;
+        font-size: 0.7rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Echo backend — dummy ingest & heatmap (polls API, no WebSocket)</h1>
+    <p class="muted">
+      Serve this page from the API server: <code>http://localhost:PORT/demo.html</code> — CORS is enabled for other
+      origins too.
+    </p>
+
+    <div class="row">
+      <label>API base <input type="text" id="base" placeholder="(same origin)" /></label>
+      <label
+        >Poll ms
+        <input type="text" id="pollMs" value="4000" style="width: 5rem" />
+      </label>
+      <button type="button" id="togglePoll">Pause poll</button>
+    </div>
+
+    <div class="row">
+      <button type="button" class="primary" id="btnMedical">Post dummy medical (SF)</button>
+      <button type="button" id="btnFire">Post dummy fire (nearby)</button>
+      <button type="button" id="btnPolice">Post police / Oakland</button>
+      <button type="button" id="btnDup">Send duplicate (same messageId — expect dedup)</button>
+      <button type="button" id="btnNoTriageNote">Post without GPS (triage still runs if key set)</button>
+    </div>
+
+    <div id="map"></div>
+    <p class="muted" id="heatmapMeta">Heatmap: polling <code>/api/data/heatmap</code></p>
+
+    <div class="grid">
+      <div>
+        <strong>Latest heatmap response</strong>
+        <pre id="heatmapJson">{}</pre>
+      </div>
+      <div>
+        <strong>Latest <code>GET /api/data</code></strong>
+        <div class="panel" id="listWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>time</th>
+                <th>category</th>
+                <th>sev</th>
+                <th>message</th>
+              </tr>
+            </thead>
+            <tbody id="listBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <strong>Last POST response</strong>
+      <pre id="postOut">—</pre>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script>
+      /** Firebase Web SDK config (browser). This page uses the REST API only; load `firebase/app` if you add client Firestore/Auth. */
+      const firebaseConfig = {
+        apiKey: "AIzaSyDdp9AUaotaauDf193NIJjo8dPpFK4j16k",
+        authDomain: "echo-5beed.firebaseapp.com",
+        projectId: "echo-5beed",
+        storageBucket: "echo-5beed.firebasestorage.app",
+        messagingSenderId: "390640342159",
+        appId: "1:390640342159:web:f7b86c206484e63ede4cfa",
+        measurementId: "G-QQ24VGK0DM",
+      };
+      if (typeof window !== "undefined") window.__ECHO_FIREBASE_CONFIG = firebaseConfig;
+
+      const $ = (id) => document.getElementById(id);
+      const apiBase = () => ($("base").value || "").replace(/\/$/, "") || "";
+
+      /** Earth radius (m). Small-offset approximation: good for 50–500 m. */
+      const R_EARTH_M = 6371000;
+      /** Random GPS within an annulus [minM, maxM] from (lat, lon) — spreads heatmap points. */
+      function randomOffsetFrom(lat, lon, minM, maxM) {
+        const lo = minM;
+        const hi = maxM;
+        const dist = lo + Math.random() * (hi - lo);
+        const bearing = Math.random() * 2 * Math.PI;
+        const dLat = ((dist * Math.cos(bearing)) / R_EARTH_M) * (180 / Math.PI);
+        const dLon =
+          ((dist * Math.sin(bearing)) / (R_EARTH_M * Math.cos((lat * Math.PI) / 180))) * (180 / Math.PI);
+        return { lat: lat + dLat, lon: lon + dLon };
+      }
+
+      const JITTER_MIN_M = 50;
+      const JITTER_MAX_M = 500;
+      const BASE_SF = { lat: 37.7749, lon: -122.4194 };
+      const BASE_OAK = { lat: 37.8044, lon: -122.2712 };
+
+      const map = L.map("map").setView([37.7749, -122.4194], 11);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap",
+      }).addTo(map);
+
+      let heatLayer = null;
+
+      function setHeat(points) {
+        if (heatLayer) {
+          map.removeLayer(heatLayer);
+          heatLayer = null;
+        }
+        if (!points || !points.length || !L.heatLayer) {
+          $("heatmapMeta").textContent = "Heatmap: no points or leaflet.heat missing";
+          return;
+        }
+        const latlngs = points.map((p) => [p.lat, p.lon, Math.max(0.15, p.weight / 8)]);
+        heatLayer = L.heatLayer(latlngs, { radius: 28, blur: 22, maxZoom: 14 }).addTo(map);
+        const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lon]));
+        map.fitBounds(bounds.pad(0.15));
+        $("heatmapMeta").textContent =
+          "Heatmap: " + points.length + " points (weight = severity × category multiplier)";
+      }
+
+      async function fetchJson(path, opts) {
+        const url = apiBase() + path;
+        const r = await fetch(url, opts);
+        const text = await r.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { _raw: text };
+        }
+        if (!r.ok) throw new Error(r.status + " " + (data.error || text));
+        return data;
+      }
+
+      async function refreshHeatmap() {
+        const data = await fetchJson("/api/data/heatmap?limit=200");
+        $("heatmapJson").textContent = JSON.stringify(data, null, 2);
+        setHeat(data.points || []);
+      }
+
+      async function refreshList() {
+        const rows = await fetchJson("/api/data?limit=25");
+        const tb = $("listBody");
+        tb.innerHTML = "";
+        for (const r of rows) {
+          const tr = document.createElement("tr");
+          const tri = (r.meta && r.meta.triage) || {};
+          const cat = tri.category || "—";
+          const sev = tri.severity != null ? tri.severity : "—";
+          tr.innerHTML =
+            "<td>" +
+            (r.time || "").slice(11, 19) +
+            '</td><td><span class="pill">' +
+            cat +
+            "</span></td><td>" +
+            sev +
+            "</td><td>" +
+            (r.message || "").slice(0, 80) +
+            (r.message && r.message.length > 80 ? "…" : "") +
+            "</td>";
+          tb.appendChild(tr);
+        }
+      }
+
+      async function postEvent(body) {
+        const data = await fetchJson("/api/data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        $("postOut").textContent = JSON.stringify(data, null, 2);
+        await refreshHeatmap();
+        await refreshList();
+      }
+
+      const now = () => new Date().toISOString();
+
+      $("btnMedical").onclick = () =>
+        postEvent({
+          macAddress: "aa:bb:cc:dd:ee:01",
+          message: "Person unconscious, need medical assistance",
+          time: now(),
+          gps: randomOffsetFrom(BASE_SF.lat, BASE_SF.lon, JITTER_MIN_M, JITTER_MAX_M),
+          meta: { hopCount: 2, battery: 61, messageId: "demo-" + Date.now() },
+        });
+
+      $("btnFire").onclick = () =>
+        postEvent({
+          macAddress: "aa:bb:cc:dd:ee:02",
+          message: "Building on fire, smoke on floor 3",
+          time: now(),
+          gps: randomOffsetFrom(BASE_SF.lat, BASE_SF.lon, JITTER_MIN_M, JITTER_MAX_M),
+          meta: { hopCount: 4, messageId: "demo-" + Date.now() },
+        });
+
+      $("btnPolice").onclick = () =>
+        postEvent({
+          macAddress: "aa:bb:cc:dd:ee:03",
+          message: "Looting reported at intersection",
+          time: now(),
+          gps: randomOffsetFrom(BASE_OAK.lat, BASE_OAK.lon, JITTER_MIN_M, JITTER_MAX_M),
+          meta: { hopCount: 1, messageId: "demo-" + Date.now() },
+        });
+
+      $("btnDup").onclick = () => {
+        const id = "fixed-dup-test";
+        return postEvent({
+          macAddress: "aa:bb:cc:dd:ee:99",
+          message: "duplicate test",
+          time: now(),
+          gps: { lat: 37.77, lon: -122.42 },
+          meta: { messageId: id },
+        }).then(() => postEvent({
+          macAddress: "aa:bb:cc:dd:ee:99",
+          message: "duplicate test",
+          time: now(),
+          gps: { lat: 37.77, lon: -122.42 },
+          meta: { messageId: id },
+        }));
+      };
+
+      $("btnNoTriageNote").onclick = () =>
+        postEvent({
+          macAddress: "aa:bb:cc:dd:ee:04",
+          message: "Lost contact with team, no GPS fix",
+          time: now(),
+          meta: { messageId: "demo-" + Date.now() },
+        });
+
+      let pollTimer = null;
+      let polling = true;
+
+      function schedulePoll() {
+        const ms = Math.max(1000, parseInt($("pollMs").value, 10) || 4000);
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(() => {
+          if (polling) {
+            refreshHeatmap().catch((e) => console.error(e));
+            refreshList().catch((e) => console.error(e));
+          }
+        }, ms);
+      }
+
+      $("togglePoll").onclick = () => {
+        polling = !polling;
+        $("togglePoll").textContent = polling ? "Pause poll" : "Resume poll";
+      };
+
+      $("pollMs").onchange = schedulePoll;
+
+      refreshHeatmap().catch((e) => {
+        $("heatmapJson").textContent = String(e);
+      });
+      refreshList().catch(() => {});
+      schedulePoll();
+    </script>
+  </body>
+</html>

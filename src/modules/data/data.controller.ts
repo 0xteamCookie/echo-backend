@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import { triageAfterIngestSafe } from "../triage/triage-agent.service";
 import { dataService } from "./data.service";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -10,6 +11,10 @@ function toNumber(v: unknown): number | undefined {
   if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v)))
     return Number(v);
   return undefined;
+}
+
+function isValidGps(lat: number, lon: number): boolean {
+  return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
 
 export const dataController = {
@@ -39,9 +44,14 @@ export const dataController = {
         ? { lat: toNumber(gpsRaw.lat)!, lon: toNumber(gpsRaw.lon)! }
         : undefined;
 
+    if (gps && !isValidGps(gps.lat, gps.lon)) {
+      res.status(400).json({ error: "gps.lat and gps.lon must be valid WGS84 coordinates" });
+      return;
+    }
+
     const meta = isRecord(body.meta) ? body.meta : undefined;
 
-    const record = await dataService.create({
+    const { record, deduplicated } = await dataService.create({
       macAddress,
       message,
       time,
@@ -49,7 +59,35 @@ export const dataController = {
       meta,
     });
 
-    res.status(201).json(record);
+    let finalRecord = record;
+    if (!deduplicated) {
+      const triaged = await triageAfterIngestSafe(record.id);
+      if (triaged) finalRecord = triaged;
+    }
+
+    res.status(deduplicated ? 200 : 201).json({ ...finalRecord, deduplicated });
+  }) satisfies RequestHandler,
+
+  heatmap: (async (req, res) => {
+    const since = typeof req.query.since === "string" ? req.query.since : undefined;
+    const category = typeof req.query.category === "string" ? req.query.category : undefined;
+    const limitRaw =
+      typeof req.query.limit === "string" && req.query.limit.trim() !== ""
+        ? Number(req.query.limit)
+        : undefined;
+
+    if (since !== undefined && since.trim() !== "" && Number.isNaN(new Date(since).getTime())) {
+      res.status(400).json({ error: "since must be a valid ISO8601 datetime" });
+      return;
+    }
+
+    const points = await dataService.heatmapPoints({
+      since: since?.trim() || undefined,
+      limit: typeof limitRaw === "number" && Number.isFinite(limitRaw) ? limitRaw : undefined,
+      category: category?.trim() || undefined,
+    });
+
+    res.json({ points, polledAt: new Date().toISOString() });
   }) satisfies RequestHandler,
 
   list: (async (req, res) => {
