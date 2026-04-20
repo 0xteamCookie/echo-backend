@@ -238,15 +238,12 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
 
   const userText = buildUserPayload(record, historyForPrompt, nearby);
 
-  console.log("[triage] systemInstruction (full)\n" + TRIAGE_SYSTEM_INSTRUCTION);
-  console.log("[triage] user message (full)\n" + userText);
 
   const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: userText }] }],
   });
 
   const raw = result.response.text();
-  console.log("[triage] model raw output (full)\n" + (raw ?? ""));
 
   if (!raw || raw.trim() === "") {
     throw new Error("Gemini returned empty triage response");
