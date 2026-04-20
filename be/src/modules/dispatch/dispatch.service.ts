@@ -1,42 +1,37 @@
+import { appendFile, mkdir } from "node:fs/promises";
+import path from "node:path";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import type { Schema } from "@google/generative-ai";
 import { config } from "../../lib/config";
 import { haversineMeters } from "../../lib/geo";
-import type { AgencyScope, DeviceData } from "../data/data.schema";
+import type { AgencyScope, DeviceData, HeatmapPoint } from "../data/data.schema";
 import { dataService } from "../data/data.service";
 import { categoriesFromTriageMeta } from "../triage/triage.schema";
 import type {
+  DispatchDecision,
   DispatchRecommendation,
   DispatchRecommendationResponse,
-  RecommendedResponder,
+  IncidentBrief,
   RescuerProfile,
 } from "./dispatch.schema";
-import { DISPATCH_SYSTEM_INSTRUCTION } from "./system-instruction";
+
+const DISPATCH_TRACE_FILE = path.join(process.cwd(), "logs", "dispatch-model-io.txt");
+const INCIDENT_MIN_SEVERITY = 3;
+const INCIDENT_MAX_AGE_MINUTES = 360;
+const MAX_LOAD = 4;
+const SHORTLIST_SIZE = 3;
 
 type CandidateIncident = {
   id: string;
   severity: number;
   categories: string[];
-  summary: string;
-  dispatchInstruction: string;
   agencyHints: AgencyScope[];
-  priorityScore: number;
-  gps: { lat: number; lon: number } | null;
+  summary: string;
+  location: { lat: number; lon: number };
   receivedAt: string;
-  message: string;
 };
 
-type PlannerOutput = {
-  recommendations: Array<{
-    incidentId: string;
-    agency: AgencyScope;
-    rescuerId: string;
-    priority: number;
-    rationale: string;
-    dispatchInstruction?: string;
-  }>;
-  plannerNotes: string[];
-};
+type DecisionWithSource = DispatchDecision & { modelAssisted: boolean };
 
 const DUMMY_RESCUERS: RescuerProfile[] = [
   {
@@ -95,43 +90,36 @@ const DUMMY_RESCUERS: RescuerProfile[] = [
   },
 ];
 
-const dispatchJsonSchema: Schema = {
+const decisionSchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    recommendations: {
-      type: SchemaType.ARRAY,
-      items: {
-        type: SchemaType.OBJECT,
-        properties: {
-          incidentId: { type: SchemaType.STRING },
-          agency: {
-            type: SchemaType.STRING,
-            format: "enum",
-            enum: ["medical", "fire", "police"],
-          },
-          rescuerId: { type: SchemaType.STRING },
-          priority: { type: SchemaType.NUMBER },
-          rationale: { type: SchemaType.STRING },
-          dispatchInstruction: { type: SchemaType.STRING },
-        },
-        required: ["incidentId", "agency", "rescuerId", "priority", "rationale"],
-      },
-    },
-    plannerNotes: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-    },
+    selectedResponderId: { type: SchemaType.STRING },
+    confidenceLevel: { type: SchemaType.INTEGER },
+    rationale: { type: SchemaType.STRING },
+    escalate: { type: SchemaType.BOOLEAN },
   },
-  required: ["recommendations", "plannerNotes"],
+  required: ["selectedResponderId", "confidenceLevel", "rationale", "escalate"],
 };
+
+async function writeDispatchTrace(section: string, content: string): Promise<void> {
+  try {
+    await mkdir(path.dirname(DISPATCH_TRACE_FILE), { recursive: true });
+    const stamp = new Date().toISOString();
+    const block =
+      `\n\n=== ${stamp} | ${section} ===\n` +
+      `${content}\n` +
+      `=== END ${section} ===\n`;
+    await appendFile(DISPATCH_TRACE_FILE, block, "utf8");
+  } catch {
+    // Never break dispatch due to trace write failures.
+  }
+}
 
 function severityFromMeta(meta?: Record<string, unknown>): number {
   const tri = meta?.triage;
   if (tri && typeof tri === "object" && !Array.isArray(tri)) {
     const raw = (tri as { severity?: unknown }).severity;
-    if (typeof raw === "number" && Number.isFinite(raw)) {
-      return Math.min(5, Math.max(1, Math.round(raw)));
-    }
+    if (typeof raw === "number" && Number.isFinite(raw)) return Math.min(5, Math.max(1, Math.round(raw)));
   }
   return 1;
 }
@@ -140,205 +128,245 @@ function summaryFromMeta(d: DeviceData): string {
   const tri = d.meta?.triage;
   if (tri && typeof tri === "object" && !Array.isArray(tri)) {
     const raw = (tri as { summary?: unknown }).summary;
-    if (typeof raw === "string" && raw.trim() !== "") return raw.trim();
+    if (typeof raw === "string" && raw.trim() !== "") return raw.trim().slice(0, 200);
   }
   const msg = d.message.trim();
-  return msg.length > 160 ? `${msg.slice(0, 157)}...` : msg || "Incident with limited details";
+  return (msg || "Incident with limited details").slice(0, 200);
 }
 
-function dispatchMessageFromMeta(d: DeviceData): string {
-  const tri = d.meta?.triage;
-  if (tri && typeof tri === "object" && !Array.isArray(tri)) {
-    const raw = (tri as { dispatchMessage?: unknown }).dispatchMessage;
-    if (typeof raw === "string" && raw.trim() !== "") return raw.trim();
-  }
-  return `Dispatch support for incident ${d.id}`;
-}
-
-function inferAgencies(d: DeviceData): AgencyScope[] {
-  const categories = categoriesFromTriageMeta(d.meta?.triage);
-  const agencies = new Set<AgencyScope>();
-  for (const c of categories) {
-    if (c === "medical" || c === "fire" || c === "police") agencies.add(c);
-    if (c === "rescue") agencies.add("fire");
-  }
-  if (agencies.size === 0 && d.agency) agencies.add(d.agency);
-  if (agencies.size === 0) agencies.add("medical");
-  return [...agencies];
-}
-
-function recencyBoost(receivedAt: string): number {
+function ageMinutes(receivedAt: string): number {
   const ms = Date.now() - new Date(receivedAt).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return 0.4;
-  if (ms < 10 * 60_000) return 1.0;
-  if (ms < 30 * 60_000) return 0.8;
-  if (ms < 60 * 60_000) return 0.6;
-  if (ms < 2 * 60 * 60_000) return 0.4;
-  return 0.2;
+  if (!Number.isFinite(ms)) return Number.MAX_SAFE_INTEGER;
+  return Math.max(0, Math.round(ms / 60000));
 }
 
-function computePriorityScore(d: DeviceData): number {
-  const severity = severityFromMeta(d.meta);
-  const categories = categoriesFromTriageMeta(d.meta?.triage);
-  const categoryWeight = categories.includes("fire") ? 1.25 : categories.includes("medical") ? 1.15 : 1.0;
-  return Number((severity * categoryWeight + recencyBoost(d.receivedAt)).toFixed(2));
+function inferAgencies(categories: string[], fallback?: AgencyScope): AgencyScope[] {
+  const out = new Set<AgencyScope>();
+  for (const category of categories) {
+    if (category === "medical" || category === "fire" || category === "police") out.add(category);
+    if (category === "rescue") out.add("fire");
+  }
+  if (out.size === 0 && fallback) out.add(fallback);
+  if (out.size === 0) out.add("medical");
+  return [...out];
 }
 
 function hotspotKey(lat: number, lon: number): string {
   return `${lat.toFixed(2)},${lon.toFixed(2)}`;
 }
 
-function topHotspotsFromIncidents(rows: DeviceData[]): Array<{ lat: number; lon: number; count: number }> {
-  const buckets = new Map<string, { latSum: number; lonSum: number; count: number }>();
+function buildHotspotCounts(rows: DeviceData[]): Map<string, number> {
+  const map = new Map<string, number>();
   for (const row of rows) {
     if (!row.gps) continue;
     const key = hotspotKey(row.gps.lat, row.gps.lon);
-    const hit = buckets.get(key) ?? { latSum: 0, lonSum: 0, count: 0 };
-    hit.latSum += row.gps.lat;
-    hit.lonSum += row.gps.lon;
-    hit.count += 1;
-    buckets.set(key, hit);
+    map.set(key, (map.get(key) ?? 0) + 1);
   }
-  return [...buckets.values()]
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8)
-    .map((b) => ({
-      lat: Number((b.latSum / b.count).toFixed(5)),
-      lon: Number((b.lonSum / b.count).toFixed(5)),
-      count: b.count,
-    }));
+  return map;
 }
 
-function toCandidateIncident(d: DeviceData): CandidateIncident {
+function historicalRiskTier(
+  incident: CandidateIncident,
+  hotspotCounts: Map<string, number>,
+): 1 | 2 | 3 {
+  const current = hotspotCounts.get(hotspotKey(incident.location.lat, incident.location.lon)) ?? 0;
+  const all = [...hotspotCounts.values()].sort((a, b) => a - b);
+  if (all.length === 0) return 1;
+  const p50 = all[Math.floor(all.length * 0.5)] ?? 0;
+  const p80 = all[Math.floor(all.length * 0.8)] ?? 0;
+  if (current >= p80 && current > 0) return 3;
+  if (current >= p50 && current > 0) return 2;
+  return 1;
+}
+
+function nearbyActiveCount(incident: CandidateIncident, incidents: CandidateIncident[]): number {
+  let count = 0;
+  for (const other of incidents) {
+    if (other.id === incident.id) continue;
+    const m = haversineMeters(incident.location, other.location);
+    if (m <= 1500) count += 1;
+  }
+  return count;
+}
+
+function heatIntensity(incident: CandidateIncident, points: HeatmapPoint[]): "low" | "medium" | "high" {
+  const local = points.filter((p) => haversineMeters(incident.location, { lat: p.lat, lon: p.lon }) <= 2000);
+  if (local.length === 0) return "low";
+  const avg = local.reduce((sum, p) => sum + p.weight, 0) / local.length;
+  if (avg >= 4) return "high";
+  if (avg >= 2) return "medium";
+  return "low";
+}
+
+function baseLoad(responder: RescuerProfile): number {
+  if (responder.status === "busy") return 3;
+  if (responder.status === "enroute") return 2;
+  return 0;
+}
+
+function agencyMatches(incident: CandidateIncident, responder: RescuerProfile): boolean {
+  return incident.agencyHints.includes(responder.agency);
+}
+
+function scoreResponder(
+  incident: CandidateIncident,
+  responder: RescuerProfile,
+  hotspotTier: 1 | 2 | 3,
+): number {
+  const distanceKm = haversineMeters(incident.location, responder.location) / 1000;
+  const maxRadiusKm = Math.max(1, responder.radiusM / 1000);
+  const distanceScore = Math.max(0, 1 - distanceKm / maxRadiusKm);
+  const severityMatch = agencyMatches(incident, responder) ? 1 : 0;
+  const loadPenalty = Math.max(0, 1 - baseLoad(responder) / MAX_LOAD);
+  const zoneRisk = hotspotTier / 3;
+  return distanceScore * 0.35 + severityMatch * 0.3 + loadPenalty * 0.2 + zoneRisk * 0.15;
+}
+
+function buildCandidateIncident(row: DeviceData): CandidateIncident | null {
+  if (!row.gps) return null;
+  const severity = severityFromMeta(row.meta);
+  const age = ageMinutes(row.receivedAt);
+  if (severity < INCIDENT_MIN_SEVERITY) return null;
+  if (age > INCIDENT_MAX_AGE_MINUTES) return null;
+  const categories = categoriesFromTriageMeta(row.meta?.triage);
   return {
-    id: d.id,
-    severity: severityFromMeta(d.meta),
-    categories: categoriesFromTriageMeta(d.meta?.triage),
-    summary: summaryFromMeta(d),
-    dispatchInstruction: dispatchMessageFromMeta(d),
-    agencyHints: inferAgencies(d),
-    priorityScore: computePriorityScore(d),
-    gps: d.gps ? { lat: d.gps.lat, lon: d.gps.lon } : null,
-    receivedAt: d.receivedAt,
-    message: d.message,
+    id: row.id,
+    severity,
+    categories,
+    agencyHints: inferAgencies(categories, row.agency),
+    summary: summaryFromMeta(row),
+    location: { lat: row.gps.lat, lon: row.gps.lon },
+    receivedAt: row.receivedAt,
   };
 }
 
-function buildPlannerPrompt(params: {
-  incidents: CandidateIncident[];
-  responders: RescuerProfile[];
-  heatmapContext: {
-    points: number;
-    avgWeight: number;
-    byAgency: Record<AgencyScope, number>;
-  };
-  historicalHotspots: Array<{ lat: number; lon: number; count: number }>;
-}): string {
-  return [
-    "## Dispatch candidates",
-    JSON.stringify(params.incidents, null, 2),
-    "## Available responders",
-    JSON.stringify(params.responders, null, 2),
-    "## Live heatmap context",
-    JSON.stringify(params.heatmapContext, null, 2),
-    "## Historical repeated incident zones",
-    JSON.stringify(params.historicalHotspots, null, 2),
-    "Return JSON only.",
-  ].join("\n\n");
-}
-
-function repairJsonLikeText(input: string): string {
-  return input
+function parseDecision(raw: string): DispatchDecision {
+  const cleaned = raw
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/i, "")
     .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
-    // common model glitch: `12.` (invalid JSON number) before separator
-    .replace(/(-?\d+)\.(\s*[,}\]])/g, "$1.0$2")
-    // common model glitch: trailing commas
-    .replace(/,\s*([}\]])/g, "$1");
+    .replace(/[‘’]/g, "'");
+  const parsed = JSON.parse(cleaned) as Record<string, unknown>;
+  const selectedResponderId = String(parsed.selectedResponderId ?? "").trim();
+  const confidenceRaw =
+    typeof parsed.confidenceLevel === "number" && Number.isFinite(parsed.confidenceLevel)
+      ? Math.round(parsed.confidenceLevel)
+      : 1;
+  const confidenceLevel = Math.min(3, Math.max(1, confidenceRaw)) as 1 | 2 | 3;
+  const rationale = String(parsed.rationale ?? "").trim();
+  const escalate = Boolean(parsed.escalate);
+  if (!selectedResponderId) throw new Error("Missing selectedResponderId");
+  if (!rationale) throw new Error("Missing rationale");
+  return { selectedResponderId, confidenceLevel, rationale, escalate };
 }
 
-function extractLikelyJsonObject(raw: string): string {
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start >= 0 && end > start) {
-    return raw.slice(start, end + 1);
+function buildPrompt(brief: IncidentBrief): string {
+  const candidates = brief.candidateResponders
+    .map(
+      (c) =>
+        `- ID: ${c.id} | Agency: ${c.agency} | ETA: ${c.etaMinutes}min | Load: ${c.currentLoad}`,
+    )
+    .join("\n");
+  return [
+    "You are a dispatch coordinator. Select the best responder from the shortlist.",
+    "",
+    "INCIDENT:",
+    `- Severity: ${brief.severity}/5`,
+    `- Type: ${brief.categories.join(", ")}`,
+    `- Summary: ${brief.summary}`,
+    `- Zone risk tier: ${brief.historicalRiskTier}/3`,
+    `- Active nearby incidents: ${brief.nearbyActiveCount}`,
+    `- Heat intensity: ${brief.heatIntensity}`,
+    "",
+    "CANDIDATES:",
+    candidates,
+    "",
+    "Return JSON only. Choose one responder. Explain in <= 20 words.",
+  ].join("\n");
+}
+
+function fallbackDecision(brief: IncidentBrief): DecisionWithSource {
+  return {
+    selectedResponderId: brief.candidateResponders[0].id,
+    confidenceLevel: 1,
+    rationale: "Fallback: closest available responder",
+    escalate: true,
+    modelAssisted: false,
+  };
+}
+
+function applyGuardrails(
+  decision: DispatchDecision,
+  brief: IncidentBrief,
+): DispatchDecision {
+  const valid = new Map(brief.candidateResponders.map((c) => [c.id, c]));
+  const top = brief.candidateResponders[0];
+  const safe: DispatchDecision = { ...decision };
+
+  if (!valid.has(safe.selectedResponderId)) {
+    safe.selectedResponderId = top.id;
+    safe.escalate = true;
   }
-  return raw;
+  const selected = valid.get(safe.selectedResponderId)!;
+  if (!brief.categories.includes(selected.agency) && !brief.categories.includes("rescue")) {
+    const agencyMatch = brief.candidateResponders.find((c) => brief.categories.includes(c.agency));
+    if (agencyMatch) safe.selectedResponderId = agencyMatch.id;
+  }
+  if (selected.currentLoad >= MAX_LOAD) safe.escalate = true;
+  safe.confidenceLevel = Math.min(3, Math.max(1, Math.round(safe.confidenceLevel))) as 1 | 2 | 3;
+  safe.rationale = safe.rationale.split(/\s+/).slice(0, 25).join(" ");
+  return safe;
 }
 
-function parsePlannerOutput(raw: string): PlannerOutput {
-  const attempts: string[] = [
-    raw,
-    repairJsonLikeText(raw),
-    repairJsonLikeText(extractLikelyJsonObject(raw)),
-  ];
+async function decideWithGemini(
+  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+  brief: IncidentBrief,
+): Promise<DecisionWithSource> {
+  const prompt = buildPrompt(brief);
+  await writeDispatchTrace("incident_brief", JSON.stringify(brief));
+  await writeDispatchTrace("incident_prompt", prompt);
 
-  let parsed: Record<string, unknown> | null = null;
-  let parseError: unknown;
-  for (const candidate of attempts) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      parsed = JSON.parse(candidate) as Record<string, unknown>;
-      break;
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+      });
+      const raw = result.response.text();
+      await writeDispatchTrace(`incident_output_attempt_${attempt + 1}`, raw ?? "");
+      if (!raw || raw.trim() === "") throw new Error("Empty model output");
+      const parsed = parseDecision(raw);
+      const guarded = applyGuardrails(parsed, brief);
+      return { ...guarded, modelAssisted: true };
     } catch (err) {
-      parseError = err;
+      await writeDispatchTrace(
+        `incident_error_attempt_${attempt + 1}`,
+        err instanceof Error ? err.message : String(err),
+      );
     }
   }
-  if (!parsed) {
-    const message = parseError instanceof Error ? parseError.message : "Invalid JSON";
-    throw new Error(`Gemini dispatch JSON parse failed: ${message}`);
-  }
 
-  const recommendationsRaw = Array.isArray(parsed.recommendations) ? parsed.recommendations : [];
-  const plannerNotesRaw = Array.isArray(parsed.plannerNotes) ? parsed.plannerNotes : [];
-
-  const recommendations = recommendationsRaw
-    .map((x) => x as Record<string, unknown>)
-    .map((x) => ({
-      incidentId: String(x.incidentId ?? "").trim(),
-      agency: String(x.agency ?? "").trim().toLowerCase() as AgencyScope,
-      rescuerId: String(x.rescuerId ?? "").trim(),
-      priority: typeof x.priority === "number" && Number.isFinite(x.priority) ? x.priority : 0,
-      rationale: String(x.rationale ?? "").trim(),
-      dispatchInstruction:
-        typeof x.dispatchInstruction === "string" && x.dispatchInstruction.trim() !== ""
-          ? x.dispatchInstruction.trim()
-          : undefined,
-    }))
-    .filter(
-      (x) =>
-        x.incidentId !== "" &&
-        (x.agency === "medical" || x.agency === "fire" || x.agency === "police") &&
-        x.rescuerId !== "" &&
-        x.rationale !== "",
-    );
-
-  const plannerNotes = plannerNotesRaw
-    .map((x) => String(x).trim())
-    .filter((x) => x !== "");
-
-  return { recommendations, plannerNotes };
+  return fallbackDecision(brief);
 }
 
-function toResponder(
-  rescuer: RescuerProfile,
+function toRecommendation(
   incident: CandidateIncident,
-  rationale: string,
-): RecommendedResponder {
-  const distanceMeters = incident.gps
-    ? Math.round(haversineMeters(incident.gps, rescuer.location))
-    : Math.round(rescuer.radiusM * 1.3);
-  const etaMinutes = Math.max(2, Math.round(distanceMeters / 450));
+  brief: IncidentBrief,
+  decision: DecisionWithSource,
+): DispatchRecommendation {
+  const selected = brief.candidateResponders.find((c) => c.id === decision.selectedResponderId);
+  const fallback = brief.candidateResponders[0];
+  const picked = selected ?? fallback;
   return {
-    rescuerId: rescuer.id,
-    name: rescuer.name,
-    agency: rescuer.agency,
-    sourceSystem: rescuer.sourceSystem,
-    etaMinutes,
-    distanceMeters,
-    status: rescuer.status,
-    rationale,
+    incidentId: incident.id,
+    severity: incident.severity,
+    selectedResponderId: picked.id,
+    agency: picked.agency,
+    etaMinutes: picked.etaMinutes,
+    confidenceLevel: decision.confidenceLevel,
+    rationale: decision.rationale,
+    escalate: decision.escalate,
+    modelAssisted: decision.modelAssisted,
+    summary: incident.summary,
   };
 }
 
@@ -347,162 +375,123 @@ export const dispatchService = {
     agencies?: AgencyScope[];
     maxIncidents?: number;
   }): Promise<DispatchRecommendationResponse> {
-    if (!config.geminiApiKey) {
-      throw new Error("Gemini is required for dispatch recommendations (missing GEMINI_API_KEY)");
-    }
-
     const maxIncidents = Math.max(1, Math.min(25, params.maxIncidents ?? 10));
-    const incidentRows = await dataService.list({
-      limit: 300,
+
+    const rows = await dataService.list({
+      limit: 500,
       agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
     });
-    const candidates = incidentRows
-      .filter((d) => d.gps)
-      .sort((a, b) => computePriorityScore(b) - computePriorityScore(a))
-      .slice(0, maxIncidents)
-      .map(toCandidateIncident);
+    const incidents = rows
+      .map(buildCandidateIncident)
+      .filter((x): x is CandidateIncident => x !== null)
+      .sort((a, b) => b.severity - a.severity || ageMinutes(a.receivedAt) - ageMinutes(b.receivedAt))
+      .slice(0, maxIncidents);
 
-    const allowedAgencySet = new Set(params.agencies ?? ["medical", "fire", "police"]);
-    const responders = DUMMY_RESCUERS.filter((r) => allowedAgencySet.has(r.agency));
-
-    const heatmapPoints = await dataService.heatmapPoints({
-      limit: 300,
-      agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
-    });
-    const byAgency: Record<AgencyScope, number> = { medical: 0, fire: 0, police: 0 };
-    for (const p of heatmapPoints) {
-      const a = p.agency;
-      if (a) byAgency[a] += 1;
-    }
-    const heatmapContext = {
-      points: heatmapPoints.length,
-      avgWeight:
-        heatmapPoints.length > 0
-          ? Number(
-              (
-                heatmapPoints.reduce((sum, p) => sum + (typeof p.weight === "number" ? p.weight : 0), 0) /
-                heatmapPoints.length
-              ).toFixed(2),
-            )
-          : 0,
-      byAgency,
-    };
-    const historicalHotspots = topHotspotsFromIncidents(incidentRows);
-
-    if (candidates.length === 0) {
+    if (incidents.length === 0) {
       return {
-        overview: {
-          totalIncidentsReviewed: incidentRows.length,
-          recommendationsCount: 0,
-          highSeverityCount: 0,
-          agencyDemand: byAgency,
-        },
+        generatedAt: new Date().toISOString(),
         recommendations: [],
-        planner: {
-          mode: "heuristic-agentic",
-          notes: ["No geolocated incidents available for dispatch planning."],
+        meta: {
+          totalIncidents: 0,
+          modelAssistedCount: 0,
+          fallbackCount: 0,
         },
       };
     }
 
-    const genAI = new GoogleGenerativeAI(config.geminiApiKey);
-    const model = genAI.getGenerativeModel({
-      model: config.geminiModel,
-      systemInstruction: DISPATCH_SYSTEM_INSTRUCTION,
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 21048,
-        responseMimeType: "application/json",
-        responseSchema: dispatchJsonSchema,
-      },
+    const allowed = new Set(params.agencies ?? ["medical", "fire", "police"]);
+    const responders = DUMMY_RESCUERS.filter((r) => allowed.has(r.agency));
+    const hotspotCounts = buildHotspotCounts(rows);
+    const heatmap = await dataService.heatmapPoints({
+      limit: 400,
+      agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
     });
 
-    const plannerPrompt = buildPlannerPrompt({
-      incidents: candidates,
-      responders,
-      heatmapContext,
-      historicalHotspots,
-    });
-    console.log("[dispatch] planner prompt (full)\n" + plannerPrompt);
+    const briefs: Array<{ incident: CandidateIncident; brief: IncidentBrief }> = incidents
+      .map((incident) => {
+        const riskTier = historicalRiskTier(incident, hotspotCounts);
+        const shortlist = [...responders]
+          .map((responder) => {
+            const score = scoreResponder(incident, responder, riskTier);
+            const etaMinutes = Math.max(
+              1,
+              Math.round(haversineMeters(incident.location, responder.location) / 450),
+            );
+            return {
+              id: responder.id,
+              agency: responder.agency,
+              etaMinutes,
+              currentLoad: baseLoad(responder),
+              score,
+            };
+          })
+          .sort((a, b) => b.score - a.score)
+          .slice(0, SHORTLIST_SIZE)
+          .map(({ score: _score, ...brief }) => brief);
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: plannerPrompt }] }],
-    });
-    const raw = result.response.text();
-    console.log("[dispatch] model raw output (full)\n" + (raw ?? ""));
-    if (!raw || raw.trim() === "") {
-      throw new Error("Gemini returned empty dispatch planner response");
-    }
-    let parsed: PlannerOutput;
-    try {
-      parsed = parsePlannerOutput(raw);
-    } catch {
-      // One retry with explicit JSON correction instruction if the first output was malformed.
-      const repairPrompt =
-        `${plannerPrompt}\n\nYour previous answer was malformed JSON. ` +
-        `Return ONLY valid JSON matching the same schema. Do not include markdown fences.`;
-      const repairResult = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: repairPrompt }] }],
+        if (shortlist.length === 0) return null;
+        return {
+          incident,
+          brief: {
+            incidentId: incident.id,
+            severity: incident.severity,
+            categories: incident.categories,
+            summary: incident.summary,
+            heatIntensity: heatIntensity(incident, heatmap),
+            nearbyActiveCount: nearbyActiveCount(incident, incidents),
+            historicalRiskTier: riskTier,
+            candidateResponders: shortlist,
+          },
+        };
+      })
+      .filter((x): x is { incident: CandidateIncident; brief: IncidentBrief } => x !== null);
+
+    let model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]> | null = null;
+    if (config.geminiApiKey) {
+      const genAI = new GoogleGenerativeAI(config.geminiApiKey);
+      model = genAI.getGenerativeModel({
+        model: config.geminiModel,
+        systemInstruction:
+          "You are a dispatch coordinator. Output valid JSON only. Never invent responder IDs.",
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 512,
+          responseMimeType: "application/json",
+          responseSchema: decisionSchema,
+        },
       });
-      const repairRaw = repairResult.response.text();
-      console.log("[dispatch] model repair output (full)\n" + (repairRaw ?? ""));
-      if (!repairRaw || repairRaw.trim() === "") {
-        throw new Error("Gemini returned empty dispatch planner response after repair retry");
-      }
-      parsed = parsePlannerOutput(repairRaw);
     }
 
-    const incidentMap = new Map(candidates.map((i) => [i.id, i]));
-    const responderMap = new Map(responders.map((r) => [r.id, r]));
+    const decisions = await Promise.allSettled(
+      briefs.map(async ({ brief }) => {
+        if (!model) return fallbackDecision(brief);
+        return decideWithGemini(model, brief);
+      }),
+    );
+
     const recommendations: DispatchRecommendation[] = [];
-    const demand: Record<AgencyScope, number> = { medical: 0, fire: 0, police: 0 };
+    let modelAssistedCount = 0;
+    let fallbackCount = 0;
 
-    for (const plan of parsed.recommendations) {
-      const incident = incidentMap.get(plan.incidentId);
-      const rescuer = responderMap.get(plan.rescuerId);
-      if (!incident || !rescuer) continue;
-      if (rescuer.agency !== plan.agency) continue;
-      demand[plan.agency] += 1;
-      const responder = toResponder(rescuer, incident, plan.rationale);
-      recommendations.push({
-        incidentId: incident.id,
-        message: incident.message,
-        summary: incident.summary,
-        severity: incident.severity,
-        categories: incident.categories,
-        location: incident.gps ? { lat: incident.gps.lat, lon: incident.gps.lon } : undefined,
-        agency: plan.agency,
-        priorityScore: Number(
-          (
-            (typeof plan.priority === "number" && Number.isFinite(plan.priority)
-              ? Math.max(0, Math.min(100, plan.priority))
-              : incident.priorityScore * 12)
-          ).toFixed(2),
-        ),
-        dispatchInstruction: plan.dispatchInstruction ?? incident.dispatchInstruction,
-        responders: [responder],
-        generatedAt: new Date().toISOString(),
-      });
+    for (let i = 0; i < briefs.length; i += 1) {
+      const pair = briefs[i];
+      const decisionResult = decisions[i];
+      const decision =
+        decisionResult.status === "fulfilled"
+          ? decisionResult.value
+          : fallbackDecision(pair.brief);
+      if (decision.modelAssisted) modelAssistedCount += 1;
+      else fallbackCount += 1;
+      recommendations.push(toRecommendation(pair.incident, pair.brief, decision));
     }
-
-    recommendations.sort((a, b) => b.priorityScore - a.priorityScore);
 
     return {
-      overview: {
-        totalIncidentsReviewed: incidentRows.length,
-        recommendationsCount: recommendations.length,
-        highSeverityCount: recommendations.filter((r) => r.severity >= 4).length,
-        agencyDemand: demand,
-      },
+      generatedAt: new Date().toISOString(),
       recommendations,
-      planner: {
-        mode: "gemini-agentic",
-        notes:
-          parsed.plannerNotes.length > 0
-            ? parsed.plannerNotes
-            : [
-                "Gemini dispatch planner used triage severity, hotspot activity, and responder availability.",
-              ],
+      meta: {
+        totalIncidents: incidents.length,
+        modelAssistedCount,
+        fallbackCount,
       },
     };
   },

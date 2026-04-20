@@ -21,32 +21,52 @@ export type RecommendedResponder = {
   rationale: string;
 };
 
-export type DispatchRecommendation = {
-  incidentId: string;
-  message: string;
-  summary: string;
-  severity: number;
-  categories: string[];
-  location?: { lat: number; lon: number };
+export type CandidateResponderBrief = {
+  id: string;
   agency: AgencyScope;
-  priorityScore: number;
-  dispatchInstruction: string;
-  responders: RecommendedResponder[];
-  generatedAt: string;
+  etaMinutes: number;
+  currentLoad: number;
 };
 
-export type DispatchOverview = {
-  totalIncidentsReviewed: number;
-  recommendationsCount: number;
-  highSeverityCount: number;
-  agencyDemand: Record<AgencyScope, number>;
+export type IncidentBrief = {
+  incidentId: string;
+  severity: number;
+  categories: string[];
+  summary: string;
+  heatIntensity: "low" | "medium" | "high";
+  nearbyActiveCount: number;
+  historicalRiskTier: 1 | 2 | 3;
+  candidateResponders: CandidateResponderBrief[];
+};
+
+export type DispatchDecision = {
+  selectedResponderId: string;
+  confidenceLevel: 1 | 2 | 3;
+  rationale: string;
+  escalate: boolean;
+};
+
+export type DispatchRecommendation = {
+  incidentId: string;
+  severity: number;
+  selectedResponderId: string;
+  agency: AgencyScope;
+  etaMinutes: number;
+  confidenceLevel: 1 | 2 | 3;
+  rationale: string;
+  escalate: boolean;
+  modelAssisted: boolean;
+  summary: string;
+};
+
+export type DispatchMeta = {
+  totalIncidents: number;
+  modelAssistedCount: number;
+  fallbackCount: number;
 };
 
 export type DispatchRecommendationResponse = {
-  overview: DispatchOverview;
+  generatedAt: string;
   recommendations: DispatchRecommendation[];
-  planner: {
-    mode: "gemini-agentic" | "heuristic-agentic";
-    notes: string[];
-  };
+  meta: DispatchMeta;
 };

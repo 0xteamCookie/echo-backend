@@ -1,41 +1,30 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { BrainCircuit, RefreshCcw, Siren, Timer } from "lucide-react";
+import { AlertTriangle, BrainCircuit, RefreshCcw, Siren, Timer } from "lucide-react";
 import useSWR from "swr";
 import { useAuth } from "../lib/auth/provider";
 
-type RecommendedResponder = {
-  rescuerId: string;
-  name: string;
-  agency: "medical" | "fire" | "police";
-  sourceSystem: string;
-  etaMinutes: number;
-  distanceMeters: number;
-  status: "available" | "enroute" | "busy";
-  rationale: string;
-};
-
 type DispatchRecommendation = {
   incidentId: string;
+  selectedResponderId: string;
   summary: string;
   severity: number;
-  categories: string[];
   agency: "medical" | "fire" | "police";
-  priorityScore: number;
-  dispatchInstruction: string;
-  responders: RecommendedResponder[];
-  generatedAt: string;
+  etaMinutes: number;
+  confidenceLevel: 1 | 2 | 3;
+  rationale: string;
+  escalate: boolean;
+  modelAssisted: boolean;
 };
 
 type DispatchPayload = {
-  overview: {
-    totalIncidentsReviewed: number;
-    recommendationsCount: number;
-    highSeverityCount: number;
-    agencyDemand: { medical: number; fire: number; police: number };
+  generatedAt: string;
+  meta: {
+    totalIncidents: number;
+    modelAssistedCount: number;
+    fallbackCount: number;
   };
-  planner: { mode: string; notes: string[] };
   recommendations: DispatchRecommendation[];
 };
 
@@ -77,13 +66,8 @@ export default function AgenticDispatchPanel() {
             Agentic Dispatch Recommendations
           </h3>
           <p className="text-[12px] text-gray-500 mt-1">
-            AI-assisted dispatch planner based on live triage context, heatmap intensity, and responder fit.
+            Per-incident Gemini decisions with deterministic guardrails and fallback.
           </p>
-          {payload && (
-            <p className="text-[11px] text-gray-400 mt-1">
-              Engine: <span className="font-semibold">{payload.planner.mode}</span>
-            </p>
-          )}
         </div>
         <button
           type="button"
@@ -98,21 +82,21 @@ export default function AgenticDispatchPanel() {
       {payload && (
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl bg-[#FAFAFA] border border-gray-100 p-3">
-            <p className="text-[11px] text-gray-500 uppercase">Incidents reviewed</p>
+            <p className="text-[11px] text-gray-500 uppercase">Incidents</p>
             <p className="text-[20px] font-semibold text-gray-900 mt-1">
-              {payload.overview.totalIncidentsReviewed}
+              {payload.meta.totalIncidents}
             </p>
           </div>
           <div className="rounded-xl bg-[#FAFAFA] border border-gray-100 p-3">
-            <p className="text-[11px] text-gray-500 uppercase">Active recommendations</p>
+            <p className="text-[11px] text-gray-500 uppercase">AI recommended</p>
             <p className="text-[20px] font-semibold text-gray-900 mt-1">
-              {payload.overview.recommendationsCount}
+              {payload.meta.modelAssistedCount}
             </p>
           </div>
           <div className="rounded-xl bg-[#FAFAFA] border border-gray-100 p-3">
-            <p className="text-[11px] text-gray-500 uppercase">High severity (4+)</p>
+            <p className="text-[11px] text-gray-500 uppercase">Fallback assigned</p>
             <p className="text-[20px] font-semibold text-[#E63946] mt-1">
-              {payload.overview.highSeverityCount}
+              {payload.meta.fallbackCount}
             </p>
           </div>
         </div>
@@ -141,45 +125,46 @@ export default function AgenticDispatchPanel() {
                     {item.agency.toUpperCase()}
                   </span>
                   <span className="text-[11px] text-gray-500">Incident {item.incidentId.slice(0, 8)}</span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full ${
+                      item.modelAssisted ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {item.modelAssisted ? "AI recommended" : "Auto-assigned"}
+                  </span>
                 </div>
                 <div className="text-[11px] text-gray-600">
-                  Priority <span className="font-semibold">{item.priorityScore.toFixed(2)}</span>
+                  Confidence <span className="font-semibold">{item.confidenceLevel}/3</span>
                 </div>
               </div>
 
               <p className="text-[13px] font-semibold text-gray-900 mt-2">{item.summary}</p>
-              <p className="text-[12px] text-gray-600 mt-1">{item.dispatchInstruction}</p>
-
-              {item.responders.length > 0 ? (
-                <div className="mt-3 rounded-lg bg-[#FAFAFA] border border-gray-100 p-2.5">
-                  {item.responders.map((r) => (
-                    <div key={r.rescuerId} className="flex items-center justify-between gap-2 text-[12px]">
-                      <div className="flex items-center gap-2">
-                        <Siren size={14} className="text-gray-500" />
-                        <span className="font-medium text-gray-800">{r.name}</span>
-                        <span className="text-gray-500">({r.sourceSystem})</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Timer size={13} />
-                        <span>
-                          ETA {r.etaMinutes}m | {Math.round(r.distanceMeters / 1000)}km
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+              <div className="mt-3 rounded-lg bg-[#FAFAFA] border border-gray-100 p-2.5">
+                <div className="flex items-center justify-between gap-2 text-[12px]">
+                  <div className="flex items-center gap-2">
+                    <Siren size={14} className="text-gray-500" />
+                    <span className="font-medium text-gray-800">{item.selectedResponderId}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Timer size={13} />
+                    <span>ETA {item.etaMinutes}m</span>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-[12px] text-amber-700 mt-2">
-                  No nearby responder candidate found in current roster.
-                </p>
+              </div>
+              <p className="text-[12px] text-gray-600 mt-2">{item.rationale}</p>
+              {item.escalate && (
+                <div className="mt-2 inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-full">
+                  <AlertTriangle size={12} />
+                  Escalate for supervisor review
+                </div>
               )}
             </div>
           ))}
         </div>
       )}
-      {payload && payload.planner.notes.length > 0 && (
+      {payload && (
         <div className="rounded-xl bg-gray-50 border border-gray-200 p-3 text-[12px] text-gray-600">
-          {payload.planner.notes[0]}
+          Generated at {new Date(payload.generatedAt).toLocaleTimeString()} with deterministic guardrails.
         </div>
       )}
     </div>
