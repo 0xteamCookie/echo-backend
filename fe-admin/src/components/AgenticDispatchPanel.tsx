@@ -8,6 +8,7 @@ import { useAuth } from "../lib/auth/provider";
 type DispatchRecommendation = {
   incidentId: string;
   selectedResponderId: string;
+  selectedResponderName: string;
   summary: string;
   severity: number;
   agency: "medical" | "fire" | "police";
@@ -143,7 +144,8 @@ export default function AgenticDispatchPanel() {
                 <div className="flex items-center justify-between gap-2 text-[12px]">
                   <div className="flex items-center gap-2">
                     <Siren size={14} className="text-gray-500" />
-                    <span className="font-medium text-gray-800">{item.selectedResponderId}</span>
+                      <span className="font-medium text-gray-800">{item.selectedResponderName}</span>
+                      <span className="text-gray-500">({item.selectedResponderId})</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-600">
                     <Timer size={13} />

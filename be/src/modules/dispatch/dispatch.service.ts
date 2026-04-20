@@ -16,8 +16,8 @@ import type {
 } from "./dispatch.schema";
 
 const DISPATCH_TRACE_FILE = path.join(process.cwd(), "logs", "dispatch-model-io.txt");
-const INCIDENT_MIN_SEVERITY = 3;
-const INCIDENT_MAX_AGE_MINUTES = 360;
+const INCIDENT_MIN_SEVERITY = 1;
+const INCIDENT_MAX_AGE_MINUTES = 10080;
 const MAX_LOAD = 4;
 const SHORTLIST_SIZE = 3;
 
@@ -30,6 +30,10 @@ type CandidateIncident = {
   location: { lat: number; lon: number };
   receivedAt: string;
 };
+
+type BuildIncidentResult =
+  | { incident: CandidateIncident }
+  | { incident: null; reason: "no_gps" | "low_severity" | "stale" };
 
 type DecisionWithSource = DispatchDecision & { modelAssisted: boolean };
 
@@ -222,21 +226,23 @@ function scoreResponder(
   return distanceScore * 0.35 + severityMatch * 0.3 + loadPenalty * 0.2 + zoneRisk * 0.15;
 }
 
-function buildCandidateIncident(row: DeviceData): CandidateIncident | null {
-  if (!row.gps) return null;
+function buildCandidateIncident(row: DeviceData): BuildIncidentResult {
+  if (!row.gps) return { incident: null, reason: "no_gps" };
   const severity = severityFromMeta(row.meta);
   const age = ageMinutes(row.receivedAt);
-  if (severity < INCIDENT_MIN_SEVERITY) return null;
-  if (age > INCIDENT_MAX_AGE_MINUTES) return null;
+  if (severity < INCIDENT_MIN_SEVERITY) return { incident: null, reason: "low_severity" };
+  if (age > INCIDENT_MAX_AGE_MINUTES) return { incident: null, reason: "stale" };
   const categories = categoriesFromTriageMeta(row.meta?.triage);
   return {
-    id: row.id,
-    severity,
-    categories,
-    agencyHints: inferAgencies(categories, row.agency),
-    summary: summaryFromMeta(row),
-    location: { lat: row.gps.lat, lon: row.gps.lon },
-    receivedAt: row.receivedAt,
+    incident: {
+      id: row.id,
+      severity,
+      categories,
+      agencyHints: inferAgencies(categories, row.agency),
+      summary: summaryFromMeta(row),
+      location: { lat: row.gps.lat, lon: row.gps.lon },
+      receivedAt: row.receivedAt,
+    },
   };
 }
 
@@ -360,6 +366,7 @@ function toRecommendation(
     incidentId: incident.id,
     severity: incident.severity,
     selectedResponderId: picked.id,
+    selectedResponderName: picked.name,
     agency: picked.agency,
     etaMinutes: picked.etaMinutes,
     confidenceLevel: decision.confidenceLevel,
@@ -381,13 +388,40 @@ export const dispatchService = {
       limit: 500,
       agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
     });
-    const incidents = rows
-      .map(buildCandidateIncident)
-      .filter((x): x is CandidateIncident => x !== null)
-      .sort((a, b) => b.severity - a.severity || ageMinutes(a.receivedAt) - ageMinutes(b.receivedAt))
-      .slice(0, maxIncidents);
+    const incidents: CandidateIncident[] = [];
+    const dropped = { noGps: 0, lowSeverity: 0, stale: 0 };
+    let withGps = 0;
+    for (const row of rows) {
+      if (row.gps) withGps += 1;
+      const built = buildCandidateIncident(row);
+      if (built.incident) {
+        incidents.push(built.incident);
+      } else {
+        if (built.reason === "no_gps") dropped.noGps += 1;
+        if (built.reason === "low_severity") dropped.lowSeverity += 1;
+        if (built.reason === "stale") dropped.stale += 1;
+      }
+    }
+    incidents.sort((a, b) => b.severity - a.severity || ageMinutes(a.receivedAt) - ageMinutes(b.receivedAt));
+    const trimmedIncidents = incidents.slice(0, maxIncidents);
 
-    if (incidents.length === 0) {
+    const eligibilitySummary = {
+      totalRows: rows.length,
+      withGps,
+      eligibleBeforeLimit: incidents.length,
+      eligibleAfterLimit: trimmedIncidents.length,
+      droppedNoGps: dropped.noGps,
+      droppedLowSeverity: dropped.lowSeverity,
+      droppedStale: dropped.stale,
+      thresholds: {
+        minSeverity: INCIDENT_MIN_SEVERITY,
+        maxAgeMinutes: INCIDENT_MAX_AGE_MINUTES,
+      },
+    };
+    console.log("[dispatch] eligibility summary", eligibilitySummary);
+    await writeDispatchTrace("eligibility_summary", JSON.stringify(eligibilitySummary, null, 2));
+
+    if (trimmedIncidents.length === 0) {
       return {
         generatedAt: new Date().toISOString(),
         recommendations: [],
@@ -407,7 +441,7 @@ export const dispatchService = {
       agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
     });
 
-    const briefs: Array<{ incident: CandidateIncident; brief: IncidentBrief }> = incidents
+    const briefs: Array<{ incident: CandidateIncident; brief: IncidentBrief }> = trimmedIncidents
       .map((incident) => {
         const riskTier = historicalRiskTier(incident, hotspotCounts);
         const shortlist = [...responders]
@@ -419,6 +453,7 @@ export const dispatchService = {
             );
             return {
               id: responder.id,
+              name: responder.name,
               agency: responder.agency,
               etaMinutes,
               currentLoad: baseLoad(responder),
@@ -438,7 +473,7 @@ export const dispatchService = {
             categories: incident.categories,
             summary: incident.summary,
             heatIntensity: heatIntensity(incident, heatmap),
-            nearbyActiveCount: nearbyActiveCount(incident, incidents),
+            nearbyActiveCount: nearbyActiveCount(incident, trimmedIncidents),
             historicalRiskTier: riskTier,
             candidateResponders: shortlist,
           },

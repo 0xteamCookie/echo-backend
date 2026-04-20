@@ -23,6 +23,7 @@ export type RecommendedResponder = {
 
 export type CandidateResponderBrief = {
   id: string;
+  name: string;
   agency: AgencyScope;
   etaMinutes: number;
   currentLoad: number;
@@ -50,6 +51,7 @@ export type DispatchRecommendation = {
   incidentId: string;
   severity: number;
   selectedResponderId: string;
+  selectedResponderName: string;
   agency: AgencyScope;
   etaMinutes: number;
   confidenceLevel: 1 | 2 | 3;
