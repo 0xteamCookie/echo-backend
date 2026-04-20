@@ -14,7 +14,100 @@ type IssueResponse = {
   error?: string;
 };
 
+type DummyRescuer = {
+  sourceSystem: "Medical CAD" | "Fire Dispatch" | "Police RMS";
+  sub: string;
+  name: string;
+  role: "medical" | "fire" | "police";
+  agency: "medical" | "fire" | "police";
+  radiusM: number;
+  lat: number;
+  lng: number;
+};
+
 const DEFAULT_EXPIRES = 60 * 60 * 24 * 365 * 10;
+const DUMMY_RESCUERS: DummyRescuer[] = [
+  {
+    sourceSystem: "Medical CAD",
+    sub: "medic-201",
+    name: "Dr. Maya Patel",
+    role: "medical",
+    agency: "medical",
+    radiusM: 600,
+    lat: -33.8734,
+    lng: 151.2069,
+  },
+  {
+    sourceSystem: "Medical CAD",
+    sub: "medic-317",
+    name: "Nurse Liam Grant",
+    role: "medical",
+    agency: "medical",
+    radiusM: 450,
+    lat: -37.8136,
+    lng: 144.9631,
+  },
+  {
+    sourceSystem: "Fire Dispatch",
+    sub: "fire-042",
+    name: "Captain Elena Rossi",
+    role: "fire",
+    agency: "fire",
+    radiusM: 1000,
+    lat: -27.4698,
+    lng: 153.0251,
+  },
+  {
+    sourceSystem: "Fire Dispatch",
+    sub: "fire-126",
+    name: "Lt. Noah Campbell",
+    role: "fire",
+    agency: "fire",
+    radiusM: 850,
+    lat: -34.9285,
+    lng: 138.6007,
+  },
+  {
+    sourceSystem: "Police RMS",
+    sub: "police-908",
+    name: "Sgt. Olivia Hart",
+    role: "police",
+    agency: "police",
+    radiusM: 700,
+    lat: -31.9505,
+    lng: 115.8605,
+  },
+  {
+    sourceSystem: "Police RMS",
+    sub: "police-611",
+    name: "Officer Ethan Blake",
+    role: "police",
+    agency: "police",
+    radiusM: 650,
+    lat: -35.2809,
+    lng: 149.13,
+  },
+  {
+    sourceSystem: "Medical CAD",
+    sub: "medic-512",
+    name: "Paramedic Zara Khan",
+    role: "medical",
+    agency: "medical",
+    radiusM: 500,
+    lat: -42.8821,
+    lng: 147.3272,
+  },
+  {
+    sourceSystem: "Fire Dispatch",
+    sub: "fire-301",
+    name: "Rescuer Jacob Wells",
+    role: "fire",
+    agency: "fire",
+    radiusM: 900,
+    lat: -12.4634,
+    lng: 130.8456,
+  },
+];
 
 export default function ProvisionPage() {
   const { session, authHeader } = useAuth();
@@ -30,26 +123,12 @@ export default function ProvisionPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IssueResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [selectedRescuerSub, setSelectedRescuerSub] = useState("");
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function issueToken(payload: Record<string, string | number>) {
     setLoading(true);
     setResult(null);
     setCopied(false);
-
-    const payload: Record<string, string | number> = {
-      sub: sub.trim(),
-      role: role.trim(),
-      agency: agency.trim(),
-      name: name.trim(),
-      radius_m: Number(radiusM),
-      lat: Number(lat),
-      lng: Number(lng),
-    };
-    const exp = expiresInSeconds.trim();
-    if (exp !== "" && Number.isFinite(Number(exp))) {
-      payload.expiresInSeconds = Math.floor(Number(exp));
-    }
 
     try {
       const res = await fetch("/api/provision", {
@@ -64,6 +143,46 @@ export default function ProvisionPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const payload: Record<string, string | number> = {
+      sub: sub.trim(),
+      role: role.trim(),
+      agency: agency.trim(),
+      name: name.trim(),
+      radius_m: Number(radiusM),
+      lat: Number(lat),
+      lng: Number(lng),
+    };
+    const exp = expiresInSeconds.trim();
+    if (exp !== "" && Number.isFinite(Number(exp))) {
+      payload.expiresInSeconds = Math.floor(Number(exp));
+    }
+    await issueToken(payload);
+  }
+
+  async function onSelectDummyRescuer(rescuer: DummyRescuer) {
+    if (!canIssue) return;
+    setSelectedRescuerSub(rescuer.sub);
+    setSub(rescuer.sub);
+    setRole(rescuer.role);
+    setAgency(rescuer.agency);
+    setName(rescuer.name);
+    setRadiusM(String(rescuer.radiusM));
+    setLat(String(rescuer.lat));
+    setLng(String(rescuer.lng));
+
+    await issueToken({
+      sub: rescuer.sub,
+      role: rescuer.role,
+      agency: rescuer.agency,
+      name: rescuer.name,
+      radius_m: rescuer.radiusM,
+      lat: rescuer.lat,
+      lng: rescuer.lng,
+    });
   }
 
   async function copyToken() {
@@ -96,6 +215,39 @@ export default function ProvisionPage() {
             <code className="text-[12px] bg-gray-100 px-1 rounded">ADMIN_API_KEY</code> in{" "}
             <code className="text-[12px] bg-gray-100 px-1 rounded">.env.local</code>.
           </p>
+        </div>
+      </div>
+
+      <div className="bg-white border border-[#EBEBEB] rounded-2xl p-5 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-[16px] font-semibold text-gray-900">Rescuer directory (dummy synced records)</h2>
+          <span className="text-[12px] text-gray-500">
+            Click any rescuer to prefill fields and instantly generate their login QR.
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mt-4">
+          {DUMMY_RESCUERS.map((rescuer) => (
+            <button
+              key={rescuer.sub}
+              type="button"
+              disabled={!canIssue || loading}
+              onClick={() => onSelectDummyRescuer(rescuer)}
+              className={`text-left rounded-xl border px-3 py-3 transition-colors disabled:opacity-50 ${
+                selectedRescuerSub === rescuer.sub
+                  ? "border-[#E63946] bg-red-50"
+                  : "border-gray-200 bg-white hover:bg-gray-50"
+              }`}
+            >
+              <p className="text-[11px] uppercase tracking-wide text-gray-500">{rescuer.sourceSystem}</p>
+              <p className="text-[14px] font-semibold text-gray-900 mt-1">{rescuer.name}</p>
+              <p className="text-[12px] text-gray-600 mt-1">
+                {rescuer.sub} | {rescuer.role}
+              </p>
+              <p className="text-[11px] text-gray-500 mt-1">
+                Radius {rescuer.radiusM}m | {rescuer.lat}, {rescuer.lng}
+              </p>
+            </button>
+          ))}
         </div>
       </div>
 

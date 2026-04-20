@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  BrainCircuit,
   Map,
   Settings,
   Folder,
@@ -36,6 +37,12 @@ export default function Sidebar() {
           <nav className="flex flex-col gap-0.5">
             <NavItem href="/" icon={<LayoutGrid size={16} />} label="Overview" active={pathname === "/"} />
             <NavItem href="/live-feed" icon={<Activity size={16} />} label="Live Feed" active={pathname === "/live-feed"} />
+            <NavItem
+              href="/dispatch"
+              icon={<BrainCircuit size={16} />}
+              label="Agentic Dispatch"
+              active={pathname === "/dispatch"}
+            />
             <NavItem href="/map" icon={<Map size={16} />} label="Operations Map" active={pathname === "/map"} />
           </nav>
         </div>

@@ -8,6 +8,7 @@ import { identifyUser } from "./middleware/authz";
 import { accountRouter } from "./modules/account/account.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { dataRouter } from "./modules/data/data.routes";
+import { dispatchRouter } from "./modules/dispatch/dispatch.routes";
 import { provisionRouter } from "./modules/provision/provision.routes";
 
 export const app = express();
@@ -35,5 +36,6 @@ app.use("/api/auth", authRouter);
 app.use("/api/provision", provisionRouter);
 app.use("/api/account", accountRouter);
 app.use("/api/data", dataRouter);
+app.use("/api/dispatch", dispatchRouter);
 
 app.use(errorHandler);
