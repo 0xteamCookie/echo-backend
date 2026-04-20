@@ -82,7 +82,7 @@ export const dataController = {
       if (triaged) finalRecord = triaged;
     }
 
-    res.status(deduplicated ? 200 : 201).json({ ...finalRecord, deduplicated });
+    res.status(deduplicated ? 200 : 201);
   }) satisfies RequestHandler,
 
   heatmap: (async (req, res) => {
