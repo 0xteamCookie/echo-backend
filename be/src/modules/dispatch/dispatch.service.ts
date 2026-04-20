@@ -343,6 +343,7 @@ function toRecommendation(
     severity: incident.severity,
     selectedResponderId: picked.id,
     selectedResponderName: picked.name,
+    selectedResponderSourceSystem: picked.sourceSystem,
     agency: picked.agency,
     etaMinutes: picked.etaMinutes,
     confidenceLevel: decision.confidenceLevel,
@@ -350,6 +351,15 @@ function toRecommendation(
     escalate: decision.escalate,
     modelAssisted: decision.modelAssisted,
     summary: incident.summary,
+    provisioningPreset: {
+      sub: picked.id,
+      name: picked.name,
+      role: picked.agency,
+      agency: picked.agency,
+      radiusM: Math.max(300, Math.round(picked.etaMinutes * 120)),
+      lat: incident.location.lat,
+      lng: incident.location.lon,
+    },
   };
 }
 
@@ -429,6 +439,7 @@ export const dispatchService = {
               id: responder.id,
               name: responder.name,
               agency: responder.agency,
+              sourceSystem: responder.sourceSystem,
               etaMinutes,
               currentLoad: baseLoad(responder),
               score,
