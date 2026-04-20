@@ -1,5 +1,3 @@
-import { appendFile, mkdir } from "node:fs/promises";
-import path from "node:path";
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import type { Schema } from "@google/generative-ai";
 import { config } from "../../lib/config";
@@ -15,7 +13,6 @@ import type {
   RescuerProfile,
 } from "./dispatch.schema";
 
-const DISPATCH_TRACE_FILE = path.join(process.cwd(), "logs", "dispatch-model-io.txt");
 const INCIDENT_MIN_SEVERITY = 1;
 const INCIDENT_MAX_AGE_MINUTES = 10080;
 const MAX_LOAD = 4;
@@ -104,20 +101,6 @@ const decisionSchema: Schema = {
   },
   required: ["selectedResponderId", "confidenceLevel", "rationale", "escalate"],
 };
-
-async function writeDispatchTrace(section: string, content: string): Promise<void> {
-  try {
-    await mkdir(path.dirname(DISPATCH_TRACE_FILE), { recursive: true });
-    const stamp = new Date().toISOString();
-    const block =
-      `\n\n=== ${stamp} | ${section} ===\n` +
-      `${content}\n` +
-      `=== END ${section} ===\n`;
-    await appendFile(DISPATCH_TRACE_FILE, block, "utf8");
-  } catch {
-    // Never break dispatch due to trace write failures.
-  }
-}
 
 function severityFromMeta(meta?: Record<string, unknown>): number {
   const tri = meta?.triage;
@@ -329,25 +312,18 @@ async function decideWithGemini(
   brief: IncidentBrief,
 ): Promise<DecisionWithSource> {
   const prompt = buildPrompt(brief);
-  await writeDispatchTrace("incident_brief", JSON.stringify(brief));
-  await writeDispatchTrace("incident_prompt", prompt);
-
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const result = await model.generateContent({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
       });
       const raw = result.response.text();
-      await writeDispatchTrace(`incident_output_attempt_${attempt + 1}`, raw ?? "");
       if (!raw || raw.trim() === "") throw new Error("Empty model output");
       const parsed = parseDecision(raw);
       const guarded = applyGuardrails(parsed, brief);
       return { ...guarded, modelAssisted: true };
-    } catch (err) {
-      await writeDispatchTrace(
-        `incident_error_attempt_${attempt + 1}`,
-        err instanceof Error ? err.message : String(err),
-      );
+    } catch {
+      // Try one more time, then fallback.
     }
   }
 
@@ -419,8 +395,6 @@ export const dispatchService = {
       },
     };
     console.log("[dispatch] eligibility summary", eligibilitySummary);
-    await writeDispatchTrace("eligibility_summary", JSON.stringify(eligibilitySummary, null, 2));
-
     if (trimmedIncidents.length === 0) {
       return {
         generatedAt: new Date().toISOString(),
