@@ -15,6 +15,32 @@ function parseFiniteNumber(v: unknown): number | null {
   return null;
 }
 
+function parseRole(value: unknown): "super_admin" | "medical" | "fire" | "police" | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  if (
+    normalized === "super_admin" ||
+    normalized === "super-admin" ||
+    normalized === "admin" ||
+    normalized === "medical" ||
+    normalized === "fire" ||
+    normalized === "police"
+  ) {
+    if (normalized === "super-admin" || normalized === "admin") return "super_admin";
+    return normalized;
+  }
+  return null;
+}
+
+function parseAgency(value: unknown): "medical" | "fire" | "police" | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "medical" || normalized === "fire" || normalized === "police") {
+    return normalized;
+  }
+  return null;
+}
+
 export const provisionController = {
   issueToken: (async (req, res) => {
     const body = req.body;
@@ -24,13 +50,22 @@ export const provisionController = {
     }
 
     const sub = body.sub;
-    const role = body.role;
+    const role = parseRole(body.role);
+    const agency = parseAgency(body.agency);
     if (typeof sub !== "string" || !sub.trim()) {
       res.status(400).json({ error: "sub is required and must be a non-empty string" });
       return;
     }
-    if (typeof role !== "string" || !role.trim()) {
-      res.status(400).json({ error: "role is required and must be a non-empty string" });
+    if (!role) {
+      res.status(400).json({ error: "role must be one of super_admin, medical, fire, police" });
+      return;
+    }
+    if (!agency) {
+      res.status(400).json({ error: "agency must be one of medical, fire, police" });
+      return;
+    }
+    if (role !== "super_admin" && role !== agency) {
+      res.status(400).json({ error: "agency-scoped users must have matching role and agency" });
       return;
     }
     if (typeof body.name !== "string" || !body.name.trim()) {
@@ -59,7 +94,8 @@ export const provisionController = {
 
     const patch: IssueTokenBody = {
       sub: sub.trim(),
-      role: role.trim(),
+      role,
+      agency,
       name: body.name.trim(),
       radius_m,
       lat,

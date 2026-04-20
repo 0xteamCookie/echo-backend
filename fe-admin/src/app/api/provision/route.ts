@@ -7,12 +7,16 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const key = process.env.ADMIN_API_KEY?.trim();
   const base = (process.env.BACKEND_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const auth = req.headers.get("authorization")?.trim() ?? "";
 
   if (!key) {
     return NextResponse.json(
       { error: "ADMIN_API_KEY is not configured on the admin app (set it in fe-admin/.env.local)" },
       { status: 503 },
     );
+  }
+  if (!auth) {
+    return NextResponse.json({ error: "Missing Authorization header" }, { status: 401 });
   }
 
   let body: unknown;
@@ -27,6 +31,7 @@ export async function POST(req: Request) {
     headers: {
       "Content-Type": "application/json",
       "x-admin-api-key": key,
+      Authorization: auth,
     },
     body: JSON.stringify(body),
   });

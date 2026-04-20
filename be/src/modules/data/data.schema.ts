@@ -3,10 +3,13 @@ export type GpsCoordinates = {
   lon: number;
 };
 
+export type AgencyScope = "medical" | "fire" | "police";
+
 export type DeviceData = {
   id: string;
   macAddress: string;
   message: string;
+  agency?: AgencyScope;
   time: string; // ISO8601 recommended
   gps?: GpsCoordinates;
   meta?: Record<string, unknown>;
@@ -16,6 +19,7 @@ export type DeviceData = {
 export type CreateDeviceDataBody = {
   macAddress: string;
   message: string;
+  agency?: AgencyScope;
   time: string;
   gps?: GpsCoordinates;
   /** Mesh / device metadata: e.g. hopCount, battery, messageId (for dedup), triage from AI agent */
@@ -36,5 +40,6 @@ export type HeatmapPoint = {
   severity: number;
   receivedAt: string;
   macAddress: string;
+  agency?: AgencyScope;
 };
 

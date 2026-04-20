@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { FieldValue, getFirestoreDb } from "../../lib/firebase";
 import { categoriesFromTriageMeta } from "../triage/triage.schema";
-import type { CreateDeviceDataBody, DeviceData, HeatmapPoint } from "./data.schema";
+import type { AgencyScope, CreateDeviceDataBody, DeviceData, HeatmapPoint } from "./data.schema";
 
 const COLLECTION = "device_entries";
 
@@ -90,11 +90,39 @@ function heatmapPointFromDevice(d: DeviceData): HeatmapPoint | null {
     severity,
     receivedAt: d.receivedAt,
     macAddress: d.macAddress,
+    agency: d.agency,
   };
 }
 
 function normalizeMac(input: string): string {
   return input.trim().toLowerCase();
+}
+
+function parseAgencyScope(value: unknown): AgencyScope | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "medical" || normalized === "fire" || normalized === "police") {
+    return normalized;
+  }
+  return undefined;
+}
+
+function inferAgency(meta?: Record<string, unknown>): AgencyScope | undefined {
+  const directAgency = parseAgencyScope(meta?.agency);
+  if (directAgency) return directAgency;
+  const directCategory = parseAgencyScope(meta?.category);
+  if (directCategory) return directCategory;
+
+  const triage = meta?.triage;
+  if (triage && typeof triage === "object" && !Array.isArray(triage)) {
+    const categories = categoriesFromTriageMeta(triage);
+    for (const category of categories) {
+      const agency = parseAgencyScope(category);
+      if (agency) return agency;
+    }
+  }
+
+  return undefined;
 }
 
 function timestampToIso(v: unknown): string {
@@ -143,6 +171,7 @@ function docToDevice(id: string, data: FirebaseFirestore.DocumentData): DeviceDa
     id,
     macAddress: String(data.macAddress ?? ""),
     message: String(data.message ?? ""),
+    agency: parseAgencyScope(data.agency),
     time: String(data.time ?? ""),
     gps,
     meta,
@@ -175,6 +204,7 @@ export const dataService = {
     await ref.set({
       macAddress: normalizeMac(payload.macAddress),
       message: payload.message,
+      agency: payload.agency ?? inferAgency(payload.meta) ?? null,
       time: payload.time,
       gps: payload.gps ?? null,
       meta: payload.meta ?? null,
@@ -242,6 +272,7 @@ export const dataService = {
     since?: string;
     limit?: number;
     category?: string;
+    agencies?: AgencyScope[];
   }): Promise<HeatmapPoint[]> {
     const db = getFirestoreDb();
     const limit = Math.max(1, Math.min(500, filter?.limit ?? 200));
@@ -268,6 +299,11 @@ export const dataService = {
       .map(heatmapPointFromDevice)
       .filter((p): p is HeatmapPoint => p !== null);
 
+    if (filter?.agencies && filter.agencies.length > 0) {
+      const allowedAgencies = new Set(filter.agencies);
+      points = points.filter((point) => point.agency && allowedAgencies.has(point.agency));
+    }
+
     if (categoryFilter) {
       points = points.filter((p) => p.categories.includes(categoryFilter));
     }
@@ -275,7 +311,11 @@ export const dataService = {
     return points;
   },
 
-  async list(filter?: { macAddress?: string; limit?: number }): Promise<DeviceData[]> {
+  async list(filter?: {
+    macAddress?: string;
+    limit?: number;
+    agencies?: AgencyScope[];
+  }): Promise<DeviceData[]> {
     const db = getFirestoreDb();
     const limit = Math.max(0, Math.min(1000, filter?.limit ?? 100));
     const mac = filter?.macAddress ? normalizeMac(filter.macAddress) : undefined;
@@ -289,6 +329,9 @@ export const dataService = {
       : db.collection(COLLECTION).orderBy("receivedAt", "desc").limit(limit);
 
     const snap = await q.get();
-    return snap.docs.map((d) => docToDevice(d.id, d.data()));
+    const items = snap.docs.map((d) => docToDevice(d.id, d.data()));
+    if (!filter?.agencies || filter.agencies.length === 0) return items;
+    const allowedAgencies = new Set(filter.agencies);
+    return items.filter((item) => item.agency && allowedAgencies.has(item.agency));
   },
 };

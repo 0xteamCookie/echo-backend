@@ -31,4 +31,10 @@ export const config = {
 
   /** Required for `POST /api/provision/token`. Use a long random string in production. */
   adminApiKey: process.env.ADMIN_API_KEY?.trim() ?? "",
+
+  /** JWT secret used for dashboard/admin login tokens. */
+  dashboardJwtSecret: process.env.DASHBOARD_JWT_SECRET?.trim() || "change-me-dashboard-secret",
+  /** Seeded super-admin credentials for dashboard login. */
+  superAdminEmail: process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase() || "admin@disasterrecov.com",
+  superAdminPassword: process.env.SUPER_ADMIN_PASSWORD?.trim() || "disasterrecov@123",
 } as const;

@@ -1,8 +1,10 @@
 export type IssueTokenBody = {
   /** Stable id for this rescuer (badge id, user id, etc.) */
   sub: string;
-  /** Role slug: e.g. fire, medic, admin */
-  role: string;
+  /** Role slug used by clients. */
+  role: "super_admin" | "medical" | "fire" | "police";
+  /** Primary agency scope for this token. */
+  agency: "medical" | "fire" | "police";
   /** Display name of the agent. */
   name: string;
   /** Authorized radius in metres. */

@@ -10,6 +10,14 @@ export const accountController = {
   me: (async (req, res) => {
     const userId = req.user?.id ?? "demo";
     const profile = await accountService.getProfile(userId);
+    if (req.user) {
+      res.json({
+        ...profile,
+        role: req.user.role,
+        agencies: req.user.agencies,
+      });
+      return;
+    }
     res.json(profile);
   }) satisfies RequestHandler,
 

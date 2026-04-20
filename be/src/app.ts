@@ -6,6 +6,7 @@ import { config } from "./lib/config";
 import { errorHandler } from "./middleware/error-handler";
 import { identifyUser } from "./middleware/authz";
 import { accountRouter } from "./modules/account/account.routes";
+import { authRouter } from "./modules/auth/auth.routes";
 import { dataRouter } from "./modules/data/data.routes";
 import { provisionRouter } from "./modules/provision/provision.routes";
 
@@ -25,13 +26,13 @@ app.get("/.well-known/jwks.json", async (_req, res) => {
   }
 });
 
-app.use("/api/provision", provisionRouter);
-
 app.use(identifyUser);
 
 const publicDir = path.join(__dirname, "..", "public");
 app.use(express.static(publicDir));
 
+app.use("/api/auth", authRouter);
+app.use("/api/provision", provisionRouter);
 app.use("/api/account", accountRouter);
 app.use("/api/data", dataRouter);
 

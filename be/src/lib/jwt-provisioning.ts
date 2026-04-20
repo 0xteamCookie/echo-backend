@@ -20,6 +20,8 @@ export type VerifiedRescuerPayload = {
   nbf?: number;
   /** Role slug (e.g. medic, fire). */
   role?: string;
+  /** Agency scope. */
+  agency?: "medical" | "fire" | "police";
   /** Display name of the agent. */
   name?: string;
   /** Authorized radius in metres. */
@@ -77,7 +79,8 @@ export async function getProvisioningPublicJwk(): Promise<ProvisioningJwk> {
 
 export type RescuerJwtClaims = {
   sub: string;
-  role: string;
+  role: "super_admin" | "medical" | "fire" | "police";
+  agency: "medical" | "fire" | "police";
   name: string;
   radius_m: number;
   lat: number;
@@ -94,6 +97,7 @@ export async function signRescuerJwt(
 
   const token = await new SignJWT({
     role: claims.role,
+    agency: claims.agency,
     name: claims.name,
     radius_m: claims.radius_m,
     lat: claims.lat,

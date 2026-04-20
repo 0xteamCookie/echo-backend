@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Check, QrCode } from "lucide-react";
+import AccessDenied from "../../components/auth/AccessDenied";
+import { can } from "../../lib/auth/permissions";
+import { useAuth } from "../../lib/auth/provider";
 
 type IssueResponse = {
   token?: string;
@@ -14,8 +17,11 @@ type IssueResponse = {
 const DEFAULT_EXPIRES = 60 * 60 * 24 * 365 * 10;
 
 export default function ProvisionPage() {
+  const { session, authHeader } = useAuth();
+  const canIssue = can(session, "provision:issue");
   const [sub, setSub] = useState("");
-  const [role, setRole] = useState("medic");
+  const [role, setRole] = useState("medical");
+  const [agency, setAgency] = useState("medical");
   const [name, setName] = useState("");
   const [radiusM, setRadiusM] = useState("500");
   const [lat, setLat] = useState("");
@@ -34,6 +40,7 @@ export default function ProvisionPage() {
     const payload: Record<string, string | number> = {
       sub: sub.trim(),
       role: role.trim(),
+      agency: agency.trim(),
       name: name.trim(),
       radius_m: Number(radiusM),
       lat: Number(lat),
@@ -47,7 +54,7 @@ export default function ProvisionPage() {
     try {
       const res = await fetch("/api/provision", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify(payload),
       });
       const data = (await res.json()) as IssueResponse;
@@ -72,6 +79,12 @@ export default function ProvisionPage() {
 
   return (
     <>
+      {!canIssue && (
+        <AccessDenied
+          title="Provisioning is super-admin only"
+          detail="Your role can work with incident data but cannot mint rescuer JWT credentials."
+        />
+      )}
       <div className="flex justify-between items-center bg-white mb-2 pb-4">
         <div>
           <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight flex items-center gap-2">
@@ -107,11 +120,26 @@ export default function ProvisionPage() {
               required
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              disabled={!canIssue}
               className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-[#E63946]/30 focus:border-[#E63946]"
             >
-              <option value="medic">Medic</option>
+              <option value="medical">Medical</option>
               <option value="fire">Fire</option>
-              <option value="admin">Admin</option>
+              <option value="police">Police</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] font-semibold text-gray-600 mb-1">Agency *</label>
+            <select
+              required
+              value={agency}
+              onChange={(e) => setAgency(e.target.value)}
+              disabled={!canIssue}
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-[#E63946]/30 focus:border-[#E63946]"
+            >
+              <option value="medical">Medical</option>
+              <option value="fire">Fire</option>
               <option value="police">Police</option>
             </select>
           </div>
@@ -121,6 +149,7 @@ export default function ProvisionPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={!canIssue}
               placeholder="Full name or call sign"
               className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-[#E63946]/30 focus:border-[#E63946]"
             />
@@ -131,6 +160,7 @@ export default function ProvisionPage() {
               required
               value={radiusM}
               onChange={(e) => setRadiusM(e.target.value)}
+              disabled={!canIssue}
               type="text"
               inputMode="decimal"
               placeholder="e.g. 500"
@@ -144,6 +174,7 @@ export default function ProvisionPage() {
                 required
                 value={lat}
                 onChange={(e) => setLat(e.target.value)}
+                disabled={!canIssue}
                 type="text"
                 inputMode="decimal"
                 placeholder="-37.81"
@@ -156,6 +187,7 @@ export default function ProvisionPage() {
                 required
                 value={lng}
                 onChange={(e) => setLng(e.target.value)}
+                disabled={!canIssue}
                 type="text"
                 inputMode="decimal"
                 placeholder="144.96"
@@ -168,6 +200,7 @@ export default function ProvisionPage() {
             <input
               value={expiresInSeconds}
               onChange={(e) => setExpiresInSeconds(e.target.value)}
+              disabled={!canIssue}
               type="text"
               inputMode="numeric"
               placeholder={`Optional — backend default (~${DEFAULT_EXPIRES}s)`}
@@ -178,7 +211,7 @@ export default function ProvisionPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !canIssue}
             className="mt-2 rounded-xl bg-black text-white py-2.5 text-[14px] font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
             {loading ? "Issuing…" : "Generate QR"}

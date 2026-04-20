@@ -1,7 +1,11 @@
+"use client";
 import React from "react";
-import { Search, Bell, Plus, Settings, Menu } from "lucide-react";
+import { Search, Plus, Settings, Menu } from "lucide-react";
+import { useAuth } from "../lib/auth/provider";
 
 export default function Header() {
+  const { session, logout } = useAuth();
+
   return (
     <header className="flex items-center justify-between px-8 py-4 bg-white sticky top-0 z-10 w-full mb-6">
       <div className="flex items-center gap-4 flex-1 max-w-2xl">
@@ -16,6 +20,19 @@ export default function Header() {
       </div>
       
       <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-2 text-[12px] bg-[#F7F7F7] px-3 py-1.5 rounded-full">
+          <span className="text-gray-500">Signed in</span>
+          <span className="font-semibold">{session.email || "Unknown"}</span>
+          <span className="text-gray-400">|</span>
+          <span className="font-semibold uppercase">{session.role}</span>
+          <button
+            type="button"
+            onClick={logout}
+            className="ml-2 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100"
+          >
+            Logout
+          </button>
+        </div>
         <button className="flex items-center justify-center bg-[#E63946] text-white w-9 h-9 rounded-full shadow-sm">
           <Plus size={18} />
         </button>

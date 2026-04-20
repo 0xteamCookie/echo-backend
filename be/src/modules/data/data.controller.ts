@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import { getAllowedAgencies } from "../../middleware/authz";
 import { triageAfterIngestSafe } from "../triage/triage-agent.service";
 import { dataService } from "./data.service";
 
@@ -15,6 +16,15 @@ function toNumber(v: unknown): number | undefined {
 
 function isValidGps(lat: number, lon: number): boolean {
   return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+}
+
+function parseAgency(value: unknown): "medical" | "fire" | "police" | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "medical" || normalized === "fire" || normalized === "police") {
+    return normalized;
+  }
+  return undefined;
 }
 
 export const dataController = {
@@ -50,10 +60,17 @@ export const dataController = {
     }
 
     const meta = isRecord(body.meta) ? body.meta : undefined;
+    const agency = parseAgency(body.agency) ?? parseAgency(meta?.agency) ?? parseAgency(meta?.category);
+    const allowedAgencies = getAllowedAgencies(req);
+    if (allowedAgencies.length > 0 && agency && !allowedAgencies.includes(agency)) {
+      res.status(403).json({ error: "Forbidden: cannot create data outside your agency scope" });
+      return;
+    }
 
     const { record, deduplicated } = await dataService.create({
       macAddress,
       message,
+      agency: agency ?? (req.user?.role === "super_admin" ? undefined : allowedAgencies[0]),
       time,
       gps,
       meta,
@@ -85,6 +102,7 @@ export const dataController = {
       since: since?.trim() || undefined,
       limit: typeof limitRaw === "number" && Number.isFinite(limitRaw) ? limitRaw : undefined,
       category: category?.trim() || undefined,
+      agencies: req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
     });
 
     res.json({ points, polledAt: new Date().toISOString() });
@@ -101,6 +119,7 @@ export const dataController = {
     const items = await dataService.list({
       macAddress,
       limit: typeof limit === "number" && Number.isFinite(limit) ? limit : undefined,
+      agencies: req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
     });
 
     res.json(items);

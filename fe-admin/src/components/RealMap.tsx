@@ -4,11 +4,18 @@ import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet.heat";
 import "leaflet/dist/leaflet.css";
+import { useAuth } from "../lib/auth/provider";
+
+type HeatPoint = { lat: number; lon: number; weight?: number };
+type HeatLayerFactory = typeof L & {
+  heatLayer: (latlngs: Array<[number, number, number]>, options?: Record<string, unknown>) => L.Layer;
+};
 
 export default function RealMap() {
+  const { authHeader } = useAuth();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
-  const heatLayer = useRef<any>(null);
+  const heatLayer = useRef<L.Layer | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return;
@@ -25,17 +32,20 @@ export default function RealMap() {
 
     async function fetchHeatmap() {
       try {
-        const res = await fetch("http://localhost:3000/api/data/heatmap?limit=200");
+        const res = await fetch("/api/data/heatmap?limit=200", {
+          headers: authHeader,
+        });
         if (!res.ok) return;
-        const data = await res.json();
+        const data = (await res.json()) as { points?: HeatPoint[] };
         
         if (data.points && Array.isArray(data.points) && mapInstance.current) {
            if (heatLayer.current) {
               mapInstance.current.removeLayer(heatLayer.current);
            }
-           const latlngs = data.points.map((p: any) => [p.lat, p.lon, Math.max(0.15, (p.weight || 1) / 8)]);
-           // @ts-ignore
-           heatLayer.current = L.heatLayer(latlngs, { radius: 28, blur: 22, maxZoom: 14 }).addTo(mapInstance.current);
+           const latlngs = data.points.map((p) => [p.lat, p.lon, Math.max(0.15, (p.weight || 1) / 8)] as [number, number, number]);
+           heatLayer.current = (L as HeatLayerFactory)
+             .heatLayer(latlngs, { radius: 28, blur: 22, maxZoom: 14 })
+             .addTo(mapInstance.current);
         }
       } catch (e) {
         console.error("Heatmap fetch error", e);
@@ -55,7 +65,7 @@ export default function RealMap() {
          mapInstance.current = null;
       }
     };
-  }, []);
+  }, [authHeader]);
 
   return <div ref={mapRef} className="w-full h-full rounded-xl z-0" />;
 }

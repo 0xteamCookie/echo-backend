@@ -1,5 +1,7 @@
 export type AccountProfile = {
   id: string;
+  role: "super_admin" | "medical" | "fire" | "police";
+  agencies: Array<"medical" | "fire" | "police">;
   email?: string;
   /** Client-reported device info (model, OS, etc.) — stored in Firestore under `users/{id}`. */
   device?: Record<string, unknown>;

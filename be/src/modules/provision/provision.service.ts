@@ -12,6 +12,7 @@ export const provisionService = {
     const claims: RescuerJwtClaims = {
       sub: body.sub,
       role: body.role,
+      agency: body.agency,
       name: body.name,
       radius_m: body.radius_m,
       lat: body.lat,

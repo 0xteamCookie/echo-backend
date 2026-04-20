@@ -11,9 +11,16 @@ import {
   ShieldAlert,
   QrCode,
 } from "lucide-react";
+import { can } from "../lib/auth/permissions";
+import { useAuth } from "../lib/auth/provider";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { session } = useAuth();
+  const showMedical = session.agencies.includes("medical");
+  const showFire = session.agencies.includes("fire");
+  const showPolice = session.agencies.includes("police");
+
   return (
     <aside className="w-[240px] h-screen bg-[#F8F8F8] flex flex-col border-r border-[#EBEBEB]">
       <div className="p-6 flex items-center gap-3">
@@ -36,27 +43,57 @@ export default function Sidebar() {
         <div className="mb-6">
           <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">Field access</p>
           <nav className="flex flex-col gap-0.5">
-            <NavItem
-              href="/provision"
-              icon={<QrCode size={16} />}
-              label="Rescuer QR"
-              active={pathname === "/provision"}
-            />
+            {can(session, "provision:issue") && (
+              <NavItem
+                href="/provision"
+                icon={<QrCode size={16} />}
+                label="Rescuer QR"
+                active={pathname === "/provision"}
+              />
+            )}
           </nav>
         </div>
 
         <div className="mb-6">
           <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">Reports</p>
           <nav className="flex flex-col gap-0.5">
-            <NavItem href="/medical" icon={<Folder size={16} />} label="Medical" active={pathname === "/medical"} />
-            <NavItem href="/fire-rescue" icon={<Folder size={16} />} label="Fire & Rescue" active={pathname === "/fire-rescue"} />
-            <NavItem href="/police" icon={<Folder size={16} />} label="Police" active={pathname === "/police"} />
+            {showMedical && (
+              <NavItem
+                href="/medical"
+                icon={<Folder size={16} />}
+                label="Medical"
+                active={pathname === "/medical"}
+              />
+            )}
+            {showFire && (
+              <NavItem
+                href="/fire-rescue"
+                icon={<Folder size={16} />}
+                label="Fire & Rescue"
+                active={pathname === "/fire-rescue"}
+              />
+            )}
+            {showPolice && (
+              <NavItem
+                href="/police"
+                icon={<Folder size={16} />}
+                label="Police"
+                active={pathname === "/police"}
+              />
+            )}
           </nav>
         </div>
       </div>
 
       <div className="p-4 mt-auto">
-         <NavItem href="/settings" icon={<Settings size={16} />} label="Settings" active={pathname === "/settings"} />
+        {can(session, "settings:read") && (
+          <NavItem
+            href="/settings"
+            icon={<Settings size={16} />}
+            label="Settings"
+            active={pathname === "/settings"}
+          />
+        )}
       </div>
     </aside>
   );
