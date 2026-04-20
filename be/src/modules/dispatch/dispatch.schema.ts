@@ -25,6 +25,7 @@ export type CandidateResponderBrief = {
   id: string;
   name: string;
   agency: AgencyScope;
+  sourceSystem: RescuerProfile["sourceSystem"];
   etaMinutes: number;
   currentLoad: number;
 };
@@ -52,6 +53,7 @@ export type DispatchRecommendation = {
   severity: number;
   selectedResponderId: string;
   selectedResponderName: string;
+  selectedResponderSourceSystem: RescuerProfile["sourceSystem"];
   agency: AgencyScope;
   etaMinutes: number;
   confidenceLevel: 1 | 2 | 3;
@@ -59,6 +61,15 @@ export type DispatchRecommendation = {
   escalate: boolean;
   modelAssisted: boolean;
   summary: string;
+  provisioningPreset: {
+    sub: string;
+    name: string;
+    role: AgencyScope;
+    agency: AgencyScope;
+    radiusM: number;
+    lat: number;
+    lng: number;
+  };
 };
 
 export type DispatchMeta = {
