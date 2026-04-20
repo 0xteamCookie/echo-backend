@@ -1,1506 +1,317 @@
 
 
-=== 2026-04-20T10:03:50.391Z | planner_prompt ===
-## Dispatch candidates
-
-[
-  {
-    "id": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-    "severity": 5,
-    "categories": [
-      "fire",
-      "medical",
-      "rescue"
-    ],
-    "summary": "Major building fire with smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.",
-    "dispatchInstruction": "FIRE: Major building fire with heavy smoke reported on floor 3 at 37.77399758164326, -122.41990509506975. Multiple nearby medical emergencies and unconscious individuals reported. Requesting full fire and EMS response, prioritize rescue.",
-    "agencyHints": [
-      "fire",
-      "medical"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77399758164326,
-      "lon": -122.41990509506975
-    },
-    "receivedAt": "2026-04-19T06:54:48.639Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "de153410-faa8-4981-9893-8d9f2623e3e8",
-    "severity": 5,
-    "categories": [
-      "medical",
-      "fire",
-      "rescue"
-    ],
-    "summary": "Multiple unconscious individuals and a major building fire reported in the vicinity. Current report is of an unconscious person.",
-    "dispatchInstruction": "URGENT: Multiple unconscious individuals and major building fire reported in the area of 37.7761725402626, -122.41921958378319. Requesting immediate multi-agency response for mass casualty incident and structural fire.",
-    "agencyHints": [
-      "medical",
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.7761725402626,
-      "lon": -122.41921958378319
-    },
-    "receivedAt": "2026-04-19T06:54:44.823Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "e69bba52-acf1-4489-83f5-61cabe841a16",
-    "severity": 5,
-    "categories": [
-      "fire",
-      "medical",
-      "rescue"
-    ],
-    "summary": "Major building fire with smoke reported on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.",
-    "dispatchInstruction": "FIRE: Multi-story building fire reported, smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals. Dispatching full fire and EMS response. Location: 37.773847744745815, -122.41573896574035",
-    "agencyHints": [
-      "fire",
-      "medical"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.773847744745815,
-      "lon": -122.41573896574035
-    },
-    "receivedAt": "2026-04-19T06:54:12.765Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "6a6e296f-74bb-40f6-923f-27cd6645cfd3",
-    "severity": 5,
-    "categories": [
-      "medical",
-      "fire"
-    ],
-    "summary": "Multiple unconscious individuals reported, escalating due to nearby building fire.",
-    "dispatchInstruction": "Multiple unconscious individuals reported in the area of 37.774149, -122.420035. A building fire is also active nearby. Requesting immediate EMS and Fire response.",
-    "agencyHints": [
-      "medical",
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77414905825732,
-      "lon": -122.42003556360449
-    },
-    "receivedAt": "2026-04-19T06:53:41.867Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "3ea58ec8-6e8c-45c4-b119-af3ffe4de753",
-    "severity": 5,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "dispatchInstruction": "FIRE: Structure fire reported on floor 3 at 37.77465601100389, -122.41845008165318. Multiple nearby medical emergencies reported. Requesting full fire and EMS response.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77465601100389,
-      "lon": -122.41845008165318
-    },
-    "receivedAt": "2026-04-19T06:31:41.706Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "c6a46e7a-ccf0-4706-814f-1b96ea735ed1",
-    "severity": 5,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "dispatchInstruction": "FIRE: Structure fire reported on floor 3 at 37.77463074588716, -122.41434967540324. Multiple nearby medical emergencies reported. Requesting full fire and EMS response.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77463074588716,
-      "lon": -122.41434967540324
-    },
-    "receivedAt": "2026-04-19T06:25:30.772Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "f8c4579b-6f85-40ce-8bde-0b73f0aa2e72",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple unconscious individuals reported, escalating due to nearby building fire.",
-    "dispatchInstruction": "Multiple medical emergencies reported, including unconscious individuals. A building fire is also active nearby. Dispatching EMS and Fire to 37.776988, -122.416921.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.77698837582585,
-      "lon": -122.41692097742525
-    },
-    "receivedAt": "2026-04-19T06:39:16.727Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "3d155022-d9f3-4d3d-9fd7-327ff4660e36",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple unconscious individuals reported in the area, with a building fire also active nearby. Current report is of an unconscious person.",
-    "dispatchInstruction": "Multiple unconscious individuals and a building fire reported in the vicinity. Dispatching EMS and Fire to 37.772970, -122.421388. Multiple medical emergencies and a structure fire are active in the area.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.772969761476425,
-      "lon": -122.42138782234208
-    },
-    "receivedAt": "2026-04-19T06:34:47.083Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "e0d03d0c-8868-4d18-9821-643035a7576a",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious individuals in the area, with a new report of an unconscious person at the current GPS. A building fire is also reported nearby.",
-    "dispatchInstruction": "Multiple unconscious persons reported in the vicinity of 37.770549, -122.420218. A building fire is also active nearby. Requesting multi-agency response. Priority: Medical and Fire.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.77054939620202,
-      "lon": -122.42021810914862
-    },
-    "receivedAt": "2026-04-19T06:31:31.292Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "62026c59-6c88-4057-976d-1de5baaadd30",
-    "severity": 4,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3.",
-    "dispatchInstruction": "FIRE: Structure fire reported at 37.77416255624751, -122.42289302699434. Smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 5.2,
-    "gps": {
-      "lat": 37.77416255624751,
-      "lon": -122.42289302699434
-    },
-    "receivedAt": "2026-04-19T06:25:54.893Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "08a64beb-ab4f-4230-809f-e52ccd8c846c",
-    "severity": 4,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious individuals in the area, current report at 37.77746283751982, -122.42019822462154.",
-    "dispatchInstruction": "Multiple medical emergencies reported in the vicinity of 37.77746283751982, -122.42019822462154. Requesting immediate medical response.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 4.8,
-    "gps": {
-      "lat": 37.77746283751982,
-      "lon": -122.42019822462154
-    },
-    "receivedAt": "2026-04-19T06:25:46.400Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "0324d16a-232f-478f-9b3a-ac2f3c79f139",
-    "severity": 4,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious person in the vicinity, current location updated.",
-    "dispatchInstruction": "MEDICAL EMERGENCY: Multiple reports of unconscious individuals in the area of 37.77298797261882, -122.41810127956371. Multiple prior reports from same device. Respond with urgency.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 4.8,
-    "gps": {
-      "lat": 37.77298797261882,
-      "lon": -122.41810127956371
-    },
-    "receivedAt": "2026-04-19T06:25:09.412Z",
-    "message": "Person unconscious, need medical assistance"
-  }
-]
-
-## Available responders
-
-[
-  {
-    "id": "medic-201",
-    "name": "Dr. Maya Patel",
-    "agency": "medical",
-    "sourceSystem": "Medical CAD",
-    "location": {
-      "lat": -33.8734,
-      "lon": 151.2069
-    },
-    "radiusM": 6000,
-    "status": "available"
-  },
-  {
-    "id": "medic-317",
-    "name": "Nurse Liam Grant",
-    "agency": "medical",
-    "sourceSystem": "Medical CAD",
-    "location": {
-      "lat": -37.8136,
-      "lon": 144.9631
-    },
-    "radiusM": 5000,
-    "status": "available"
-  },
-  {
-    "id": "fire-042",
-    "name": "Captain Elena Rossi",
-    "agency": "fire",
-    "sourceSystem": "Fire Dispatch",
-    "location": {
-      "lat": -27.4698,
-      "lon": 153.0251
-    },
-    "radiusM": 9000,
-    "status": "available"
-  },
-  {
-    "id": "fire-126",
-    "name": "Lt. Noah Campbell",
-    "agency": "fire",
-    "sourceSystem": "Fire Dispatch",
-    "location": {
-      "lat": -34.9285,
-      "lon": 138.6007
-    },
-    "radiusM": 8000,
-    "status": "enroute"
-  },
-  {
-    "id": "police-908",
-    "name": "Sgt. Olivia Hart",
-    "agency": "police",
-    "sourceSystem": "Police RMS",
-    "location": {
-      "lat": -31.9505,
-      "lon": 115.8605
-    },
-    "radiusM": 6500,
-    "status": "available"
-  },
-  {
-    "id": "police-611",
-    "name": "Officer Ethan Blake",
-    "agency": "police",
-    "sourceSystem": "Police RMS",
-    "location": {
-      "lat": -35.2809,
-      "lon": 149.13
-    },
-    "radiusM": 7000,
-    "status": "busy"
-  }
-]
-
-## Live heatmap context
-
+=== 2026-04-20T10:20:52.620Z | eligibility_summary ===
 {
-  "points": 25,
-  "avgWeight": 3.42,
-  "byAgency": {
-    "medical": 0,
-    "fire": 0,
-    "police": 0
+  "totalRows": 25,
+  "withGps": 25,
+  "eligibleBeforeLimit": 25,
+  "eligibleAfterLimit": 12,
+  "droppedNoGps": 0,
+  "droppedLowSeverity": 0,
+  "droppedStale": 0,
+  "thresholds": {
+    "minSeverity": 1,
+    "maxAgeMinutes": 10080
   }
 }
-
-## Historical repeated incident zones
-
-[
-  {
-    "lat": 37.77372,
-    "lon": -122.41965,
-    "count": 13
-  },
-  {
-    "lat": 37.77658,
-    "lon": -122.41858,
-    "count": 9
-  },
-  {
-    "lat": 37.80466,
-    "lon": -122.27636,
-    "count": 1
-  },
-  {
-    "lat": 37.80116,
-    "lon": -122.27446,
-    "count": 1
-  },
-  {
-    "lat": 37.77463,
-    "lon": -122.41435,
-    "count": 1
-  }
-]
-
-Return JSON only.
-=== END planner_prompt ===
+=== END eligibility_summary ===
 
 
-=== 2026-04-20T10:03:59.347Z | model_raw_output ===
-{
-  "recommendations": [
-    {
-      "incidentId": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 95.0,
-      "rationale": "High severity fire with multiple medical emergencies. Fire-042 is available and has a large response radius.",
-      "dispatchInstruction": "Respond to major building fire with heavy smoke on floor 3. Prioritize rescue of unconscious individuals."
-    },
-    {
-      "incidentId": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 95.0,
-      "rationale": "High severity incident with multiple medical emergencies. Medic-201 is available and closest to the incident location.",
-      "dispatchInstruction": "Respond to major building fire with multiple unconscious individuals. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "de153410-faa8-4981-9893-8d9f2623e3e8",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 94.0,
-      "rationale": "High severity incident with multiple unconscious individuals and building fire. Fire-042 is available and has a large response radius. This incident is very close to d48a0417-bd93-4a17-8fae-0c59c49fa623, so assigning the same fire unit for coordinated response.",
-      "dispatchInstruction": "Respond to mass casualty incident and structural fire. Prioritize rescue of unconscious individuals."
-    },
-    {
-      "incidentId": "de153410-faa8-4981-9893-8d9f2623e3e8",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 94.0,
-      "rationale": "High severity incident with multiple unconscious individuals. Medic-201 is available and closest to the incident location. This incident is very close to d48a0417-bd93-4a17-8fae-0c59c49fa623, so assigning the same medical unit for coordinated response.",
-      "dispatchInstruction": "Respond to mass casualty incident. Prioritize medical assistance for unconscious individuals."
-    },
-    {
-      "incidentId": "e69bba52-acf1-4489-83f5-61cabe841a16",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 93.0,
-      "rationale": "High severity fire with multiple medical emergencies. Fire-042 is available and has a large response radius. This incident is very close to d48a0417-bd93-4a17-8fae-0c59c49fa623 and de153410-faa8-4981-9893-8d9f2623e3e8, assigning the same fire unit for coordinated response.",
-      "dispatchInstruction": "Respond to multi-story building fire with smoke on floor 3. Prioritize rescue of unconscious individuals."
-    },
-    {
-      "incidentId": "e69bba52-acf1-4489-83f5-61cabe841a16",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 93.0,
-      "rationale": "High severity incident with multiple medical emergencies. Medic-201 is available and closest to the incident location. This incident is very close to d48a0417-bd93-4a17-8fae-0c59c49fa623 and de153410-faa8-4981-9893-8d9f2623e3e8, assigning the same medical unit for coordinated response.",
-      "dispatchInstruction": "Respond to building fire with multiple unconscious individuals. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "6a6e296f-74bb-40f6-923f-27cd6645cfd3",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 92.0,
-      "rationale": "High severity medical incident with unconscious individuals and nearby fire. Medic-201 is available and closest to the incident location. This incident is very close to d48a0417-bd93-4a17-8fae-0c59c49fa623, de153410-faa8-4981-9893-8d9f2623e3e8, and e69bba52-acf1-4489-83f5-61cabe841a16, assigning the same medical unit for coordinated response.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals with nearby building fire. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "3ea58ec8-6e8c-45c4-b119-af3ffe4de753",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 91.0,
-      "rationale": "High severity fire with nearby medical emergencies. Fire-042 is available and has a large response radius. This incident is close to other active fires, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to structure fire on floor 3. Prioritize medical emergencies."
-    },
-    {
-      "incidentId": "c6a46e7a-ccf0-4706-814f-1b96ea735ed1",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 90.0,
-      "rationale": "High severity fire with nearby medical emergencies. Fire-042 is available and has a large response radius. This incident is close to other active fires, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to structure fire on floor 3. Prioritize medical emergencies."
-    },
-    {
-      "incidentId": "f8c4579b-6f85-40ce-8bde-0b73f0aa2e72",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 89.0,
-      "rationale": "High severity medical incident with unconscious individuals and nearby fire. Medic-201 is available and closest to the incident location. This incident is close to other active medical incidents, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to multiple medical emergencies including unconscious individuals. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "3d155022-d9f3-4d3d-9fd7-327ff4660e36",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 88.0,
-      "rationale": "High severity medical incident with unconscious individuals and nearby fire. Medic-201 is available and closest to the incident location. This incident is close to other active medical incidents, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals and nearby building fire. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "e0d03d0c-8868-4d18-9821-643035a7576a",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 87.0,
-      "rationale": "High severity medical incident with unconscious individuals and nearby fire. Medic-201 is available and closest to the incident location. This incident is close to other active medical incidents, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to multiple unconscious persons with nearby building fire. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "62026c59-6c88-4057-976d-1de5baaadd30",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 86.0,
-      "rationale": "Moderate severity fire with nearby medical emergencies. Fire-042 is available and has a large response radius. This incident is close to other active fires, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to structure fire on floor 3. Prioritize medical emergencies."
-    },
-    {
-      "incidentId": "08a64beb-ab4f-4230-809f-e52ccd8c846c",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 85.0,
-      "rationale": "Moderate severity medical incident. Medic-201 is available and closest to the incident location. This incident is close to other active medical incidents, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "0324d16a-232f-478f-9b3a-ac2f3c79f139",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 84.0,
-      "rationale": "Moderate severity medical incident with multiple reports. Medic-201 is available and closest to the incident location. This incident is close to other active medical incidents, assigning the same unit for efficiency.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals. Prioritize medical assistance."
-    }
-  ],
-  "plannerNotes": [
-    "Assigned medic-201 to multiple high-priority medical and fire-related incidents due to its availability and proximity to a cluster of events.",
-    "Assigned fire-042 to multiple high-priority fire and medical-related incidents due to its availability and large response radius, covering a cluster of events.",
-    "Rescuer medic-317, fire-126, police-908, and police-611 were not assigned due to their locations being distant from the active incident zones or their status (enroute/busy).",
-    "Prioritized incidents with severity 5 and those involving multiple categories (fire, medical, rescue) and reports of unconscious individuals.",
-    "Coordinated assignments for incidents in close proximity to optimize response times and resource utilization."
-  ]
-}
-=== END model_raw_output ===
+=== 2026-04-20T10:20:52.724Z | incident_brief ===
+{"incidentId":"d48a0417-bd93-4a17-8fae-0c59c49fa623","severity":5,"categories":["fire","medical","rescue"],"summary":"Major building fire with smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26551,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28128,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25321,"currentLoad":0}]}
+=== END incident_brief ===
 
 
-=== 2026-04-20T10:06:14.143Z | planner_prompt ===
-## Dispatch candidates
-
-[
-  {
-    "id": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-    "severity": 5,
-    "categories": [
-      "fire",
-      "medical",
-      "rescue"
-    ],
-    "summary": "Major building fire with smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.",
-    "dispatchInstruction": "FIRE: Major building fire with heavy smoke reported on floor 3 at 37.77399758164326, -122.41990509506975. Multiple nearby medical emergencies and unconscious individuals reported. Requesting full fire and EMS response, prioritize rescue.",
-    "agencyHints": [
-      "fire",
-      "medical"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77399758164326,
-      "lon": -122.41990509506975
-    },
-    "receivedAt": "2026-04-19T06:54:48.639Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "de153410-faa8-4981-9893-8d9f2623e3e8",
-    "severity": 5,
-    "categories": [
-      "medical",
-      "fire",
-      "rescue"
-    ],
-    "summary": "Multiple unconscious individuals and a major building fire reported in the vicinity. Current report is of an unconscious person.",
-    "dispatchInstruction": "URGENT: Multiple unconscious individuals and major building fire reported in the area of 37.7761725402626, -122.41921958378319. Requesting immediate multi-agency response for mass casualty incident and structural fire.",
-    "agencyHints": [
-      "medical",
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.7761725402626,
-      "lon": -122.41921958378319
-    },
-    "receivedAt": "2026-04-19T06:54:44.823Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "e69bba52-acf1-4489-83f5-61cabe841a16",
-    "severity": 5,
-    "categories": [
-      "fire",
-      "medical",
-      "rescue"
-    ],
-    "summary": "Major building fire with smoke reported on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.",
-    "dispatchInstruction": "FIRE: Multi-story building fire reported, smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals. Dispatching full fire and EMS response. Location: 37.773847744745815, -122.41573896574035",
-    "agencyHints": [
-      "fire",
-      "medical"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.773847744745815,
-      "lon": -122.41573896574035
-    },
-    "receivedAt": "2026-04-19T06:54:12.765Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "6a6e296f-74bb-40f6-923f-27cd6645cfd3",
-    "severity": 5,
-    "categories": [
-      "medical",
-      "fire"
-    ],
-    "summary": "Multiple unconscious individuals reported, escalating due to nearby building fire.",
-    "dispatchInstruction": "Multiple unconscious individuals reported in the area of 37.774149, -122.420035. A building fire is also active nearby. Requesting immediate EMS and Fire response.",
-    "agencyHints": [
-      "medical",
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77414905825732,
-      "lon": -122.42003556360449
-    },
-    "receivedAt": "2026-04-19T06:53:41.867Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "3ea58ec8-6e8c-45c4-b119-af3ffe4de753",
-    "severity": 5,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "dispatchInstruction": "FIRE: Structure fire reported on floor 3 at 37.77465601100389, -122.41845008165318. Multiple nearby medical emergencies reported. Requesting full fire and EMS response.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77465601100389,
-      "lon": -122.41845008165318
-    },
-    "receivedAt": "2026-04-19T06:31:41.706Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "c6a46e7a-ccf0-4706-814f-1b96ea735ed1",
-    "severity": 5,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "dispatchInstruction": "FIRE: Structure fire reported on floor 3 at 37.77463074588716, -122.41434967540324. Multiple nearby medical emergencies reported. Requesting full fire and EMS response.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77463074588716,
-      "lon": -122.41434967540324
-    },
-    "receivedAt": "2026-04-19T06:25:30.772Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "f8c4579b-6f85-40ce-8bde-0b73f0aa2e72",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple unconscious individuals reported, escalating due to nearby building fire.",
-    "dispatchInstruction": "Multiple medical emergencies reported, including unconscious individuals. A building fire is also active nearby. Dispatching EMS and Fire to 37.776988, -122.416921.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.77698837582585,
-      "lon": -122.41692097742525
-    },
-    "receivedAt": "2026-04-19T06:39:16.727Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "3d155022-d9f3-4d3d-9fd7-327ff4660e36",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple unconscious individuals reported in the area, with a building fire also active nearby. Current report is of an unconscious person.",
-    "dispatchInstruction": "Multiple unconscious individuals and a building fire reported in the vicinity. Dispatching EMS and Fire to 37.772970, -122.421388. Multiple medical emergencies and a structure fire are active in the area.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.772969761476425,
-      "lon": -122.42138782234208
-    },
-    "receivedAt": "2026-04-19T06:34:47.083Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "e0d03d0c-8868-4d18-9821-643035a7576a",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious individuals in the area, with a new report of an unconscious person at the current GPS. A building fire is also reported nearby.",
-    "dispatchInstruction": "Multiple unconscious persons reported in the vicinity of 37.770549, -122.420218. A building fire is also active nearby. Requesting multi-agency response. Priority: Medical and Fire.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.77054939620202,
-      "lon": -122.42021810914862
-    },
-    "receivedAt": "2026-04-19T06:31:31.292Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "62026c59-6c88-4057-976d-1de5baaadd30",
-    "severity": 4,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3.",
-    "dispatchInstruction": "FIRE: Structure fire reported at 37.77416255624751, -122.42289302699434. Smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 5.2,
-    "gps": {
-      "lat": 37.77416255624751,
-      "lon": -122.42289302699434
-    },
-    "receivedAt": "2026-04-19T06:25:54.893Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "08a64beb-ab4f-4230-809f-e52ccd8c846c",
-    "severity": 4,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious individuals in the area, current report at 37.77746283751982, -122.42019822462154.",
-    "dispatchInstruction": "Multiple medical emergencies reported in the vicinity of 37.77746283751982, -122.42019822462154. Requesting immediate medical response.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 4.8,
-    "gps": {
-      "lat": 37.77746283751982,
-      "lon": -122.42019822462154
-    },
-    "receivedAt": "2026-04-19T06:25:46.400Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "0324d16a-232f-478f-9b3a-ac2f3c79f139",
-    "severity": 4,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious person in the vicinity, current location updated.",
-    "dispatchInstruction": "MEDICAL EMERGENCY: Multiple reports of unconscious individuals in the area of 37.77298797261882, -122.41810127956371. Multiple prior reports from same device. Respond with urgency.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 4.8,
-    "gps": {
-      "lat": 37.77298797261882,
-      "lon": -122.41810127956371
-    },
-    "receivedAt": "2026-04-19T06:25:09.412Z",
-    "message": "Person unconscious, need medical assistance"
-  }
-]
-
-## Available responders
-
-[
-  {
-    "id": "medic-201",
-    "name": "Dr. Maya Patel",
-    "agency": "medical",
-    "sourceSystem": "Medical CAD",
-    "location": {
-      "lat": -33.8734,
-      "lon": 151.2069
-    },
-    "radiusM": 6000,
-    "status": "available"
-  },
-  {
-    "id": "medic-317",
-    "name": "Nurse Liam Grant",
-    "agency": "medical",
-    "sourceSystem": "Medical CAD",
-    "location": {
-      "lat": -37.8136,
-      "lon": 144.9631
-    },
-    "radiusM": 5000,
-    "status": "available"
-  },
-  {
-    "id": "fire-042",
-    "name": "Captain Elena Rossi",
-    "agency": "fire",
-    "sourceSystem": "Fire Dispatch",
-    "location": {
-      "lat": -27.4698,
-      "lon": 153.0251
-    },
-    "radiusM": 9000,
-    "status": "available"
-  },
-  {
-    "id": "fire-126",
-    "name": "Lt. Noah Campbell",
-    "agency": "fire",
-    "sourceSystem": "Fire Dispatch",
-    "location": {
-      "lat": -34.9285,
-      "lon": 138.6007
-    },
-    "radiusM": 8000,
-    "status": "enroute"
-  },
-  {
-    "id": "police-908",
-    "name": "Sgt. Olivia Hart",
-    "agency": "police",
-    "sourceSystem": "Police RMS",
-    "location": {
-      "lat": -31.9505,
-      "lon": 115.8605
-    },
-    "radiusM": 6500,
-    "status": "available"
-  },
-  {
-    "id": "police-611",
-    "name": "Officer Ethan Blake",
-    "agency": "police",
-    "sourceSystem": "Police RMS",
-    "location": {
-      "lat": -35.2809,
-      "lon": 149.13
-    },
-    "radiusM": 7000,
-    "status": "busy"
-  }
-]
-
-## Live heatmap context
-
-{
-  "points": 25,
-  "avgWeight": 3.42,
-  "byAgency": {
-    "medical": 0,
-    "fire": 0,
-    "police": 0
-  }
-}
-
-## Historical repeated incident zones
-
-[
-  {
-    "lat": 37.77372,
-    "lon": -122.41965,
-    "count": 13
-  },
-  {
-    "lat": 37.77658,
-    "lon": -122.41858,
-    "count": 9
-  },
-  {
-    "lat": 37.80466,
-    "lon": -122.27636,
-    "count": 1
-  },
-  {
-    "lat": 37.80116,
-    "lon": -122.27446,
-    "count": 1
-  },
-  {
-    "lat": 37.77463,
-    "lon": -122.41435,
-    "count": 1
-  }
-]
-
-Return JSON only.
-=== END planner_prompt ===
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"e69bba52-acf1-4489-83f5-61cabe841a16","severity":5,"categories":["fire","medical","rescue"],"summary":"Major building fire with smoke reported on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26552,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28129,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25322,"currentLoad":0}]}
+=== END incident_brief ===
 
 
-=== 2026-04-20T10:06:21.161Z | model_raw_output ===
-{
-  "recommendations": [
-    {
-      "incidentId": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 95.0,
-      "rationale": "High severity fire with rescue and medical components. Fire-042 is available and has a large response radius.",
-      "dispatchInstruction": "Respond to major building fire with heavy smoke on floor 3. Prioritize rescue of unconscious individuals."
-    },
-    {
-      "incidentId": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 95.0,
-      "rationale": "High severity incident with multiple medical emergencies and unconscious individuals. Medic-201 is available and nearby.",
-      "dispatchInstruction": "Respond to major building fire with multiple nearby medical emergencies and unconscious individuals. Prioritize medical aid."
-    },
-    {
-      "incidentId": "de153410-faa8-4981-9893-8d9f2623e3e8",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 94.0,
-      "rationale": "High severity incident with multiple unconscious individuals and a nearby building fire. Medic-201 is available and nearby, can assist with this high-priority medical event.",
-      "dispatchInstruction": "Respond to mass casualty incident with multiple unconscious individuals and a major building fire. Prioritize medical aid."
-    },
-    {
-      "incidentId": "e69bba52-acf1-4489-83f5-61cabe841a16",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 93.0,
-      "rationale": "High severity building fire with multiple nearby medical emergencies. Fire-042 is available and has a large response radius.",
-      "dispatchInstruction": "Respond to multi-story building fire with smoke on floor 3 and multiple nearby medical emergencies. Prioritize rescue."
-    },
-    {
-      "incidentId": "6a6e296f-74bb-40f6-923f-27cd6645cfd3",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 92.0,
-      "rationale": "High severity medical incident with multiple unconscious individuals and a nearby building fire. Medic-201 is available and nearby.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals with a nearby building fire. Prioritize medical aid."
-    },
-    {
-      "incidentId": "3ea58ec8-6e8c-45c4-b119-af3ffe4de753",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 91.0,
-      "rationale": "High severity building fire with multiple nearby medical emergencies. Fire-042 is available and has a large response radius.",
-      "dispatchInstruction": "Respond to structure fire on floor 3 with multiple nearby medical emergencies. Prioritize rescue."
-    },
-    {
-      "incidentId": "c6a46e7a-ccf0-4706-814f-1b96ea735ed1",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 90.0,
-      "rationale": "High severity building fire with multiple nearby medical emergencies. Fire-042 is available and has a large response radius.",
-      "dispatchInstruction": "Respond to structure fire on floor 3 with multiple nearby medical emergencies. Prioritize rescue."
-    },
-    {
-      "incidentId": "f8c4579b-6f85-40ce-8bde-0b73f0aa2e72",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 85.0,
-      "rationale": "High priority medical incident with unconscious individuals and a nearby building fire. Medic-201 is available and nearby.",
-      "dispatchInstruction": "Respond to multiple medical emergencies including unconscious individuals, with a nearby building fire. Prioritize medical aid."
-    },
-    {
-      "incidentId": "3d155022-d9f3-4d3d-9fd7-327ff4660e36",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 84.0,
-      "rationale": "High priority medical incident with unconscious individuals and a nearby building fire. Medic-201 is available and nearby.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals and a building fire. Prioritize medical aid."
-    },
-    {
-      "incidentId": "e0d03d0c-8868-4d18-9821-643035a7576a",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 83.0,
-      "rationale": "High priority medical incident with unconscious individuals and a nearby building fire. Medic-201 is available and nearby.",
-      "dispatchInstruction": "Respond to multiple unconscious persons with a nearby building fire. Prioritize medical and fire response."
-    },
-    {
-      "incidentId": "62026c59-6c88-4057-976d-1de5baaadd30",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 75.0,
-      "rationale": "Moderate severity building fire with nearby medical emergencies. Fire-042 is available and has a large response radius.",
-      "dispatchInstruction": "Respond to structure fire with smoke on floor 3 and nearby medical emergencies. Prioritize rescue."
-    },
-    {
-      "incidentId": "08a64beb-ab4f-4230-809f-e52ccd8c846c",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 70.0,
-      "rationale": "Moderate severity medical incident with unconscious individuals. Medic-201 is available and nearby.",
-      "dispatchInstruction": "Respond to multiple medical emergencies including unconscious individuals. Prioritize medical aid."
-    },
-    {
-      "incidentId": "0324d16a-232f-478f-9b3a-ac2f3c79f139",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 70.0,
-      "rationale": "Moderate severity medical incident with unconscious individuals. Medic-201 is available and nearby.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals. Prioritize medical aid."
-    }
-  ],
-  "plannerNotes": [
-    "Assigned Medic-201 to multiple high-priority medical and fire-related incidents due to availability and proximity. Fire-042 assigned to multiple high-priority fire incidents.",
-    "Rescuer Medic-317, Fire-126, Police-908, and Police-611 were not assigned due to their locations being too far from the incident clusters or their status (enroute/busy).",
-    "The incident cluster is heavily concentrated in the San Francisco area, with available responders located in Sydney, Melbourne, Brisbane, Adelaide, Perth, and Canberra. This indicates a significant response time challenge."
-  ]
-}
-=== END model_raw_output ===
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"6a6e296f-74bb-40f6-923f-27cd6645cfd3","severity":5,"categories":["medical","fire"],"summary":"Multiple unconscious individuals reported, escalating due to nearby building fire.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26551,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28128,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25321,"currentLoad":0}]}
+=== END incident_brief ===
 
 
-=== 2026-04-20T10:08:49.882Z | planner_prompt ===
-## Dispatch candidates
-
-[
-  {
-    "id": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-    "severity": 5,
-    "categories": [
-      "fire",
-      "medical",
-      "rescue"
-    ],
-    "summary": "Major building fire with smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.",
-    "dispatchInstruction": "FIRE: Major building fire with heavy smoke reported on floor 3 at 37.77399758164326, -122.41990509506975. Multiple nearby medical emergencies and unconscious individuals reported. Requesting full fire and EMS response, prioritize rescue.",
-    "agencyHints": [
-      "fire",
-      "medical"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77399758164326,
-      "lon": -122.41990509506975
-    },
-    "receivedAt": "2026-04-19T06:54:48.639Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "de153410-faa8-4981-9893-8d9f2623e3e8",
-    "severity": 5,
-    "categories": [
-      "medical",
-      "fire",
-      "rescue"
-    ],
-    "summary": "Multiple unconscious individuals and a major building fire reported in the vicinity. Current report is of an unconscious person.",
-    "dispatchInstruction": "URGENT: Multiple unconscious individuals and major building fire reported in the area of 37.7761725402626, -122.41921958378319. Requesting immediate multi-agency response for mass casualty incident and structural fire.",
-    "agencyHints": [
-      "medical",
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.7761725402626,
-      "lon": -122.41921958378319
-    },
-    "receivedAt": "2026-04-19T06:54:44.823Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "e69bba52-acf1-4489-83f5-61cabe841a16",
-    "severity": 5,
-    "categories": [
-      "fire",
-      "medical",
-      "rescue"
-    ],
-    "summary": "Major building fire with smoke reported on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.",
-    "dispatchInstruction": "FIRE: Multi-story building fire reported, smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals. Dispatching full fire and EMS response. Location: 37.773847744745815, -122.41573896574035",
-    "agencyHints": [
-      "fire",
-      "medical"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.773847744745815,
-      "lon": -122.41573896574035
-    },
-    "receivedAt": "2026-04-19T06:54:12.765Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "6a6e296f-74bb-40f6-923f-27cd6645cfd3",
-    "severity": 5,
-    "categories": [
-      "medical",
-      "fire"
-    ],
-    "summary": "Multiple unconscious individuals reported, escalating due to nearby building fire.",
-    "dispatchInstruction": "Multiple unconscious individuals reported in the area of 37.774149, -122.420035. A building fire is also active nearby. Requesting immediate EMS and Fire response.",
-    "agencyHints": [
-      "medical",
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77414905825732,
-      "lon": -122.42003556360449
-    },
-    "receivedAt": "2026-04-19T06:53:41.867Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "3ea58ec8-6e8c-45c4-b119-af3ffe4de753",
-    "severity": 5,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "dispatchInstruction": "FIRE: Structure fire reported on floor 3 at 37.77465601100389, -122.41845008165318. Multiple nearby medical emergencies reported. Requesting full fire and EMS response.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77465601100389,
-      "lon": -122.41845008165318
-    },
-    "receivedAt": "2026-04-19T06:31:41.706Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "c6a46e7a-ccf0-4706-814f-1b96ea735ed1",
-    "severity": 5,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "dispatchInstruction": "FIRE: Structure fire reported on floor 3 at 37.77463074588716, -122.41434967540324. Multiple nearby medical emergencies reported. Requesting full fire and EMS response.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 6.45,
-    "gps": {
-      "lat": 37.77463074588716,
-      "lon": -122.41434967540324
-    },
-    "receivedAt": "2026-04-19T06:25:30.772Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "f8c4579b-6f85-40ce-8bde-0b73f0aa2e72",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple unconscious individuals reported, escalating due to nearby building fire.",
-    "dispatchInstruction": "Multiple medical emergencies reported, including unconscious individuals. A building fire is also active nearby. Dispatching EMS and Fire to 37.776988, -122.416921.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.77698837582585,
-      "lon": -122.41692097742525
-    },
-    "receivedAt": "2026-04-19T06:39:16.727Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "3d155022-d9f3-4d3d-9fd7-327ff4660e36",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple unconscious individuals reported in the area, with a building fire also active nearby. Current report is of an unconscious person.",
-    "dispatchInstruction": "Multiple unconscious individuals and a building fire reported in the vicinity. Dispatching EMS and Fire to 37.772970, -122.421388. Multiple medical emergencies and a structure fire are active in the area.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.772969761476425,
-      "lon": -122.42138782234208
-    },
-    "receivedAt": "2026-04-19T06:34:47.083Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "e0d03d0c-8868-4d18-9821-643035a7576a",
-    "severity": 5,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious individuals in the area, with a new report of an unconscious person at the current GPS. A building fire is also reported nearby.",
-    "dispatchInstruction": "Multiple unconscious persons reported in the vicinity of 37.770549, -122.420218. A building fire is also active nearby. Requesting multi-agency response. Priority: Medical and Fire.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 5.95,
-    "gps": {
-      "lat": 37.77054939620202,
-      "lon": -122.42021810914862
-    },
-    "receivedAt": "2026-04-19T06:31:31.292Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "62026c59-6c88-4057-976d-1de5baaadd30",
-    "severity": 4,
-    "categories": [
-      "fire"
-    ],
-    "summary": "Building fire with smoke reported on floor 3.",
-    "dispatchInstruction": "FIRE: Structure fire reported at 37.77416255624751, -122.42289302699434. Smoke reported on floor 3. Multiple nearby medical emergencies reported.",
-    "agencyHints": [
-      "fire"
-    ],
-    "priorityScore": 5.2,
-    "gps": {
-      "lat": 37.77416255624751,
-      "lon": -122.42289302699434
-    },
-    "receivedAt": "2026-04-19T06:25:54.893Z",
-    "message": "Building on fire, smoke on floor 3"
-  },
-  {
-    "id": "08a64beb-ab4f-4230-809f-e52ccd8c846c",
-    "severity": 4,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious individuals in the area, current report at 37.77746283751982, -122.42019822462154.",
-    "dispatchInstruction": "Multiple medical emergencies reported in the vicinity of 37.77746283751982, -122.42019822462154. Requesting immediate medical response.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 4.8,
-    "gps": {
-      "lat": 37.77746283751982,
-      "lon": -122.42019822462154
-    },
-    "receivedAt": "2026-04-19T06:25:46.400Z",
-    "message": "Person unconscious, need medical assistance"
-  },
-  {
-    "id": "0324d16a-232f-478f-9b3a-ac2f3c79f139",
-    "severity": 4,
-    "categories": [
-      "medical"
-    ],
-    "summary": "Multiple reports of unconscious person in the vicinity, current location updated.",
-    "dispatchInstruction": "MEDICAL EMERGENCY: Multiple reports of unconscious individuals in the area of 37.77298797261882, -122.41810127956371. Multiple prior reports from same device. Respond with urgency.",
-    "agencyHints": [
-      "medical"
-    ],
-    "priorityScore": 4.8,
-    "gps": {
-      "lat": 37.77298797261882,
-      "lon": -122.41810127956371
-    },
-    "receivedAt": "2026-04-19T06:25:09.412Z",
-    "message": "Person unconscious, need medical assistance"
-  }
-]
-
-## Available responders
-
-[
-  {
-    "id": "medic-201",
-    "name": "Dr. Maya Patel",
-    "agency": "medical",
-    "sourceSystem": "Medical CAD",
-    "location": {
-      "lat": -33.8734,
-      "lon": 151.2069
-    },
-    "radiusM": 6000,
-    "status": "available"
-  },
-  {
-    "id": "medic-317",
-    "name": "Nurse Liam Grant",
-    "agency": "medical",
-    "sourceSystem": "Medical CAD",
-    "location": {
-      "lat": -37.8136,
-      "lon": 144.9631
-    },
-    "radiusM": 5000,
-    "status": "available"
-  },
-  {
-    "id": "fire-042",
-    "name": "Captain Elena Rossi",
-    "agency": "fire",
-    "sourceSystem": "Fire Dispatch",
-    "location": {
-      "lat": -27.4698,
-      "lon": 153.0251
-    },
-    "radiusM": 9000,
-    "status": "available"
-  },
-  {
-    "id": "fire-126",
-    "name": "Lt. Noah Campbell",
-    "agency": "fire",
-    "sourceSystem": "Fire Dispatch",
-    "location": {
-      "lat": -34.9285,
-      "lon": 138.6007
-    },
-    "radiusM": 8000,
-    "status": "enroute"
-  },
-  {
-    "id": "police-908",
-    "name": "Sgt. Olivia Hart",
-    "agency": "police",
-    "sourceSystem": "Police RMS",
-    "location": {
-      "lat": -31.9505,
-      "lon": 115.8605
-    },
-    "radiusM": 6500,
-    "status": "available"
-  },
-  {
-    "id": "police-611",
-    "name": "Officer Ethan Blake",
-    "agency": "police",
-    "sourceSystem": "Police RMS",
-    "location": {
-      "lat": -35.2809,
-      "lon": 149.13
-    },
-    "radiusM": 7000,
-    "status": "busy"
-  }
-]
-
-## Live heatmap context
-
-{
-  "points": 25,
-  "avgWeight": 3.42,
-  "byAgency": {
-    "medical": 0,
-    "fire": 0,
-    "police": 0
-  }
-}
-
-## Historical repeated incident zones
-
-[
-  {
-    "lat": 37.77372,
-    "lon": -122.41965,
-    "count": 13
-  },
-  {
-    "lat": 37.77658,
-    "lon": -122.41858,
-    "count": 9
-  },
-  {
-    "lat": 37.80466,
-    "lon": -122.27636,
-    "count": 1
-  },
-  {
-    "lat": 37.80116,
-    "lon": -122.27446,
-    "count": 1
-  },
-  {
-    "lat": 37.77463,
-    "lon": -122.41435,
-    "count": 1
-  }
-]
-
-Return JSON only.
-=== END planner_prompt ===
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"de153410-faa8-4981-9893-8d9f2623e3e8","severity":5,"categories":["medical","fire","rescue"],"summary":"Multiple unconscious individuals and a major building fire reported in the vicinity. Current report is of an unconscious person.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":2,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26552,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28128,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25322,"currentLoad":0}]}
+=== END incident_brief ===
 
 
-=== 2026-04-20T10:08:57.020Z | model_raw_output ===
-{
-  "recommendations": [
-    {
-      "incidentId": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 95.0,
-      "rationale": "High severity fire incident with multiple associated medical emergencies. Fire-042 is available and closest to the incident location.",
-      "dispatchInstruction": "Respond to major building fire with heavy smoke on floor 3. Prioritize rescue of unconscious individuals."
-    },
-    {
-      "incidentId": "d48a0417-bd93-4a17-8fae-0c59c49fa623",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 95.0,
-      "rationale": "High severity fire incident with multiple associated medical emergencies. Medic-201 is available and closest to the incident location.",
-      "dispatchInstruction": "Respond to major building fire with heavy smoke on floor 3. Multiple unconscious individuals reported. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "de153410-faa8-4981-9893-8d9f2623e3e8",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 94.0,
-      "rationale": "High severity incident with multiple unconscious individuals and a major building fire. Medic-201 is available and closest to the incident.",
-      "dispatchInstruction": "Respond to mass casualty incident with multiple unconscious individuals and structural fire. Prioritize medical aid."
-    },
-    {
-      "incidentId": "de153410-faa8-4981-9893-8d9f2623e3e8",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 94.0,
-      "rationale": "High severity incident with multiple unconscious individuals and a major building fire. Fire-042 is available and closest to the incident.",
-      "dispatchInstruction": "Respond to mass casualty incident with multiple unconscious individuals and structural fire. Prioritize fire suppression and rescue."
-    },
-    {
-      "incidentId": "e69bba52-acf1-4489-83f5-61cabe841a16",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 93.0,
-      "rationale": "High severity fire incident with multiple associated medical emergencies. Fire-042 is available and closest to the incident.",
-      "dispatchInstruction": "Respond to multi-story building fire with smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals reported. Prioritize rescue."
-    },
-    {
-      "incidentId": "e69bba52-acf1-4489-83f5-61cabe841a16",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 93.0,
-      "rationale": "High severity fire incident with multiple associated medical emergencies. Medic-201 is available and closest to the incident.",
-      "dispatchInstruction": "Respond to multi-story building fire with smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals reported. Prioritize medical aid."
-    },
-    {
-      "incidentId": "6a6e296f-74bb-40f6-923f-27cd6645cfd3",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 92.0,
-      "rationale": "High severity incident with multiple unconscious individuals and a nearby building fire. Medic-201 is available and closest.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals and nearby building fire. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "6a6e296f-74bb-40f6-923f-27cd6645cfd3",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 92.0,
-      "rationale": "High severity incident with multiple unconscious individuals and a nearby building fire. Fire-042 is available and closest.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals and nearby building fire. Prioritize fire suppression and support EMS."
-    },
-    {
-      "incidentId": "3ea58ec8-6e8c-45c4-b119-af3ffe4de753",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 90.0,
-      "rationale": "High severity building fire with nearby medical emergencies. Fire-042 is available and closest.",
-      "dispatchInstruction": "Respond to structure fire on floor 3. Multiple nearby medical emergencies reported. Prioritize fire suppression and rescue."
-    },
-    {
-      "incidentId": "3ea58ec8-6e8c-45c4-b119-af3ffe4de753",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 90.0,
-      "rationale": "High severity building fire with nearby medical emergencies. Medic-201 is available and closest.",
-      "dispatchInstruction": "Respond to structure fire on floor 3. Multiple nearby medical emergencies reported. Prioritize medical aid."
-    },
-    {
-      "incidentId": "c6a46e7a-ccf0-4706-814f-1b96ea735ed1",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 89.0,
-      "rationale": "High severity building fire with nearby medical emergencies. Fire-042 is available and closest.",
-      "dispatchInstruction": "Respond to structure fire on floor 3. Multiple nearby medical emergencies reported. Prioritize fire suppression and rescue."
-    },
-    {
-      "incidentId": "f8c4579b-6f85-40ce-8bde-0b73f0aa2e72",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 85.0,
-      "rationale": "High severity medical incident with unconscious individuals and a nearby building fire. Medic-201 is available and closest.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals and nearby building fire. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "3d155022-d9f3-4d3d-9fd7-327ff4660e36",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 84.0,
-      "rationale": "High severity medical incident with unconscious individuals and a nearby building fire. Medic-201 is available and closest.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals and nearby building fire. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "e0d03d0c-8868-4d18-9821-643035a7576a",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 83.0,
-      "rationale": "High severity medical incident with unconscious individuals and a nearby building fire. Medic-201 is available and closest.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals and nearby building fire. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "62026c59-6c88-4057-976d-1de5baaadd30",
-      "agency": "fire",
-      "rescuerId": "fire-042",
-      "priority": 75.0,
-      "rationale": "Moderate severity building fire with nearby medical emergencies. Fire-042 is available and closest.",
-      "dispatchInstruction": "Respond to structure fire on floor 3. Multiple nearby medical emergencies reported."
-    },
-    {
-      "incidentId": "08a64beb-ab4f-4230-809f-e52ccd8c846c",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 70.0,
-      "rationale": "Moderate severity medical incident with unconscious individuals. Medic-201 is available and closest.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals. Prioritize medical assistance."
-    },
-    {
-      "incidentId": "0324d16a-232f-478f-9b3a-ac2f3c79f139",
-      "agency": "medical",
-      "rescuerId": "medic-201",
-      "priority": 69.0,
-      "rationale": "Moderate severity medical incident with unconscious individuals. Medic-201 is available and closest.",
-      "dispatchInstruction": "Respond to multiple unconscious individuals. Prioritize medical assistance."
-    }
-  ],
-  "plannerNotes": [
-    "Assigned closest available responders to high-priority incidents first.",
-    "Prioritized incidents with multiple categories (fire/medical/rescue) and high severity.",
-    "Rescuer medic-201 and fire-042 are heavily assigned due to proximity and availability.",
-    "No police units were assigned as no police-specific incidents were present."
-  ]
-}
-=== END model_raw_output ===
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"3d155022-d9f3-4d3d-9fd7-327ff4660e36","severity":5,"categories":["medical"],"summary":"Multiple unconscious individuals reported in the area, with a building fire also active nearby. Current report is of an unconscious person.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26551,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28128,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25321,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"f8c4579b-6f85-40ce-8bde-0b73f0aa2e72","severity":5,"categories":["medical"],"summary":"Multiple unconscious individuals reported, escalating due to nearby building fire.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":2,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26552,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28129,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25322,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"3ea58ec8-6e8c-45c4-b119-af3ffe4de753","severity":5,"categories":["fire"],"summary":"Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25322,"currentLoad":0},{"id":"fire-126","name":"Lt. Noah Campbell","agency":"fire","etaMinutes":28877,"currentLoad":2},{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26552,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"e0d03d0c-8868-4d18-9821-643035a7576a","severity":5,"categories":["medical"],"summary":"Multiple reports of unconscious individuals in the area, with a new report of an unconscious person at the current GPS. A building fire is also reported nearby.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26551,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28127,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25321,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"62026c59-6c88-4057-976d-1de5baaadd30","severity":4,"categories":["fire"],"summary":"Building fire with smoke reported on floor 3.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25321,"currentLoad":0},{"id":"fire-126","name":"Lt. Noah Campbell","agency":"fire","etaMinutes":28876,"currentLoad":2},{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26551,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"08a64beb-ab4f-4230-809f-e52ccd8c846c","severity":4,"categories":["medical"],"summary":"Multiple reports of unconscious individuals in the area, current report at 37.77746283751982, -122.42019822462154.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":2,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26552,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28128,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25322,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"c6a46e7a-ccf0-4706-814f-1b96ea735ed1","severity":5,"categories":["fire"],"summary":"Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":2,"candidateResponders":[{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25323,"currentLoad":0},{"id":"fire-126","name":"Lt. Noah Campbell","agency":"fire","etaMinutes":28878,"currentLoad":2},{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26552,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_brief ===
+{"incidentId":"0324d16a-232f-478f-9b3a-ac2f3c79f139","severity":4,"categories":["medical"],"summary":"Multiple reports of unconscious person in the vicinity, current location updated.","heatIntensity":"medium","nearbyActiveCount":11,"historicalRiskTier":3,"candidateResponders":[{"id":"medic-201","name":"Dr. Maya Patel","agency":"medical","etaMinutes":26551,"currentLoad":0},{"id":"medic-317","name":"Nurse Liam Grant","agency":"medical","etaMinutes":28128,"currentLoad":0},{"id":"fire-042","name":"Captain Elena Rossi","agency":"fire","etaMinutes":25322,"currentLoad":0}]}
+=== END incident_brief ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: fire, medical, rescue
+- Summary: Major building fire with smoke reported on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26552min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28129min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25322min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: fire, medical, rescue
+- Summary: Major building fire with smoke on floor 3. Multiple nearby medical emergencies and unconscious individuals reported.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26551min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28128min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25321min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: medical, fire
+- Summary: Multiple unconscious individuals reported, escalating due to nearby building fire.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26551min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28128min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25321min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: medical, fire, rescue
+- Summary: Multiple unconscious individuals and a major building fire reported in the vicinity. Current report is of an unconscious person.
+- Zone risk tier: 2/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26552min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28128min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25322min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: medical
+- Summary: Multiple unconscious individuals reported in the area, with a building fire also active nearby. Current report is of an unconscious person.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26551min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28128min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25321min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: fire
+- Summary: Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: fire-042 | Agency: fire | ETA: 25322min | Load: 0
+- ID: fire-126 | Agency: fire | ETA: 28877min | Load: 2
+- ID: medic-201 | Agency: medical | ETA: 26552min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: medical
+- Summary: Multiple unconscious individuals reported, escalating due to nearby building fire.
+- Zone risk tier: 2/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26552min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28129min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25322min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 4/5
+- Type: fire
+- Summary: Building fire with smoke reported on floor 3.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: fire-042 | Agency: fire | ETA: 25321min | Load: 0
+- ID: fire-126 | Agency: fire | ETA: 28876min | Load: 2
+- ID: medic-201 | Agency: medical | ETA: 26551min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: fire
+- Summary: Building fire with smoke reported on floor 3. Multiple nearby medical emergencies reported.
+- Zone risk tier: 2/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: fire-042 | Agency: fire | ETA: 25323min | Load: 0
+- ID: fire-126 | Agency: fire | ETA: 28878min | Load: 2
+- ID: medic-201 | Agency: medical | ETA: 26552min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 4/5
+- Type: medical
+- Summary: Multiple reports of unconscious individuals in the area, current report at 37.77746283751982, -122.42019822462154.
+- Zone risk tier: 2/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26552min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28128min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25322min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 5/5
+- Type: medical
+- Summary: Multiple reports of unconscious individuals in the area, with a new report of an unconscious person at the current GPS. A building fire is also reported nearby.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26551min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28127min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25321min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
+
+
+=== 2026-04-20T10:20:52.725Z | incident_prompt ===
+You are a dispatch coordinator. Select the best responder from the shortlist.
+
+INCIDENT:
+- Severity: 4/5
+- Type: medical
+- Summary: Multiple reports of unconscious person in the vicinity, current location updated.
+- Zone risk tier: 3/3
+- Active nearby incidents: 11
+- Heat intensity: medium
+
+CANDIDATES:
+- ID: medic-201 | Agency: medical | ETA: 26551min | Load: 0
+- ID: medic-317 | Agency: medical | ETA: 28128min | Load: 0
+- ID: fire-042 | Agency: fire | ETA: 25322min | Load: 0
+
+Return JSON only. Choose one responder. Explain in <= 20 words.
+=== END incident_prompt ===
