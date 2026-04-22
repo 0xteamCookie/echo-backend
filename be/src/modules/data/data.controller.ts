@@ -82,7 +82,13 @@ export const dataController = {
       if (triaged) finalRecord = triaged;
     }
 
-    res.status(deduplicated ? 200 : 201);
+    // P0-5: always emit a JSON body so clients can confirm ingest + read id.
+    res.status(deduplicated ? 200 : 201).json({
+      ok: true,
+      deduplicated,
+      messageId: finalRecord.id,
+      record: finalRecord,
+    });
   }) satisfies RequestHandler,
 
   heatmap: (async (req, res) => {
