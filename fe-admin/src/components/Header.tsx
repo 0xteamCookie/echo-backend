@@ -18,8 +18,8 @@ export default function Header() {
   const { session, logout } = useAuth();
   const [open, setOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setOpen(false);
     router.replace("/login");
   };
@@ -66,7 +66,7 @@ export default function Header() {
                 <div className="text-[11px] text-gray-500 capitalize">{session.role.replace("_", " ")}</div>
               </div>
               <button
-                onClick={handleLogout}
+                onClick={() => void handleLogout()}
                 role="menuitem"
                 className="w-full flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-50"
               >

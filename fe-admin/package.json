@@ -9,10 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vis.gl/react-google-maps": "^1.5.5",
     "clsx": "^2.1.1",
     "firebase": "^11.6.1",
-    "leaflet": "^1.9.4",
-    "leaflet.heat": "^0.2.0",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
     "qrcode.react": "^4.2.0",
@@ -24,8 +23,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/leaflet": "^1.9.21",
-    "@types/leaflet.heat": "^0.2.5",
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

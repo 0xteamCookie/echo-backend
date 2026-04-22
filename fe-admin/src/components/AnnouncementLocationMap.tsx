@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef } from "react";
-import L from "leaflet";
-import "leaflet.heat";
-import "leaflet/dist/leaflet.css";
+import {
+  APIProvider,
+  Map,
+  useMap,
+  useMapsLibrary,
+  AdvancedMarker,
+} from "@vis.gl/react-google-maps";
 
-type HeatLayerFactory = typeof L & {
-  heatLayer: (latlngs: Array<[number, number, number]>, options?: Record<string, unknown>) => L.Layer;
-};
+const GOOGLE_MAPS_API_KEY =
+  process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 export type AnnouncementMapPoint = {
   key: string;
@@ -25,114 +28,154 @@ type Props = {
 
 const RADIUS_M = 1000;
 
-export default function AnnouncementLocationMap({ points, selectedKey, onSelect }: Props) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const heatLayer = useRef<L.Layer | null>(null);
-  const pointLayer = useRef<L.LayerGroup | null>(null);
-  const selectionLayer = useRef<L.LayerGroup | null>(null);
-  const hasFittedToData = useRef(false);
+// ─── Heatmap + selection circle (imperative) ────────────────────────────────
 
-  const selectedPoint = useMemo(
-    () => points.find((point) => point.key === selectedKey) ?? null,
-    [points, selectedKey],
+function HeatmapAndSelection({
+  points,
+  selectedPoint,
+}: {
+  points: AnnouncementMapPoint[];
+  selectedPoint: AnnouncementMapPoint | null;
+}) {
+  const map = useMap();
+  const visualization = useMapsLibrary("visualization");
+  const heatmapRef = useRef<google.maps.visualization.HeatmapLayer | null>(
+    null,
   );
+  const circleRef = useRef<google.maps.Circle | null>(null);
+  const hasFitted = useRef(false);
 
+  // Heatmap layer.
   useEffect(() => {
-    if (typeof window === "undefined" || !mapRef.current) return;
-    if (!mapInstance.current) {
-      const map = L.map(mapRef.current, { zoomControl: true }).setView([37.7749, -122.4194], 11);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "(C) OpenStreetMap",
-      }).addTo(map);
-      mapInstance.current = map;
-      pointLayer.current = L.layerGroup().addTo(map);
-      selectionLayer.current = L.layerGroup().addTo(map);
-    }
+    if (!map || !visualization) return;
 
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-      heatLayer.current = null;
-      pointLayer.current = null;
-      selectionLayer.current = null;
-      hasFittedToData.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mapInstance.current || !pointLayer.current) return;
-
-    if (heatLayer.current) {
-      mapInstance.current.removeLayer(heatLayer.current);
-      heatLayer.current = null;
-    }
-    pointLayer.current.clearLayers();
-
-    if (points.length === 0) return;
-
-    const latlngs = points.map((point) => [
-      point.lat,
-      point.lon,
-      Math.max(0.15, ((point.weight ?? 1) as number) / 8),
-    ]) as Array<[number, number, number]>;
-    heatLayer.current = (L as HeatLayerFactory)
-      .heatLayer(latlngs, { radius: 28, blur: 22, maxZoom: 14 })
-      .addTo(mapInstance.current);
-
-    for (const point of points) {
-      const marker = L.circleMarker([point.lat, point.lon], {
-        radius: 6,
-        color: "#1f2937",
-        weight: 1,
-        fillColor: "#ef4444",
-        fillOpacity: 0.85,
+    if (!heatmapRef.current) {
+      heatmapRef.current = new visualization.HeatmapLayer({
+        map,
+        radius: 28,
+        opacity: 0.7,
       });
-      marker.bindTooltip(point.name, { direction: "top", offset: [0, -6] });
-      marker.on("click", () => onSelect(point.key));
-      pointLayer.current.addLayer(marker);
     }
+    const data = points.map((p) => ({
+      location: new google.maps.LatLng(p.lat, p.lon),
+      weight: Math.max(0.15, (p.weight ?? 1) / 8),
+    }));
+    heatmapRef.current.setData(data);
+  }, [map, visualization, points]);
 
-    if (!hasFittedToData.current) {
-      const bounds = L.latLngBounds(points.map((point) => [point.lat, point.lon] as [number, number]));
-      if (bounds.isValid()) {
-        mapInstance.current.fitBounds(bounds.pad(0.2));
-      }
-      hasFittedToData.current = true;
-    }
-  }, [onSelect, points]);
-
+  // Fit to data on first load.
   useEffect(() => {
-    if (!mapInstance.current || !selectionLayer.current) return;
-    selectionLayer.current.clearLayers();
+    if (!map || hasFitted.current || points.length === 0) return;
+    const bounds = new google.maps.LatLngBounds();
+    for (const p of points) bounds.extend({ lat: p.lat, lng: p.lon });
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, 32);
+      hasFitted.current = true;
+    }
+  }, [map, points]);
+
+  // Selection radius + fly-to.
+  useEffect(() => {
+    if (!map) return;
+    if (circleRef.current) {
+      circleRef.current.setMap(null);
+      circleRef.current = null;
+    }
     if (!selectedPoint) return;
 
-    const center: L.LatLngExpression = [selectedPoint.lat, selectedPoint.lon];
-    const focus = L.circleMarker(center, {
-      radius: 8,
-      color: "#111827",
-      weight: 2,
-      fillColor: "#f97316",
-      fillOpacity: 1,
-    });
-    focus.bindTooltip(`${selectedPoint.name} (selected)`, { direction: "top", offset: [0, -8] });
-    selectionLayer.current.addLayer(focus);
-
-    const radius = L.circle(center, {
+    circleRef.current = new google.maps.Circle({
+      map,
+      center: { lat: selectedPoint.lat, lng: selectedPoint.lon },
       radius: RADIUS_M,
-      color: "#f97316",
-      weight: 2,
+      strokeColor: "#f97316",
+      strokeWeight: 2,
       fillColor: "#f97316",
       fillOpacity: 0.12,
     });
-    selectionLayer.current.addLayer(radius);
 
-    const currentZoom = mapInstance.current.getZoom();
-    mapInstance.current.flyTo(center, Math.max(13, currentZoom), { duration: 0.4 });
-  }, [selectedPoint]);
+    const currentZoom = map.getZoom() ?? 11;
+    map.panTo({ lat: selectedPoint.lat, lng: selectedPoint.lon });
+    if (currentZoom < 13) map.setZoom(13);
+  }, [map, selectedPoint]);
 
-  return <div ref={mapRef} className="h-[320px] w-full rounded-xl border border-gray-200" />;
+  // Cleanup on unmount.
+  useEffect(() => {
+    return () => {
+      heatmapRef.current?.setMap(null);
+      heatmapRef.current = null;
+      circleRef.current?.setMap(null);
+      circleRef.current = null;
+    };
+  }, []);
+
+  return null;
+}
+
+// ─── Missing-key panel ───────────────────────────────────────────────────────
+
+function ConfigurePanel() {
+  return (
+    <div className="h-[320px] w-full rounded-xl border border-amber-300 bg-amber-50 p-6 flex flex-col items-center justify-center text-center gap-2">
+      <div className="text-amber-700 font-semibold text-sm">
+        Google Maps API key is not configured
+      </div>
+      <div className="text-amber-800 text-xs max-w-sm">
+        Set <code className="font-mono bg-amber-100 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
+        in <code className="font-mono bg-amber-100 px-1 rounded">.env.local</code>{" "}
+        to enable the announcement heatmap.
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
+
+export default function AnnouncementLocationMap({
+  points,
+  selectedKey,
+  onSelect,
+}: Props) {
+  const selectedPoint = useMemo(
+    () => points.find((p) => p.key === selectedKey) ?? null,
+    [points, selectedKey],
+  );
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    return <ConfigurePanel />;
+  }
+
+  return (
+    <div className="h-[320px] w-full rounded-xl border border-gray-200 overflow-hidden">
+      <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={["visualization"]}>
+        <Map
+          defaultCenter={{ lat: 37.7749, lng: -122.4194 }}
+          defaultZoom={11}
+          gestureHandling="greedy"
+          mapId="echo-admin-announcements"
+          style={{ width: "100%", height: "100%" }}
+        >
+          {points.map((p) => (
+            <AdvancedMarker
+              key={p.key}
+              position={{ lat: p.lat, lng: p.lon }}
+              onClick={() => onSelect(p.key)}
+              title={p.name}
+            >
+              <div
+                className={
+                  p.key === selectedKey
+                    ? "h-4 w-4 rounded-full border-2 border-gray-900 bg-orange-500 shadow"
+                    : "h-3 w-3 rounded-full border border-gray-800 bg-red-500"
+                }
+              />
+            </AdvancedMarker>
+          ))}
+          <HeatmapAndSelection
+            points={points}
+            selectedPoint={selectedPoint}
+          />
+        </Map>
+      </APIProvider>
+    </div>
+  );
 }

@@ -11,6 +11,8 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { dataRouter } from "./modules/data/data.routes";
 import { dispatchRouter } from "./modules/dispatch/dispatch.routes";
 import { provisionRouter } from "./modules/provision/provision.routes";
+import { pubsubRouter } from "./modules/pubsub/pubsub.routes";
+import { pushRouter } from "./modules/push/push.routes";
 
 export const app = express();
 
@@ -39,5 +41,7 @@ app.use("/api/account", accountRouter);
 app.use("/api/announcement", announcementRouter);
 app.use("/api/data", dataRouter);
 app.use("/api/dispatch", dispatchRouter);
+app.use("/api/push", pushRouter);
+app.use("/api/pubsub", pubsubRouter);
 
 app.use(errorHandler);

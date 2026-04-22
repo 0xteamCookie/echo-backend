@@ -33,6 +33,39 @@ export const config = {
   /** Set `TRIAGE_ENABLED=false` to skip Gemini on ingest (faster dummy seeding). */
   triageEnabled: process.env.TRIAGE_ENABLED !== "false",
   triageNearbyRadiusM: Number(process.env.TRIAGE_NEARBY_RADIUS_M) || 500,
+
+  /**
+   * P2-5: Vertex AI config for triage. Auth uses ADC (no API key required).
+   * `googleCloudProjectId` falls back to common GCP env vars.
+   */
+  googleCloudProjectId:
+    process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
+    process.env.GCLOUD_PROJECT?.trim() ||
+    process.env.FIREBASE_PROJECT_ID?.trim() ||
+    "",
+  vertexLocation: process.env.VERTEX_LOCATION?.trim() || "us-central1",
+  vertexModel:
+    process.env.VERTEX_MODEL?.trim() ||
+    process.env.GEMINI_MODEL?.trim() ||
+    "gemini-1.5-flash",
+
+  /**
+   * P2-4: Firebase App Check gate on mobile ingest. Defaults to on in prod,
+   * off in dev so local testing without a real Firebase project still works.
+   * Mobile clients must attach `X-Firebase-AppCheck` on ingest.
+   */
+  appCheckEnabled:
+    process.env.APP_CHECK_ENABLED !== undefined
+      ? process.env.APP_CHECK_ENABLED !== "false"
+      : isProd,
+
+  /**
+   * P2-1: FCM push dispatch feature flag. Defaults to on in prod, off in dev.
+   */
+  fcmEnabled:
+    process.env.FCM_ENABLED !== undefined
+      ? process.env.FCM_ENABLED !== "false"
+      : isProd,
   /** Allow browser demos (e.g. `public/demo.html`) to call the API from another origin. */
   corsOrigin: process.env.CORS_ORIGIN?.trim() || true,
 
@@ -64,4 +97,56 @@ export const config = {
 
   /** Shared bearer token the Flutter app sends on POST /api/data (P0-8). */
   ingestToken: requireEnv("BEACON_INGEST_TOKEN", "dev-only-ingest-token"),
+
+  /**
+   * P2-6: Cloud Translation for announcements. When off, `translations` is
+   * stored as `{}` and GET falls back to the source text.
+   */
+  translationEnabled:
+    process.env.TRANSLATION_ENABLED !== undefined
+      ? process.env.TRANSLATION_ENABLED !== "false"
+      : isProd,
+  translationTargetLangs: (
+    process.env.TRANSLATION_TARGET_LANGS?.trim() ||
+    "en,es,fr,de,zh,hi,ar,pt,ja,ko"
+  )
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0),
+
+  /**
+   * P2-8: Pub/Sub fan-out for ingested beacon records. When enabled, each
+   * non-duplicate ingest is published to `pubsubTopicIngest`; Cloud Run
+   * subscribers can then do triage, BigQuery streaming, etc.
+   */
+  pubsubEnabled:
+    process.env.PUBSUB_ENABLED !== undefined
+      ? process.env.PUBSUB_ENABLED !== "false"
+      : isProd,
+  pubsubTopicIngest: process.env.PUBSUB_TOPIC_INGEST?.trim() || "beacon-ingest",
+  /** Shared secret required on `POST /api/pubsub/triage-push` (Pub/Sub push auth). */
+  pubsubPushToken: process.env.PUBSUB_PUSH_TOKEN?.trim() ?? "",
+  /** When true, inline triage after ingest is skipped; a Pub/Sub worker handles it. */
+  triageAsync: process.env.TRIAGE_ASYNC === "true",
+
+  /**
+   * P2-9: BigQuery streaming for Looker Studio agency reports. When enabled,
+   * each non-duplicate ingest is streamed into `bigqueryDataset.bigqueryTable`.
+   */
+  bigqueryEnabled:
+    process.env.BIGQUERY_ENABLED !== undefined
+      ? process.env.BIGQUERY_ENABLED !== "false"
+      : isProd,
+  bigqueryDataset: process.env.BIGQUERY_DATASET?.trim() || "beacon",
+  bigqueryTable: process.env.BIGQUERY_TABLE?.trim() || "events",
+
+  /**
+   * P2-10: Distance Matrix-based dispatch. When off, dispatch ranks by
+   * haversine distance only.
+   */
+  distanceMatrixEnabled:
+    process.env.DISTANCE_MATRIX_ENABLED !== undefined
+      ? process.env.DISTANCE_MATRIX_ENABLED !== "false"
+      : isProd,
+  googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY?.trim() ?? "",
 } as const;
