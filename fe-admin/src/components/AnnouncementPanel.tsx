@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import useSWR from "swr";
 import { BellRing, MapPin, RefreshCcw, Send } from "lucide-react";
 import { useAuth } from "../lib/auth/provider";
+import AnnouncementLocationMap from "./AnnouncementLocationMap";
 
 type HeatmapPoint = {
   id: string;
@@ -41,6 +42,7 @@ type LocationOption = {
   lat: number;
   lon: number;
   recency: string;
+  weight?: number;
 };
 
 export default function AnnouncementPanel() {
@@ -82,13 +84,17 @@ export default function AnnouncementPanel() {
       const existing = byKey.get(key);
       const recency = point.receivedAt ?? "";
       if (!existing || recency > existing.recency) {
-        byKey.set(key, { key, name, lat: point.lat, lon: point.lon, recency });
+        byKey.set(key, { key, name, lat: point.lat, lon: point.lon, recency, weight: point.weight });
       }
     }
     return [...byKey.values()].sort((a, b) => (a.recency < b.recency ? 1 : -1));
   }, [heatmapData]);
 
   const selectedLocation = locations.find((item) => item.key === selectedKey) ?? null;
+  const handleSelectLocation = useCallback((key: string) => {
+    setSelectedKey(key);
+    setSubmitState((prev) => ({ ...prev, error: "", success: "" }));
+  }, []);
 
   const nearbyKey =
     authValue && selectedLocation
@@ -169,30 +175,27 @@ export default function AnnouncementPanel() {
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
-          <label className="text-[12px] font-medium text-gray-700">
-            Heatmap location
-            <select
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#E63946]/25"
-              value={selectedKey}
-              onChange={(e) => {
-                setSelectedKey(e.target.value);
-                setSubmitState((prev) => ({ ...prev, error: "", success: "" }));
-              }}
-              disabled={heatmapLoading || locations.length === 0}
-            >
-              <option value="">Select location</option>
-              {locations.map((location) => (
-                <option key={location.key} value={location.key}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-col gap-2">
+            <p className="text-[12px] font-medium text-gray-700">Select location from heatmap</p>
+            <AnnouncementLocationMap
+              points={locations}
+              selectedKey={selectedKey}
+              onSelect={handleSelectLocation}
+            />
+            <p className="text-[11px] text-gray-500">
+              Click a map point to choose location. The orange circle shows the 500m announcement radius.
+            </p>
+          </div>
 
           {selectedLocation && (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-[12px] text-gray-700 flex items-center gap-2">
-              <MapPin size={14} className="text-gray-500" />
-              {selectedLocation.lat.toFixed(5)}, {selectedLocation.lon.toFixed(5)}
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-[12px] text-gray-700 flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <MapPin size={14} className="text-gray-500" />
+                {selectedLocation.name}
+              </span>
+              <span className="text-gray-500">
+                {selectedLocation.lat.toFixed(5)}, {selectedLocation.lon.toFixed(5)}
+              </span>
             </div>
           )}
 
@@ -223,6 +226,9 @@ export default function AnnouncementPanel() {
             {submitState.pending ? "Publishing..." : "Publish announcement"}
           </button>
         </form>
+        {heatmapLoading && (
+          <p className="text-[12px] text-gray-500">Loading heatmap points for location selection...</p>
+        )}
       </section>
 
       <section className="col-span-12 lg:col-span-7 rounded-2xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
