@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   BrainCircuit,
+  Megaphone,
   Map,
   Settings,
   Folder,
@@ -42,6 +43,12 @@ export default function Sidebar() {
               icon={<BrainCircuit size={16} />}
               label="Agentic Dispatch"
               active={pathname === "/dispatch"}
+            />
+            <NavItem
+              href="/announcement"
+              icon={<Megaphone size={16} />}
+              label="Announcements"
+              active={pathname === "/announcement"}
             />
             <NavItem href="/map" icon={<Map size={16} />} label="Operations Map" active={pathname === "/map"} />
           </nav>

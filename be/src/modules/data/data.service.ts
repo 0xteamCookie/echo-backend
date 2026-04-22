@@ -72,6 +72,17 @@ function triageFromMeta(meta?: Record<string, unknown>): { severity: number; cat
   return { severity, categories };
 }
 
+function locationNameFromMeta(meta?: Record<string, unknown>): string | undefined {
+  if (!meta) return undefined;
+  const candidates = [meta.locationName, meta.location, meta.locationLabel, meta.placeName];
+  for (const value of candidates) {
+    if (typeof value === "string" && value.trim() !== "") {
+      return value.trim().slice(0, 120);
+    }
+  }
+  return undefined;
+}
+
 function heatmapPointFromDevice(d: DeviceData): HeatmapPoint | null {
   if (!d.gps) return null;
   const { severity, categories } = triageFromMeta(d.meta);
@@ -84,6 +95,7 @@ function heatmapPointFromDevice(d: DeviceData): HeatmapPoint | null {
     id: d.id,
     lat: d.gps.lat,
     lon: d.gps.lon,
+    locationName: locationNameFromMeta(d.meta),
     weight,
     categories,
     category: categories.join(", "),

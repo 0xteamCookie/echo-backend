@@ -6,6 +6,7 @@ import { config } from "./lib/config";
 import { errorHandler } from "./middleware/error-handler";
 import { identifyUser } from "./middleware/authz";
 import { accountRouter } from "./modules/account/account.routes";
+import { announcementRouter } from "./modules/announcement/announcement.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { dataRouter } from "./modules/data/data.routes";
 import { dispatchRouter } from "./modules/dispatch/dispatch.routes";
@@ -35,6 +36,7 @@ app.use(express.static(publicDir));
 app.use("/api/auth", authRouter);
 app.use("/api/provision", provisionRouter);
 app.use("/api/account", accountRouter);
+app.use("/api/announcement", announcementRouter);
 app.use("/api/data", dataRouter);
 app.use("/api/dispatch", dispatchRouter);
 
