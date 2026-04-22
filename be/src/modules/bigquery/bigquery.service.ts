@@ -2,6 +2,7 @@
 // Fire-and-forget; any error is swallowed so BQ outages don't block ingest.
 import { BigQuery } from "@google-cloud/bigquery";
 import { config } from "../../lib/config";
+import { log } from "../../lib/logger";
 import type { DeviceData } from "../data/data.schema";
 
 let client: BigQuery | null = null;
@@ -98,9 +99,8 @@ export async function streamEvent(record: DeviceData): Promise<void> {
       .table(config.bigqueryTable)
       .insert([row], { skipInvalidRows: false });
   } catch (err) {
-    console.warn(
-      "[bigquery] streamEvent failed:",
-      err instanceof Error ? err.message : err,
-    );
+    log.warn("bigquery.stream_event_failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }

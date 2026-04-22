@@ -3,6 +3,7 @@
 // a Cloud Run worker subscribed to `beacon-ingest` performs triage/BigQuery/etc.
 import { PubSub } from "@google-cloud/pubsub";
 import { config } from "../../lib/config";
+import { log } from "../../lib/logger";
 import type { DeviceData } from "../data/data.schema";
 
 let client: PubSub | null = null;
@@ -44,9 +45,8 @@ export async function publishIngest(record: DeviceData): Promise<void> {
       },
     });
   } catch (err) {
-    console.warn(
-      "[pubsub] publishIngest failed:",
-      err instanceof Error ? err.message : err,
-    );
+    log.warn("pubsub.publish_ingest_failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }

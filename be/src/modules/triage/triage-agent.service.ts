@@ -3,6 +3,7 @@
 import { VertexAI, SchemaType } from "@google-cloud/vertexai";
 import type { ResponseSchema } from "@google-cloud/vertexai";
 import { config } from "../../lib/config";
+import { log } from "../../lib/logger";
 import { sendIncidentAlert } from "../push/fcm.service";
 import { haversineMeters } from "../../lib/geo";
 import { dataService } from "../data/data.service";
@@ -330,10 +331,9 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
     try {
       await sendIncidentAlert(updated);
     } catch (err) {
-      console.warn(
-        "[triage] sendIncidentAlert failed:",
-        err instanceof Error ? err.message : String(err),
-      );
+      log.warn("triage.send_incident_alert_failed", {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

@@ -7,6 +7,14 @@
         { "fieldPath": "macAddress", "order": "ASCENDING" },
         { "fieldPath": "receivedAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "device_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "agency", "order": "ASCENDING" },
+        { "fieldPath": "receivedAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

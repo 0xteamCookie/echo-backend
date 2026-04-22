@@ -3,6 +3,7 @@ import type { Schema } from "@google/generative-ai";
 import { Client as GoogleMapsClient, TravelMode, UnitSystem } from "@googlemaps/google-maps-services-js";
 import { config } from "../../lib/config";
 import { getFirestoreDb } from "../../lib/firebase";
+import { log } from "../../lib/logger";
 import { haversineMeters } from "../../lib/geo";
 import type { AgencyScope, DeviceData, HeatmapPoint } from "../data/data.schema";
 import { dataService } from "../data/data.service";
@@ -266,10 +267,9 @@ async function driveTimesViaDistanceMatrix(
       return Math.max(1, Math.round(el.duration.value / 60));
     });
   } catch (err) {
-    console.warn(
-      "[dispatch] distance matrix failed, falling back to haversine:",
-      err instanceof Error ? err.message : err,
-    );
+    log.warn("dispatch.distance_matrix_failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return responders.map(() => null);
   }
 }
@@ -469,7 +469,7 @@ export const dispatchService = {
         maxAgeMinutes: INCIDENT_MAX_AGE_MINUTES,
       },
     };
-    console.log("[dispatch] eligibility summary", eligibilitySummary);
+    log.info("dispatch.eligibility_summary", eligibilitySummary);
     if (trimmedIncidents.length === 0) {
       return {
         generatedAt: new Date().toISOString(),

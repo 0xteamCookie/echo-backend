@@ -3,6 +3,7 @@
 // map of `{lang: translatedText}` for every successfully translated target.
 import { v2 as TranslateV2 } from "@google-cloud/translate";
 import { config } from "../../lib/config";
+import { log } from "../../lib/logger";
 
 let client: TranslateV2.Translate | null = null;
 
@@ -44,10 +45,9 @@ export async function translateForAll(
     if (r.status === "fulfilled" && typeof r.value.value === "string") {
       out[r.value.lang] = r.value.value;
     } else if (r.status === "rejected") {
-      console.warn(
-        "[translation] target failed:",
-        r.reason instanceof Error ? r.reason.message : r.reason,
-      );
+      log.warn("translation.target_failed", {
+        reason: r.reason instanceof Error ? r.reason.message : String(r.reason),
+      });
     }
   }
 

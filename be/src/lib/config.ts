@@ -67,7 +67,12 @@ export const config = {
       ? process.env.FCM_ENABLED !== "false"
       : isProd,
   /** Allow browser demos (e.g. `public/demo.html`) to call the API from another origin. */
-  corsOrigin: process.env.CORS_ORIGIN?.trim() || true,
+  corsOrigins: (
+    process.env.CORS_ORIGINS?.trim() || "http://localhost:3000"
+  )
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0),
 
   /** RSA PEM private key (PKCS#8) used to sign rescuer provisioning JWTs (RS256). */
   jwtPrivateKeyPem: pemFromEnv(process.env.JWT_PRIVATE_KEY),

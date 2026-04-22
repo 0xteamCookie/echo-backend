@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import type { RequestHandler } from "express";
 import { Router } from "express";
 import { config } from "../../lib/config";
+import { log } from "../../lib/logger";
 import { triageAfterIngestSafe } from "../triage/triage-agent.service";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -63,10 +64,9 @@ const triagePush: RequestHandler = async (req, res) => {
   try {
     await triageAfterIngestSafe(recordId);
   } catch (err) {
-    console.warn(
-      "[pubsub] triage push failed:",
-      err instanceof Error ? err.message : err,
-    );
+    log.warn("pubsub.triage_push_failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
   res.status(204).end();
 };
