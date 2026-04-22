@@ -8,7 +8,6 @@ import {
   Megaphone,
   Map,
   Settings,
-  Folder,
   LayoutGrid,
   ShieldAlert,
   QrCode,
@@ -19,9 +18,6 @@ import { useAuth } from "../lib/auth/provider";
 export default function Sidebar() {
   const pathname = usePathname();
   const { session } = useAuth();
-  const showMedical = session.agencies.includes("medical");
-  const showFire = session.agencies.includes("fire");
-  const showPolice = session.agencies.includes("police");
 
   return (
     <aside className="w-[240px] h-screen bg-[#F8F8F8] flex flex-col border-r border-[#EBEBEB]">
@@ -68,35 +64,8 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        <div className="mb-6">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">Reports</p>
-          <nav className="flex flex-col gap-0.5">
-            {showMedical && (
-              <NavItem
-                href="/medical"
-                icon={<Folder size={16} />}
-                label="Medical"
-                active={pathname === "/medical"}
-              />
-            )}
-            {showFire && (
-              <NavItem
-                href="/fire-rescue"
-                icon={<Folder size={16} />}
-                label="Fire & Rescue"
-                active={pathname === "/fire-rescue"}
-              />
-            )}
-            {showPolice && (
-              <NavItem
-                href="/police"
-                icon={<Folder size={16} />}
-                label="Police"
-                active={pathname === "/police"}
-              />
-            )}
-          </nav>
-        </div>
+        {/* P1-10: per-agency report pages were 100% hardcoded mocks and were
+            removed. Replace with real Looker Studio embeds in P2-9. */}
       </div>
 
       <div className="p-4 mt-auto">
