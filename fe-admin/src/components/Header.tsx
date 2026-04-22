@@ -47,7 +47,7 @@ export default function Header() {
             aria-expanded={open}
           >
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#E63946]/10 text-[#E63946] font-bold text-[11px]">
-              {initials(session.email)}
+              {initials(session.email ?? "")}
             </span>
             <span className="text-[13px] text-gray-700 font-medium max-w-[160px] truncate">
               {session.email || "admin"}
