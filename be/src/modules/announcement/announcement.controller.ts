@@ -79,7 +79,7 @@ export const announcementController = {
     });
 
     res.json({
-      radiusM: 500,
+      radiusM: 1000,
       announcements,
       fetchedAt: new Date().toISOString(),
     });

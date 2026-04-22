@@ -23,7 +23,7 @@ type Props = {
   onSelect: (key: string) => void;
 };
 
-const RADIUS_M = 500;
+const RADIUS_M = 1000;
 
 export default function AnnouncementLocationMap({ points, selectedKey, onSelect }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);

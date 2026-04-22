@@ -183,7 +183,7 @@ export default function AnnouncementPanel() {
               onSelect={handleSelectLocation}
             />
             <p className="text-[11px] text-gray-500">
-              Click a map point to choose location. The orange circle shows the 500m announcement radius.
+              Click a map point to choose location. The orange circle shows the 1km announcement radius.
             </p>
           </div>
 
@@ -247,7 +247,7 @@ export default function AnnouncementPanel() {
 
         {!selectedLocation && (
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
-            Select a heatmap location to view announcements within 500m.
+            Select a heatmap location to view announcements within 1km.
           </div>
         )}
 
@@ -268,7 +268,7 @@ export default function AnnouncementPanel() {
           !nearbyError &&
           (nearbyData?.announcements.length ?? 0) === 0 && (
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
-              No announcements found in the selected 500m radius.
+              No announcements found in the selected 1km radius.
             </div>
           )}
 

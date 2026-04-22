@@ -5,7 +5,7 @@ import { haversineMeters } from "../../lib/geo";
 import type { Announcement, CreateAnnouncementBody } from "./announcement.schema";
 
 const COLLECTION = "announcements";
-const ANNOUNCEMENT_RADIUS_M = 500;
+const ANNOUNCEMENT_RADIUS_M = 1000;
 
 function timestampToIso(v: unknown): string {
   if (
