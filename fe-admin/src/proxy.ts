@@ -18,7 +18,7 @@ import type { NextRequest } from "next/server";
  * it here via the Firebase Admin SDK. The current client-side redirect path
  * remains in place as defense-in-depth.
  */
-export function middleware(_req: NextRequest) {
+export function proxy(_req: NextRequest) {
   const res = NextResponse.next();
 
   res.headers.set(
