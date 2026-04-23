@@ -1,7 +1,6 @@
-// P2-5: Triage runs on Vertex AI (ADC auth, no API key). The dispatch module
-// still uses @google/generative-ai; this file no longer imports it.
-import { VertexAI, SchemaType } from "@google-cloud/vertexai";
-import type { ResponseSchema } from "@google-cloud/vertexai";
+// Triage uses @google/generative-ai (Gemini API key — no ADC/VPC required).
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import type { Schema } from "@google/generative-ai";
 import { config } from "../../lib/config";
 import { log } from "../../lib/logger";
 import { sendIncidentAlert } from "../push/fcm.service";
@@ -21,7 +20,7 @@ const PRIOR_MESSAGES_FOR_TRIAGE = 5;
 /** Fetch enough rows to recover current + up to N priors. */
 const MAC_THREAD_FETCH_LIMIT = PRIOR_MESSAGES_FOR_TRIAGE + 15;
 
-const triageJsonSchema: ResponseSchema = {
+const triageJsonSchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
     categories: {
@@ -30,6 +29,7 @@ const triageJsonSchema: ResponseSchema = {
         "One or more incident types (e.g. fire and medical). Order does not matter; no duplicates.",
       items: {
         type: SchemaType.STRING,
+        format: "enum",
         enum: [...TRIAGE_CATEGORIES],
       },
     },
@@ -245,17 +245,17 @@ function buildUserPayload(current: DeviceData, history: DeviceData[], nearby: De
 }
 
 /**
- * Runs Vertex AI (Gemini) triage for a freshly ingested row, merges
+ * Runs Gemini triage for a freshly ingested row, merges
  * `meta.triage`, returns updated record. No-op if triage is disabled.
- * Throws on unrecoverable errors. Auth uses Application Default Credentials.
+ * Throws on unrecoverable errors. Auth uses GEMINI_API_KEY.
  */
 export async function triageAfterIngest(eventId: string): Promise<DeviceData | null> {
   if (!config.triageEnabled) {
     return null;
   }
-  if (!config.googleCloudProjectId) {
+  if (!config.geminiApiKey) {
     throw new Error(
-      "Vertex AI triage requires a GCP project id (set GOOGLE_CLOUD_PROJECT or FIREBASE_PROJECT_ID)",
+      "Gemini triage requires GEMINI_API_KEY to be set",
     );
   }
 
@@ -264,24 +264,10 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
     return null;
   }
 
-  // Build googleAuthOptions from the service account JSON when present (no
-  // ADC / Workload Identity needed on plain VPS / container deployments).
-  const saJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
-  const googleAuthOptions = saJson
-    ? { credentials: JSON.parse(saJson) as Record<string, unknown> }
-    : undefined;
-
-  const vertex = new VertexAI({
-    project: config.googleCloudProjectId,
-    location: config.vertexLocation,
-    googleAuthOptions,
-  });
-  const model = vertex.getGenerativeModel({
-    model: config.vertexModel,
-    systemInstruction: {
-      role: "system",
-      parts: [{ text: TRIAGE_SYSTEM_INSTRUCTION }],
-    },
+  const genAI = new GoogleGenerativeAI(config.geminiApiKey);
+  const model = genAI.getGenerativeModel({
+    model: config.geminiModel,
+    systemInstruction: TRIAGE_SYSTEM_INSTRUCTION,
     generationConfig: {
       temperature: 0.2,
       maxOutputTokens: 2048,
@@ -314,23 +300,23 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
     contents: [{ role: "user", parts: [{ text: userText }] }],
   });
 
-  const raw = extractResponseText(result);
+  const raw = result.response.text();
 
   if (!raw || raw.trim() === "") {
-    throw new Error("Vertex AI returned empty triage response");
+    throw new Error("Gemini returned empty triage response");
   }
 
   let triage: TriageSnapshot;
   try {
     triage = parseTriageJson(raw);
   } catch {
-    throw new Error(`Vertex AI triage JSON parse failed: ${raw.slice(0, 200)}`);
+    throw new Error(`Gemini triage JSON parse failed: ${raw.slice(0, 200)}`);
   }
 
   const updated = await dataService.mergeDeviceMeta(eventId, {
     triage,
     triagedAt: new Date().toISOString(),
-    triageModel: config.vertexModel,
+    triageModel: config.geminiModel,
   });
 
   // P2-1: fire an FCM alert after triage completes on high-severity events.
@@ -346,31 +332,6 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
   }
 
   return updated;
-}
-
-/**
- * Vertex returns `GenerateContentResult { response: { candidates: [...] } }`.
- * Walk to the first text part and join; tolerate missing fields defensively.
- */
-function extractResponseText(result: { response: unknown }): string {
-  const resp = result.response;
-  if (!resp || typeof resp !== "object") return "";
-  const candidates = (resp as { candidates?: unknown }).candidates;
-  if (!Array.isArray(candidates) || candidates.length === 0) return "";
-  const first = candidates[0];
-  if (!first || typeof first !== "object") return "";
-  const content = (first as { content?: unknown }).content;
-  if (!content || typeof content !== "object") return "";
-  const parts = (content as { parts?: unknown }).parts;
-  if (!Array.isArray(parts)) return "";
-  const pieces: string[] = [];
-  for (const p of parts) {
-    if (p && typeof p === "object") {
-      const t = (p as { text?: unknown }).text;
-      if (typeof t === "string") pieces.push(t);
-    }
-  }
-  return pieces.join("");
 }
 
 /** Persists `meta.triageError` on failure so ingest still succeeds. */

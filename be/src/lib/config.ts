@@ -35,19 +35,15 @@ export const config = {
   triageNearbyRadiusM: Number(process.env.TRIAGE_NEARBY_RADIUS_M) || 500,
 
   /**
-   * P2-5: Vertex AI config for triage. Auth uses ADC (no API key required).
-   * `googleCloudProjectId` falls back to common GCP env vars.
+   * GCP project ID — used by BigQuery, Pub/Sub, Cloud Translation, and
+   * other GCP client libraries. Triage now uses Gemini API key instead of
+   * Vertex AI, so this is no longer required for AI inference.
    */
   googleCloudProjectId:
     process.env.GOOGLE_CLOUD_PROJECT?.trim() ||
     process.env.GCLOUD_PROJECT?.trim() ||
     process.env.FIREBASE_PROJECT_ID?.trim() ||
     "",
-  vertexLocation: process.env.VERTEX_LOCATION?.trim() || "us-central1",
-  vertexModel:
-    process.env.VERTEX_MODEL?.trim() ||
-    process.env.GEMINI_MODEL?.trim() ||
-    "gemini-1.5-flash",
 
   /**
    * P2-4: Firebase App Check gate on mobile ingest. Defaults to on in prod,
