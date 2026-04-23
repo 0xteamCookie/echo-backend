@@ -1,5 +1,8 @@
 import type { RequestHandler } from "express";
+import { config } from "../../lib/config";
 import { getAllowedAgencies } from "../../middleware/authz";
+import { streamEvent } from "../bigquery/bigquery.service";
+import { publishIngest } from "../pubsub/pubsub.service";
 import { triageAfterIngestSafe } from "../triage/triage-agent.service";
 import { dataService } from "./data.service";
 
@@ -78,11 +81,25 @@ export const dataController = {
 
     let finalRecord = record;
     if (!deduplicated) {
-      const triaged = await triageAfterIngestSafe(record.id);
-      if (triaged) finalRecord = triaged;
+      // P2-8/P2-9: fan-out new records to Pub/Sub + BigQuery. Fire-and-forget
+      // (service modules swallow errors) so ingest latency stays predictable.
+      void publishIngest(record);
+      void streamEvent(record);
+
+      // When `triageAsync` is on, the Pub/Sub worker runs triage; skip inline.
+      if (!config.triageAsync) {
+        const triaged = await triageAfterIngestSafe(record.id);
+        if (triaged) finalRecord = triaged;
+      }
     }
 
-    res.status(deduplicated ? 200 : 201);
+    // P0-5: always emit a JSON body so clients can confirm ingest + read id.
+    res.status(deduplicated ? 200 : 201).json({
+      ok: true,
+      deduplicated,
+      messageId: finalRecord.id,
+      record: finalRecord,
+    });
   }) satisfies RequestHandler,
 
   heatmap: (async (req, res) => {
@@ -123,5 +140,125 @@ export const dataController = {
     });
 
     res.json(items);
+  }) satisfies RequestHandler,
+
+  // P2-12: batch ingest for relayers returning from an outage with queued packets.
+  // Accepts `{ packets: Array<BodyShape> }` up to 500 per request; each packet is
+  // validated + dedup'd by dataService (same unique-key logic as single ingest).
+  // Triage is fire-and-forget so a 500-item batch returns quickly.
+  createBatch: (async (req, res) => {
+    const body = req.body;
+    if (!isRecord(body)) {
+      res.status(400).json({ error: "Invalid JSON body" });
+      return;
+    }
+    const packets = body.packets;
+    if (!Array.isArray(packets)) {
+      res.status(400).json({ error: "packets must be an array" });
+      return;
+    }
+    if (packets.length === 0) {
+      res.status(400).json({ error: "packets must not be empty" });
+      return;
+    }
+    if (packets.length > 500) {
+      res.status(413).json({ error: "batch too large (max 500 packets)" });
+      return;
+    }
+
+    const allowedAgencies = getAllowedAgencies(req);
+    const results: Array<{
+      index: number;
+      ok: boolean;
+      messageId?: string;
+      deduplicated?: boolean;
+      error?: string;
+    }> = [];
+
+    // Process sequentially to keep Firestore write pressure bounded and to keep
+    // dedup ordering deterministic within a batch.
+    for (let i = 0; i < packets.length; i++) {
+      const p = packets[i];
+      try {
+        if (!isRecord(p)) {
+          results.push({ index: i, ok: false, error: "not an object" });
+          continue;
+        }
+        const macAddress = String(p.macAddress ?? "").trim();
+        const message = String(p.message ?? "");
+        const time = String(p.time ?? "").trim();
+        if (!macAddress) {
+          results.push({ index: i, ok: false, error: "macAddress required" });
+          continue;
+        }
+        if (!time) {
+          results.push({ index: i, ok: false, error: "time required" });
+          continue;
+        }
+
+        const gpsRaw = p.gps;
+        const gps =
+          isRecord(gpsRaw) &&
+          toNumber(gpsRaw.lat) !== undefined &&
+          toNumber(gpsRaw.lon) !== undefined
+            ? { lat: toNumber(gpsRaw.lat)!, lon: toNumber(gpsRaw.lon)! }
+            : undefined;
+        if (gps && !isValidGps(gps.lat, gps.lon)) {
+          results.push({ index: i, ok: false, error: "invalid gps" });
+          continue;
+        }
+
+        const meta = isRecord(p.meta) ? p.meta : undefined;
+        const agency =
+          parseAgency(p.agency) ?? parseAgency(meta?.agency) ?? parseAgency(meta?.category);
+        if (allowedAgencies.length > 0 && agency && !allowedAgencies.includes(agency)) {
+          results.push({ index: i, ok: false, error: "agency outside scope" });
+          continue;
+        }
+
+        const { record, deduplicated } = await dataService.create({
+          macAddress,
+          message,
+          agency: agency ?? (req.user?.role === "super_admin" ? undefined : allowedAgencies[0]),
+          time,
+          gps,
+          meta,
+        });
+
+        // Fire-and-forget triage; don't await to keep batch latency reasonable.
+        if (!deduplicated) {
+          // P2-8/P2-9: same fan-out as single ingest.
+          void publishIngest(record);
+          void streamEvent(record);
+          if (!config.triageAsync) {
+            void triageAfterIngestSafe(record.id);
+          }
+        }
+
+        results.push({
+          index: i,
+          ok: true,
+          messageId: record.id,
+          deduplicated,
+        });
+      } catch (err) {
+        results.push({
+          index: i,
+          ok: false,
+          error: err instanceof Error ? err.message : "unknown error",
+        });
+      }
+    }
+
+    const accepted = results.filter((r) => r.ok).length;
+    const duplicates = results.filter((r) => r.ok && r.deduplicated).length;
+    res.status(202).json({
+      ok: true,
+      total: packets.length,
+      accepted,
+      duplicates,
+      rejected: packets.length - accepted,
+      results,
+    });
   }) satisfies RequestHandler,
 };

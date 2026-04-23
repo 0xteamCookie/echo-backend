@@ -1,5 +1,4 @@
 import React from "react";
-import { TrendingUp, TrendingDown, LucideIcon } from "lucide-react";
 import { cn } from "./StatCard";
 
 interface DataCardProps {

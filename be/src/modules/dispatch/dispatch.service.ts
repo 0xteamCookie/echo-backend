@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import type { Schema } from "@google/generative-ai";
+import { Client as GoogleMapsClient, TravelMode, UnitSystem } from "@googlemaps/google-maps-services-js";
 import { config } from "../../lib/config";
+import { getFirestoreDb } from "../../lib/firebase";
+import { log } from "../../lib/logger";
 import { haversineMeters } from "../../lib/geo";
 import type { AgencyScope, DeviceData, HeatmapPoint } from "../data/data.schema";
 import { dataService } from "../data/data.service";
@@ -16,7 +19,8 @@ import type {
 const INCIDENT_MIN_SEVERITY = 1;
 const INCIDENT_MAX_AGE_MINUTES = 10080;
 const MAX_LOAD = 4;
-const SHORTLIST_SIZE = 3;
+// P2-10: shortlist size increased to 5 per the action plan.
+const SHORTLIST_SIZE = 5;
 
 type CandidateIncident = {
   id: string;
@@ -34,62 +38,79 @@ type BuildIncidentResult =
 
 type DecisionWithSource = DispatchDecision & { modelAssisted: boolean };
 
-const DUMMY_RESCUERS: RescuerProfile[] = [
-  {
-    id: "medic-201",
-    name: "Dr. Maya Patel",
-    agency: "medical",
-    sourceSystem: "Medical CAD",
-    location: { lat: -33.8734, lon: 151.2069 },
-    radiusM: 6000,
-    status: "available",
-  },
-  {
-    id: "medic-317",
-    name: "Nurse Liam Grant",
-    agency: "medical",
-    sourceSystem: "Medical CAD",
-    location: { lat: -37.8136, lon: 144.9631 },
-    radiusM: 5000,
-    status: "available",
-  },
-  {
-    id: "fire-042",
-    name: "Captain Elena Rossi",
-    agency: "fire",
-    sourceSystem: "Fire Dispatch",
-    location: { lat: -27.4698, lon: 153.0251 },
-    radiusM: 9000,
-    status: "available",
-  },
-  {
-    id: "fire-126",
-    name: "Lt. Noah Campbell",
-    agency: "fire",
-    sourceSystem: "Fire Dispatch",
-    location: { lat: -34.9285, lon: 138.6007 },
-    radiusM: 8000,
-    status: "enroute",
-  },
-  {
-    id: "police-908",
-    name: "Sgt. Olivia Hart",
-    agency: "police",
-    sourceSystem: "Police RMS",
-    location: { lat: -31.9505, lon: 115.8605 },
-    radiusM: 6500,
-    status: "available",
-  },
-  {
-    id: "police-611",
-    name: "Officer Ethan Blake",
-    agency: "police",
-    sourceSystem: "Police RMS",
-    location: { lat: -35.2809, lon: 149.13 },
-    radiusM: 7000,
-    status: "busy",
-  },
-];
+/**
+ * P2-10: Firestore rescuer profile. `DUMMY_RESCUERS` is gone — live rescuers
+ * come from the `rescuers` collection.
+ */
+type DbRescuer = {
+  id: string;
+  name: string;
+  agency: AgencyScope;
+  currentLocation: { lat: number; lng: number };
+  onDuty: boolean;
+  specialties: string[];
+};
+
+const AGENCY_TO_SOURCE_SYSTEM: Record<AgencyScope, RescuerProfile["sourceSystem"]> = {
+  medical: "Medical CAD",
+  fire: "Fire Dispatch",
+  police: "Police RMS",
+};
+
+let googleMapsClient: GoogleMapsClient | null = null;
+function getGoogleMapsClient(): GoogleMapsClient {
+  if (!googleMapsClient) {
+    googleMapsClient = new GoogleMapsClient({});
+  }
+  return googleMapsClient;
+}
+
+function parseAgency(value: unknown): AgencyScope | undefined {
+  if (typeof value !== "string") return undefined;
+  const n = value.trim().toLowerCase();
+  if (n === "medical" || n === "fire" || n === "police") return n;
+  return undefined;
+}
+
+function docToRescuer(
+  id: string,
+  data: FirebaseFirestore.DocumentData,
+): DbRescuer | null {
+  const agency = parseAgency(data.agency);
+  if (!agency) return null;
+  const loc = data.currentLocation;
+  if (!loc || typeof loc !== "object") return null;
+  const rawLat = (loc as Record<string, unknown>).lat;
+  const rawLng = (loc as Record<string, unknown>).lng;
+  const lat = typeof rawLat === "number" ? rawLat : Number(rawLat);
+  const lng = typeof rawLng === "number" ? rawLng : Number(rawLng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const specialties = Array.isArray(data.specialties)
+    ? (data.specialties as unknown[])
+        .map((x) => String(x).trim().toLowerCase())
+        .filter((s) => s !== "")
+    : [];
+  return {
+    id,
+    name: typeof data.name === "string" && data.name.trim() !== "" ? data.name : id,
+    agency,
+    currentLocation: { lat, lng },
+    onDuty: data.onDuty === true,
+    specialties,
+  };
+}
+
+/** Load on-duty rescuers from Firestore, optionally scoped to caller agencies. */
+async function loadOnDutyRescuers(allowed: Set<AgencyScope>): Promise<DbRescuer[]> {
+  const db = getFirestoreDb();
+  const snap = await db.collection("rescuers").where("onDuty", "==", true).get();
+  const out: DbRescuer[] = [];
+  for (const doc of snap.docs) {
+    const r = docToRescuer(doc.id, doc.data());
+    if (r && allowed.has(r.agency)) out.push(r);
+  }
+  return out;
+}
 
 const decisionSchema: Schema = {
   type: SchemaType.OBJECT,
@@ -185,28 +206,72 @@ function heatIntensity(incident: CandidateIncident, points: HeatmapPoint[]): "lo
   return "low";
 }
 
-function baseLoad(responder: RescuerProfile): number {
-  if (responder.status === "busy") return 3;
-  if (responder.status === "enroute") return 2;
+function baseLoad(_responder: DbRescuer): number {
+  // P2-10: all on-duty rescuers from Firestore are treated as available (load 0).
+  // The onDuty flag already excludes anyone assigned or off-shift.
   return 0;
 }
 
-function agencyMatches(incident: CandidateIncident, responder: RescuerProfile): boolean {
-  return incident.agencyHints.includes(responder.agency);
+function specialtyScore(incident: CandidateIncident, responder: DbRescuer): number {
+  if (responder.specialties.length === 0) return 0;
+  const cats = new Set(incident.categories.map((c) => c.toLowerCase()));
+  let hits = 0;
+  for (const s of responder.specialties) {
+    if (cats.has(s)) hits += 1;
+  }
+  return hits;
 }
 
-function scoreResponder(
+/** Haversine-based ETA fallback: assume 450 m/min average (~27 km/h). */
+function haversineEtaMinutes(
   incident: CandidateIncident,
-  responder: RescuerProfile,
-  hotspotTier: 1 | 2 | 3,
+  responder: DbRescuer,
 ): number {
-  const distanceKm = haversineMeters(incident.location, responder.location) / 1000;
-  const maxRadiusKm = Math.max(1, responder.radiusM / 1000);
-  const distanceScore = Math.max(0, 1 - distanceKm / maxRadiusKm);
-  const severityMatch = agencyMatches(incident, responder) ? 1 : 0;
-  const loadPenalty = Math.max(0, 1 - baseLoad(responder) / MAX_LOAD);
-  const zoneRisk = hotspotTier / 3;
-  return distanceScore * 0.35 + severityMatch * 0.3 + loadPenalty * 0.2 + zoneRisk * 0.15;
+  const m = haversineMeters(incident.location, {
+    lat: responder.currentLocation.lat,
+    lon: responder.currentLocation.lng,
+  });
+  return Math.max(1, Math.round(m / 450));
+}
+
+/**
+ * Query Distance Matrix for drive-time seconds from every rescuer origin to a
+ * single incident destination. Returns `null` entries on per-row errors so the
+ * caller can fall back to haversine for that slot.
+ */
+async function driveTimesViaDistanceMatrix(
+  incident: CandidateIncident,
+  responders: DbRescuer[],
+): Promise<Array<number | null>> {
+  if (responders.length === 0) return [];
+  try {
+    const client = getGoogleMapsClient();
+    const resp = await client.distancematrix({
+      params: {
+        key: config.googleMapsApiKey,
+        origins: responders.map((r) => ({
+          lat: r.currentLocation.lat,
+          lng: r.currentLocation.lng,
+        })),
+        destinations: [{ lat: incident.location.lat, lng: incident.location.lon }],
+        mode: TravelMode.driving,
+        units: UnitSystem.metric,
+      },
+      timeout: 4000,
+    });
+    const rows = resp.data.rows ?? [];
+    return responders.map((_, i) => {
+      const row = rows[i];
+      const el = row?.elements?.[0];
+      if (!el || el.status !== "OK" || !el.duration) return null;
+      return Math.max(1, Math.round(el.duration.value / 60));
+    });
+  } catch (err) {
+    log.warn("dispatch.distance_matrix_failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return responders.map(() => null);
+  }
 }
 
 function buildCandidateIncident(row: DeviceData): BuildIncidentResult {
@@ -404,7 +469,7 @@ export const dispatchService = {
         maxAgeMinutes: INCIDENT_MAX_AGE_MINUTES,
       },
     };
-    console.log("[dispatch] eligibility summary", eligibilitySummary);
+    log.info("dispatch.eligibility_summary", eligibilitySummary);
     if (trimmedIncidents.length === 0) {
       return {
         generatedAt: new Date().toISOString(),
@@ -417,37 +482,53 @@ export const dispatchService = {
       };
     }
 
-    const allowed = new Set(params.agencies ?? ["medical", "fire", "police"]);
-    const responders = DUMMY_RESCUERS.filter((r) => allowed.has(r.agency));
+    const allowed = new Set<AgencyScope>(params.agencies ?? ["medical", "fire", "police"]);
+    // P2-10: fetch on-duty rescuers from Firestore instead of using a hardcoded list.
+    const responders = await loadOnDutyRescuers(allowed);
     const hotspotCounts = buildHotspotCounts(rows);
     const heatmap = await dataService.heatmapPoints({
       limit: 400,
       agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
     });
 
-    const briefs: Array<{ incident: CandidateIncident; brief: IncidentBrief }> = trimmedIncidents
-      .map((incident) => {
+    // P2-10: drive-time lookups are async and potentially billable — compute per incident
+    // with a Distance Matrix call (when enabled + key present) and fall back to haversine
+    // per-responder on failures or disabled flag.
+    const useDm = config.distanceMatrixEnabled && config.googleMapsApiKey.trim() !== "";
+
+    const briefPairs = await Promise.all(
+      trimmedIncidents.map(async (incident) => {
         const riskTier = historicalRiskTier(incident, hotspotCounts);
-        const shortlist = [...responders]
-          .map((responder) => {
-            const score = scoreResponder(incident, responder, riskTier);
-            const etaMinutes = Math.max(
-              1,
-              Math.round(haversineMeters(incident.location, responder.location) / 450),
-            );
-            return {
-              id: responder.id,
-              name: responder.name,
-              agency: responder.agency,
-              sourceSystem: responder.sourceSystem,
-              etaMinutes,
-              currentLoad: baseLoad(responder),
-              score,
-            };
+        const agencyPool = responders.filter((r) =>
+          incident.agencyHints.includes(r.agency),
+        );
+        if (agencyPool.length === 0) return null;
+
+        const dmEtas = useDm
+          ? await driveTimesViaDistanceMatrix(incident, agencyPool)
+          : agencyPool.map(() => null);
+
+        const scored = agencyPool
+          .map((responder, idx) => {
+            const dm = dmEtas[idx];
+            const etaMinutes = dm ?? haversineEtaMinutes(incident, responder);
+            const specialty = specialtyScore(incident, responder);
+            return { responder, etaMinutes, specialty };
           })
-          .sort((a, b) => b.score - a.score)
-          .slice(0, SHORTLIST_SIZE)
-          .map(({ score: _score, ...brief }) => brief);
+          .sort((a, b) => {
+            if (a.etaMinutes !== b.etaMinutes) return a.etaMinutes - b.etaMinutes;
+            return b.specialty - a.specialty;
+          })
+          .slice(0, SHORTLIST_SIZE);
+
+        const shortlist = scored.map(({ responder, etaMinutes }) => ({
+          id: responder.id,
+          name: responder.name,
+          agency: responder.agency,
+          sourceSystem: AGENCY_TO_SOURCE_SYSTEM[responder.agency],
+          etaMinutes,
+          currentLoad: baseLoad(responder),
+        }));
 
         if (shortlist.length === 0) return null;
         return {
@@ -463,8 +544,12 @@ export const dispatchService = {
             candidateResponders: shortlist,
           },
         };
-      })
-      .filter((x): x is { incident: CandidateIncident; brief: IncidentBrief } => x !== null);
+      }),
+    );
+
+    const briefs = briefPairs.filter(
+      (x): x is { incident: CandidateIncident; brief: IncidentBrief } => x !== null,
+    );
 
     let model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]> | null = null;
     if (config.geminiApiKey) {

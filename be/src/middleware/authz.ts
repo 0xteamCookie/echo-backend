@@ -1,43 +1,12 @@
 import type { RequestHandler } from "express";
 import { verifyDashboardJwt } from "../lib/jwt-dashboard";
+import { config } from "../lib/config";
 
-export type UserType = "official" | "user" | "agents";
+export type UserType = "official" | "user" | "agents" | "ingest";
 export type Agency = "medical" | "fire" | "police";
 export type UserRole = "super_admin" | Agency;
 
 const ALL_AGENCIES: Agency[] = ["medical", "fire", "police"];
-
-function parseAgency(value: string): Agency | null {
-  switch (value.trim().toLowerCase()) {
-    case "medical":
-      return "medical";
-    case "fire":
-      return "fire";
-    case "police":
-      return "police";
-    default:
-      return null;
-  }
-}
-
-function parseRole(value: string): UserRole {
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "super_admin" || normalized === "super-admin" || normalized === "admin") {
-    return "super_admin";
-  }
-  const agency = parseAgency(normalized);
-  if (agency) return agency;
-  return "medical";
-}
-
-function parseAgencies(value: string): Agency[] {
-  const unique = new Set<Agency>();
-  for (const token of value.split(",")) {
-    const agency = parseAgency(token);
-    if (agency) unique.add(agency);
-  }
-  return [...unique];
-}
 
 declare global {
   // eslint-disable-next-line no-var
@@ -45,7 +14,7 @@ declare global {
     interface Request {
       user?: {
         type: UserType;
-        /** Stable user id for Firestore `users/{id}` (e.g. Firebase Auth uid); override with `x-user-id`. */
+        /** Stable user id for Firestore `users/{id}` (e.g. Firebase Auth uid). */
         id: string;
         email?: string;
         role: UserRole;
@@ -56,58 +25,66 @@ declare global {
 }
 
 /**
- * For now this accepts everyone. Later you can enforce auth
- * and role-based permissions here.
- *
- * Client can optionally send `x-user-type: official|user`.
+ * Authenticates the caller via `Authorization: Bearer <jwt>` against the
+ * dashboard HS256 secret. Legacy `x-user-*` header-trust fallback was removed
+ * in P0-6; if no valid token is present, `req.user` is left undefined and
+ * route-level `requirePermission` / `requireIngestAuth` will 401.
  */
 export const identifyUser: RequestHandler = (req, _res, next) => {
   const run = async () => {
     const auth = String(req.header("authorization") ?? "").trim();
     const match = /^Bearer\s+(\S+)$/i.exec(auth);
-    if (match?.[1]) {
-      try {
-        const payload = await verifyDashboardJwt(match[1]);
-        req.user = {
-          type: "official",
-          id: payload.sub,
-          email: payload.email,
-          role: payload.role,
-          agencies:
-            payload.role === "super_admin"
-              ? [...ALL_AGENCIES]
-              : payload.agencies.length > 0
-                ? payload.agencies
-                : [payload.role],
-        };
-        next();
-        return;
-      } catch {
-        // fall through to legacy header mode
-      }
-    }
-
-    const raw = String(req.header("x-user-type") ?? "").toLowerCase();
-    const type: UserType = raw === "official" ? "official" : "user";
-    const idRaw = String(req.header("x-user-id") ?? "").trim();
-    const roleHeader = String(req.header("x-user-role") ?? "").trim();
-    if (!idRaw || !roleHeader) {
+    if (!match?.[1]) {
       req.user = undefined;
       next();
       return;
     }
 
-    const role = parseRole(roleHeader);
-    const agenciesHeader = String(req.header("x-user-agencies") ?? "");
-    const agencies = parseAgencies(agenciesHeader);
-    const effectiveAgencies =
-      role === "super_admin" ? [...ALL_AGENCIES] : agencies.length > 0 ? agencies : [role];
-    req.user = { type, id: idRaw, role, agencies: effectiveAgencies };
+    // If the bearer is the shared ingest token, mark the caller as a low-trust
+    // mobile ingestor (no dashboard permissions). Constant-time compare.
+    const ingest = config.ingestToken;
+    if (ingest && safeEqual(match[1], ingest)) {
+      req.user = {
+        type: "ingest",
+        id: "mobile-ingest",
+        role: "medical",
+        agencies: [],
+      };
+      next();
+      return;
+    }
+
+    try {
+      const payload = await verifyDashboardJwt(match[1]);
+      req.user = {
+        type: "official",
+        id: payload.sub,
+        email: payload.email,
+        role: payload.role,
+        agencies:
+          payload.role === "super_admin"
+            ? [...ALL_AGENCIES]
+            : payload.agencies.length > 0
+              ? payload.agencies
+              : [payload.role],
+      };
+    } catch {
+      req.user = undefined;
+    }
     next();
   };
 
   void run();
 };
+
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
 
 export type Permission = "data:write" | "data:read" | "provision:issue";
 
@@ -136,6 +113,11 @@ export function requirePermission(permission: Permission): RequestHandler {
       res.status(401).json({ error: "Unauthenticated" });
       return;
     }
+    // Mobile ingest tokens can only hit ingest routes (guarded separately).
+    if (req.user.type === "ingest" && permission !== "data:write") {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
     if (!hasPermission(req.user.role, permission)) {
       res.status(403).json({ error: "Forbidden" });
       return;
@@ -143,4 +125,24 @@ export function requirePermission(permission: Permission): RequestHandler {
     next();
   };
 }
+
+/**
+ * Accepts either a dashboard JWT with `data:write`, or the shared ingest
+ * bearer token (mobile devices). Returns 401 otherwise.
+ */
+export const requireIngestAuth: RequestHandler = (req, res, next) => {
+  if (!req.user) {
+    res.status(401).json({ error: "Unauthenticated" });
+    return;
+  }
+  if (req.user.type === "ingest") {
+    next();
+    return;
+  }
+  if (hasPermission(req.user.role, "data:write")) {
+    next();
+    return;
+  }
+  res.status(403).json({ error: "Forbidden" });
+};
 

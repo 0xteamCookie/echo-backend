@@ -8,22 +8,24 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
     "firebase:deploy:indexes": "firebase deploy --only firestore:indexes"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@google-cloud/bigquery": "^7.9.1",
+    "@google-cloud/pubsub": "^4.10.0",
+    "@google-cloud/translate": "^8.5.0",
     "@google/generative-ai": "^0.24.1",
-    "@prisma/client": "^7.7.0",
+    "@googlemaps/google-maps-services-js": "^3.4.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^7.4.0",
     "firebase-admin": "^13.8.0",
-    "jose": "^6.2.2",
-    "prisma": "^7.7.0"
+    "helmet": "^8.0.0",
+    "jose": "^6.2.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

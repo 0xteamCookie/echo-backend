@@ -1,5 +1,4 @@
 import { createPrivateKey, createPublicKey, randomUUID } from "node:crypto";
-import { config } from "./config";
 
 /** JWK shape returned for `/.well-known/jwks.json` (avoids type imports from ESM `jose` in CJS). */
 export type ProvisioningJwk = Record<string, unknown> & {
@@ -35,6 +34,10 @@ export type VerifiedRescuerPayload = {
 
 const ALG = "RS256" as const;
 
+// Default issuer/audience — can be overridden by env vars if needed.
+const ISSUER  = process.env.JWT_ISSUER?.trim()   || "echo";
+const AUDIENCE = process.env.JWT_AUDIENCE?.trim() || "echo-rescuer";
+
 /** `jose` is ESM-only; load it dynamically so CommonJS `tsc` output still runs in Node. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- avoid `import("jose")` type refs in CJS project
 let josePromise: Promise<any> | null = null;
@@ -43,34 +46,50 @@ function loadJose(): Promise<any> {
   return josePromise;
 }
 
+/** Extract the RSA private key PEM + key-id from FIREBASE_SERVICE_ACCOUNT_JSON. */
+function getServiceAccountKey(): { pem: string; kid: string } {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
+  if (!raw) {
+    throw new Error(
+      "FIREBASE_SERVICE_ACCOUNT_JSON is not set — cannot derive JWT signing key",
+    );
+  }
+  let sa: { private_key?: string; private_key_id?: string };
+  try {
+    sa = JSON.parse(raw) as { private_key?: string; private_key_id?: string };
+  } catch {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON");
+  }
+  if (!sa.private_key || !sa.private_key.includes("BEGIN")) {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON does not contain a valid private_key");
+  }
+  // Firebase stores the key with literal \n — normalize to real newlines.
+  const pem = sa.private_key.replace(/\\n/g, "\n").trim();
+  const kid = sa.private_key_id ?? "firebase-sa-key";
+  return { pem, kid };
+}
+
 let cachedPrivateKey: CryptoKey | null = null;
 let cachedPublicJwk: ProvisioningJwk | null = null;
-
-function getPrivateKeyPem(): string {
-  const pem = config.jwtPrivateKeyPem;
-  if (!pem || !pem.includes("BEGIN")) {
-    throw new Error("JWT_PRIVATE_KEY is not configured");
-  }
-  return pem;
-}
 
 export async function getProvisioningPrivateKey(): Promise<CryptoKey> {
   if (cachedPrivateKey) return cachedPrivateKey;
   const { importPKCS8 } = await loadJose();
-  const key = await importPKCS8(getPrivateKeyPem(), ALG);
+  const { pem } = getServiceAccountKey();
+  const key = await importPKCS8(pem, ALG);
   cachedPrivateKey = key;
   return key;
 }
 
-/** Public JWK for JWKS — derived from the same RSA key (safe to expose). */
+/** Public JWK for JWKS — derived from the Firebase SA key (safe to expose). */
 export async function getProvisioningPublicJwk(): Promise<ProvisioningJwk> {
   if (cachedPublicJwk) return cachedPublicJwk;
   const { exportJWK } = await loadJose();
-  const pem = getPrivateKeyPem();
+  const { pem, kid } = getServiceAccountKey();
   const priv = createPrivateKey({ key: pem, format: "pem" });
   const pub = createPublicKey(priv);
   const jwk = (await exportJWK(pub)) as ProvisioningJwk;
-  jwk.kid = config.jwtKeyId;
+  jwk.kid = kid;
   jwk.use = "sig";
   jwk.alg = ALG;
   cachedPublicJwk = jwk;
@@ -92,6 +111,7 @@ export async function signRescuerJwt(
   expiresInSeconds: number,
 ): Promise<string> {
   const { SignJWT } = await loadJose();
+  const { kid } = getServiceAccountKey();
   const privateKey = await getProvisioningPrivateKey();
   const now = Math.floor(Date.now() / 1000);
 
@@ -103,9 +123,9 @@ export async function signRescuerJwt(
     lat: claims.lat,
     lng: claims.lng,
   })
-    .setProtectedHeader({ alg: ALG, kid: config.jwtKeyId, typ: "JWT" })
-    .setIssuer(config.jwtIssuer)
-    .setAudience(config.jwtAudience)
+    .setProtectedHeader({ alg: ALG, kid, typ: "JWT" })
+    .setIssuer(ISSUER)
+    .setAudience(AUDIENCE)
     .setSubject(claims.sub)
     .setIssuedAt(now)
     .setExpirationTime(now + expiresInSeconds)
@@ -121,8 +141,8 @@ export async function verifyRescuerJwt(token: string): Promise<VerifiedRescuerPa
   const publicJwk = await getProvisioningPublicJwk();
   const key = await importJWK(publicJwk, ALG);
   const { payload } = await jwtVerify(token, key, {
-    issuer: config.jwtIssuer,
-    audience: config.jwtAudience,
+    issuer: ISSUER,
+    audience: AUDIENCE,
     algorithms: [ALG],
   });
   if (typeof payload.sub !== "string" || !payload.sub) {
@@ -130,3 +150,5 @@ export async function verifyRescuerJwt(token: string): Promise<VerifiedRescuerPa
   }
   return payload as VerifiedRescuerPayload;
 }
+
+

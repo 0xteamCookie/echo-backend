@@ -25,8 +25,16 @@ export const announcementController = {
       return;
     }
 
-    const message = String(body.message ?? "").trim();
+    // P2-6: accept either `message` or `body` (new field name).
+    const message = String(body.message ?? body.body ?? "").trim();
     const locationName = String(body.locationName ?? "").trim();
+    const title =
+      typeof body.title === "string" && body.title.trim() !== "" ? body.title.trim() : undefined;
+    const agencyRaw = typeof body.agency === "string" ? body.agency.trim().toLowerCase() : "";
+    const agency =
+      agencyRaw === "medical" || agencyRaw === "fire" || agencyRaw === "police"
+        ? (agencyRaw as "medical" | "fire" | "police")
+        : undefined;
     const gpsRaw = body.gps;
     const gps =
       isRecord(gpsRaw) && toNumber(gpsRaw.lat) !== undefined && toNumber(gpsRaw.lon) !== undefined
@@ -51,6 +59,8 @@ export const announcementController = {
         message,
         locationName,
         gps,
+        title,
+        agency,
       },
       req.user?.id,
     );
@@ -62,10 +72,27 @@ export const announcementController = {
     const latRaw = req.query.lat;
     const lonRaw = req.query.long ?? req.query.lon;
     const limitRaw = req.query.limit;
+    const langRaw = req.query.lang;
+    const lang =
+      typeof langRaw === "string" && langRaw.trim() !== "" ? langRaw.trim() : undefined;
 
     const lat = toNumber(latRaw);
     const lon = toNumber(lonRaw);
     const limit = toNumber(limitRaw);
+
+    // P2-6: when no coordinates are supplied, return the latest 50 instead of
+    // rejecting. Keeps the endpoint usable for translated feeds in the admin UI.
+    if (lat === undefined && lon === undefined) {
+      const latest = await announcementService.listLatest({
+        lang,
+        limit: typeof limit === "number" && Number.isFinite(limit) ? limit : 50,
+      });
+      res.json({
+        announcements: latest,
+        fetchedAt: new Date().toISOString(),
+      });
+      return;
+    }
 
     if (lat === undefined || lon === undefined || !isValidGps(lat, lon)) {
       res.status(400).json({ error: "lat and long must be valid WGS84 coordinates" });
@@ -76,6 +103,7 @@ export const announcementController = {
       lat,
       lon,
       limit: typeof limit === "number" && Number.isFinite(limit) ? limit : undefined,
+      lang,
     });
 
     res.json({
