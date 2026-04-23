@@ -600,4 +600,102 @@ export const dispatchService = {
       },
     };
   },
+
+  /**
+   * List rescuers from Firestore, optionally filtered by agency or on-duty.
+   * Used by the admin UI's incident drawer to populate the "assign rescuer"
+   * dropdown.
+   */
+  async listRescuers(params: {
+    agency?: AgencyScope;
+    onDuty?: boolean;
+    allowedAgencies?: AgencyScope[];
+  }): Promise<Array<{
+    id: string;
+    name: string;
+    agency: AgencyScope;
+    onDuty: boolean;
+    currentLocation: { lat: number; lng: number };
+    specialties: string[];
+  }>> {
+    const db = getFirestoreDb();
+    let query: FirebaseFirestore.Query = db.collection("rescuers");
+    if (params.onDuty !== undefined) {
+      query = query.where("onDuty", "==", params.onDuty);
+    }
+    if (params.agency) {
+      query = query.where("agency", "==", params.agency);
+    }
+    const snap = await query.get();
+    const allowed = params.allowedAgencies && params.allowedAgencies.length > 0
+      ? new Set(params.allowedAgencies)
+      : null;
+    const out: Array<{
+      id: string;
+      name: string;
+      agency: AgencyScope;
+      onDuty: boolean;
+      currentLocation: { lat: number; lng: number };
+      specialties: string[];
+    }> = [];
+    for (const doc of snap.docs) {
+      const r = docToRescuer(doc.id, doc.data());
+      if (!r) continue;
+      if (allowed && !allowed.has(r.agency)) continue;
+      out.push(r);
+    }
+    return out;
+  },
+
+  /**
+   * Persist an admin's assignment of a rescuer to an incident. Writes to
+   * `dispatches/{messageId}` and also mirrors the assignment onto the device
+   * entry for quick reads from the heatmap.
+   */
+  async assignRescuer(params: {
+    messageId: string;
+    rescuerId: string;
+    assignedBy: string;
+    assignedByEmail?: string;
+  }): Promise<{ ok: true; assignedAt: string }> {
+    const db = getFirestoreDb();
+    const rescuerSnap = await db.collection("rescuers").doc(params.rescuerId).get();
+    if (!rescuerSnap.exists) {
+      throw Object.assign(new Error("Rescuer not found"), { statusCode: 404 });
+    }
+    const rescuer = rescuerSnap.data() ?? {};
+    const assignedAt = new Date().toISOString();
+    const dispatchDoc = {
+      messageId: params.messageId,
+      rescuerId: params.rescuerId,
+      rescuerName: typeof rescuer.name === "string" ? rescuer.name : params.rescuerId,
+      rescuerAgency: typeof rescuer.agency === "string" ? rescuer.agency : null,
+      assignedAt,
+      assignedBy: params.assignedBy,
+      assignedByEmail: params.assignedByEmail ?? null,
+      status: "assigned" as const,
+    };
+    await db.collection("dispatches").doc(params.messageId).set(dispatchDoc, { merge: true });
+    // Best-effort: mirror onto the device entry so /api/data responses reflect it.
+    try {
+      await db.collection("device_entries").doc(params.messageId).set(
+        {
+          assignment: {
+            rescuerId: params.rescuerId,
+            rescuerName: dispatchDoc.rescuerName,
+            assignedAt,
+            assignedBy: params.assignedBy,
+          },
+          status: "assigned",
+        },
+        { merge: true },
+      );
+    } catch (err) {
+      log.warn("dispatch.assign.mirror_failed", {
+        messageId: params.messageId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return { ok: true, assignedAt };
+  },
 };

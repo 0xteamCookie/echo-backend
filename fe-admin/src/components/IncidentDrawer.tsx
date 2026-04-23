@@ -85,7 +85,7 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setRescuerId("");
     setLoadingRescuers(true);
     const url =
-      apiUrl("/api/rescuers?" +
+      apiUrl("/api/dispatch/rescuers?" +
         new URLSearchParams({
           ...(agency ? { agency } : {}),
           onDuty: "true",

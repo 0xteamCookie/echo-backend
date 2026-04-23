@@ -261,4 +261,38 @@ export const dataController = {
       results,
     });
   }) satisfies RequestHandler,
+
+  updateStatus: (async (req, res) => {
+    if (!req.user) {
+      res.status(401).json({ error: "Unauthenticated" });
+      return;
+    }
+    const id = typeof req.params.id === "string" ? req.params.id.trim() : "";
+    if (!id) {
+      res.status(400).json({ error: "id is required" });
+      return;
+    }
+    const body = req.body;
+    const statusRaw = isRecord(body) && typeof body.status === "string" ? body.status.trim().toLowerCase() : "";
+    const allowed = new Set(["acknowledged", "resolved", "assigned", "pending"]);
+    if (!allowed.has(statusRaw)) {
+      res.status(400).json({
+        error: `status must be one of: ${[...allowed].join(", ")}`,
+      });
+      return;
+    }
+    try {
+      const updated = await dataService.setStatus({
+        id,
+        status: statusRaw as "acknowledged" | "resolved" | "assigned" | "pending",
+        actorId: req.user.id,
+        actorEmail: req.user.email,
+      });
+      res.json(updated);
+    } catch (err) {
+      const status = (err as { statusCode?: number }).statusCode ?? 500;
+      const message = err instanceof Error ? err.message : "Status update failed";
+      res.status(status).json({ error: message });
+    }
+  }) satisfies RequestHandler,
 };
