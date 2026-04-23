@@ -17,6 +17,7 @@ import { dispatchRouter } from "./modules/dispatch/dispatch.routes";
 import { provisionRouter } from "./modules/provision/provision.routes";
 import { pubsubRouter } from "./modules/pubsub/pubsub.routes";
 import { pushRouter } from "./modules/push/push.routes";
+import { rescuerRouter } from "./modules/rescuer/rescuer.routes";
 
 export const app = express();
 
@@ -114,6 +115,7 @@ app.use("/api/announcement", announcementRouter);
 app.use("/api/data", dataRouter);
 app.use("/api/dispatch", dispatchRouter);
 app.use("/api/push", pushRouter);
+app.use("/api/rescuer", rescuerRouter);
 app.use("/api/pubsub", pubsubRouter);
 
 app.use(errorHandler);
