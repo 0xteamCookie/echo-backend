@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { AlertTriangle, BrainCircuit, RefreshCcw, Siren, Timer } from "lucide-react";
 import useSWR from "swr";
 import { useAuth } from "../lib/auth/provider";
+import { apiUrl } from "../lib/api";
 
 type DispatchRecommendation = {
   incidentId: string;
@@ -39,7 +40,7 @@ export default function AgenticDispatchPanel() {
   const { authHeader } = useAuth();
   const authValue = authHeader.Authorization ?? "";
   const swrKey = authValue
-    ? (["/api/dispatch/recommendations?limit=12", authValue] as const)
+    ? ([apiUrl("/api/dispatch/recommendations?limit=12"), authValue] as const)
     : null;
   const { data: payload, error, isLoading, mutate } = useSWR<DispatchPayload>(
     swrKey,

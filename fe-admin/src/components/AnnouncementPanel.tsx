@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import useSWR from "swr";
 import { BellRing, MapPin, RefreshCcw, Send } from "lucide-react";
 import { useAuth } from "../lib/auth/provider";
+import { apiUrl } from "../lib/api";
 import AnnouncementLocationMap from "./AnnouncementLocationMap";
 
 type HeatmapPoint = {
@@ -56,7 +57,7 @@ export default function AnnouncementPanel() {
     success: "",
   });
 
-  const heatmapKey = authValue ? (["/api/data/heatmap?limit=300", authValue] as const) : null;
+  const heatmapKey = authValue ? ([apiUrl("/api/data/heatmap?limit=300"), authValue] as const) : null;
   const {
     data: heatmapData,
     error: heatmapError,
@@ -98,7 +99,7 @@ export default function AnnouncementPanel() {
 
   const nearbyKey =
     authValue && selectedLocation
-      ? ([`/api/announcement?lat=${selectedLocation.lat}&long=${selectedLocation.lon}&limit=50`, authValue] as const)
+      ? ([apiUrl(`/api/announcement?lat=${selectedLocation.lat}&long=${selectedLocation.lon}&limit=50`), authValue] as const)
       : null;
   const {
     data: nearbyData,
@@ -131,7 +132,7 @@ export default function AnnouncementPanel() {
     }
 
     try {
-      const res = await fetch("/api/announcement", {
+      const res = await fetch(apiUrl("/api/announcement"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

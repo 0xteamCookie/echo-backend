@@ -10,6 +10,7 @@ import {
 import { can } from "./permissions";
 import { defaultSession, type Agency, type AuthSession, type Permission, type Role } from "./types";
 import { getAuthClient, hasFirebaseConfig } from "../firebase-client";
+import { apiUrl } from "../api";
 
 const STORAGE_KEY = "echo-admin-session";
 
@@ -144,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const reqId = ++meFetchIdRef.current;
       let resolved: AuthSession | null = null;
       try {
-        const res = await fetch("/api/auth/me", {
+        const res = await fetch(apiUrl("/api/auth/me"), {
           headers: idToken ? { Authorization: `Bearer ${idToken}` } : {},
         });
         if (res.ok) {
@@ -192,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/auth/me", {
+        const res = await fetch(apiUrl("/api/auth/me"), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (cancelled) return;
@@ -257,7 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // ── Legacy custom-JWT login ───────────────────────────────────────
-        const res = await fetch("/api/auth/login", {
+        const res = await fetch(apiUrl("/api/auth/login"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
