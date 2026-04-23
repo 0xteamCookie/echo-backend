@@ -20,6 +20,11 @@ import { pushRouter } from "./modules/push/push.routes";
 
 export const app = express();
 
+// Trust the first proxy hop (nginx/Caddy/load-balancer) so that
+// X-Forwarded-For is used correctly by express-rate-limit and Express itself.
+// Value of 1 means: trust one proxy layer in front of Node.
+app.set("trust proxy", 1);
+
 // P3-12: defense-in-depth headers before any other middleware.
 app.use(helmet());
 
