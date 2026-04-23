@@ -264,9 +264,17 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
     return null;
   }
 
+  // Build googleAuthOptions from the service account JSON when present (no
+  // ADC / Workload Identity needed on plain VPS / container deployments).
+  const saJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
+  const googleAuthOptions = saJson
+    ? { credentials: JSON.parse(saJson) as Record<string, unknown> }
+    : undefined;
+
   const vertex = new VertexAI({
     project: config.googleCloudProjectId,
     location: config.vertexLocation,
+    googleAuthOptions,
   });
   const model = vertex.getGenerativeModel({
     model: config.vertexModel,
