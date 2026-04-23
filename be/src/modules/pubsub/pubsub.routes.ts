@@ -25,8 +25,12 @@ const triagePush: RequestHandler = async (req, res) => {
     res.status(503).json({ error: "pubsub push not configured" });
     return;
   }
-  const headerRaw = req.header("X-Pubsub-Token") ?? "";
-  if (!constantTimeEq(headerRaw, expected)) {
+  // GCP Pub/Sub push can't set custom headers, so accept the token from either
+  // a URL query param (?token=...) or the X-Pubsub-Token header (used in tests).
+  const tokenRaw =
+    (typeof req.query.token === "string" ? req.query.token : "") ||
+    (req.header("X-Pubsub-Token") ?? "");
+  if (!constantTimeEq(tokenRaw, expected)) {
     res.status(401).json({ error: "invalid pubsub token" });
     return;
   }
