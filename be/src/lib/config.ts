@@ -1,7 +1,11 @@
 /** Normalize PEM pasted into `.env` with literal `\n` sequences. */
 function pemFromEnv(raw: string | undefined): string {
   if (!raw) return "";
-  return raw.replace(/\\n/g, "\n").trim();
+  return raw
+    .replace(/\\n/g, "\n")   // literal \n → real newline (dotenv style)
+    .replace(/\r\n/g, "\n")  // CRLF → LF (Windows paste artefact)
+    .replace(/\r/g, "\n")    // lone CR → LF
+    .trim();
 }
 
 const nodeEnv = process.env.NODE_ENV ?? "development";
