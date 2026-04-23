@@ -6,20 +6,30 @@ import type { NextRequest } from "next/server";
  *
  * Responsibilities:
  * 1. Attach defense-in-depth security headers on every response (also set in
- *    `next.config.ts` but duplicated here so Route Handlers also benefit).
+ *    `next.config.ts` but duplicated here so error pages also benefit).
  * 2. Mark admin pages as `noindex` — this is an internal responder console
  *    and must never appear in search engines.
  *
- * Auth gating itself stays client-side (see `components/DashboardLayout.tsx`).
- * Firebase ID tokens are held in-memory by the Firebase SDK rather than in
- * cookies, so this edge middleware cannot perform server-side token
- * verification. If that becomes necessary (for true server-rendered gating),
- * the admin would need to mint a session cookie from the ID token and verify
- * it here via the Firebase Admin SDK. The current client-side redirect path
- * remains in place as defense-in-depth.
+ * There is no Next.js API proxy layer — the admin UI talks to the `be`
+ * Express backend directly (see `src/lib/api.ts`). Auth gating stays
+ * client-side (see `components/DashboardLayout.tsx`); Firebase ID tokens are
+ * held in-memory by the Firebase SDK and forwarded as `Authorization: Bearer`
+ * on each API call.
  */
 export function proxy(_req: NextRequest) {
   const res = NextResponse.next();
+
+  // The admin UI calls the `be` Express backend directly (no Next.js API
+  // proxy layer). Read the backend origin from NEXT_PUBLIC_BACKEND_URL so it
+  // can be whitelisted in `connect-src`. Falls back to the dev default.
+  let backendOrigin = "";
+  try {
+    backendOrigin = new URL(
+      process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3000",
+    ).origin;
+  } catch {
+    backendOrigin = "http://localhost:3000";
+  }
 
   res.headers.set(
     "Content-Security-Policy",
@@ -32,7 +42,7 @@ export function proxy(_req: NextRequest) {
       // Google Maps tiles + marker sprites.
       "img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com",
       // API backend + Google Maps APIs + Firebase.
-      "connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://firestore.googleapis.com https://*.firebaseio.com",
+      `connect-src 'self' ${backendOrigin} https://*.googleapis.com https://*.gstatic.com https://firestore.googleapis.com https://*.firebaseio.com`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -54,5 +64,5 @@ export function proxy(_req: NextRequest) {
 
 export const config = {
   // Apply to every app route except Next.js internals and static assets.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/.*).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

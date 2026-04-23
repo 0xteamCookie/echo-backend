@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { X, BrainCircuit, MapPin, Clock, User, Loader2 } from "lucide-react";
 import type { DeviceEntry } from "../hooks/useRealtimeEvents";
+import { apiUrl } from "../lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -84,11 +85,11 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setRescuerId("");
     setLoadingRescuers(true);
     const url =
-      "/api/rescuers?" +
-      new URLSearchParams({
-        ...(agency ? { agency } : {}),
-        onDuty: "true",
-      }).toString();
+      apiUrl("/api/rescuers?" +
+        new URLSearchParams({
+          ...(agency ? { agency } : {}),
+          onDuty: "true",
+        }).toString());
 
     (async () => {
       try {
@@ -142,7 +143,7 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setToast(null);
     try {
       // TODO(backend): requires POST /api/dispatch/assign — route may not exist yet.
-      const res = await fetch("/api/dispatch/assign", {
+      const res = await fetch(apiUrl("/api/dispatch/assign"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({ messageId: entry.id, rescuerId }),
@@ -165,7 +166,7 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setToast(null);
     try {
       // TODO(backend): requires PATCH/POST /api/data/:id/status — route may not exist yet.
-      const res = await fetch(`/api/data/${encodeURIComponent(entry.id)}/status`, {
+      const res = await fetch(apiUrl(`/api/data/${encodeURIComponent(entry.id)}/status`), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({ status }),

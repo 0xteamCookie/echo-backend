@@ -9,6 +9,7 @@ import {
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
 import { useAuth } from "../lib/auth/provider";
+import { apiUrl } from "../lib/api";
 import {
   useRealtimeEvents,
   FIRESTORE_NO_CLIENT,
@@ -185,7 +186,7 @@ export default function RealMap() {
 
     async function fetchHeatmap() {
       try {
-        const res = await fetch("/api/data/heatmap?limit=200", {
+        const res = await fetch(apiUrl("/api/data/heatmap?limit=200"), {
           headers: authHeader,
         });
         if (!res.ok) return;

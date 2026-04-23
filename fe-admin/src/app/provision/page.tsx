@@ -6,6 +6,7 @@ import { Copy, Check, QrCode } from "lucide-react";
 import AccessDenied from "../../components/auth/AccessDenied";
 import { can } from "../../lib/auth/permissions";
 import { useAuth } from "../../lib/auth/provider";
+import { apiUrl } from "../../lib/api";
 
 type IssueResponse = {
   token?: string;
@@ -64,7 +65,7 @@ export default function ProvisionPage() {
       setDispatchLoading(true);
       setDispatchError("");
       try {
-        const res = await fetch("/api/dispatch/recommendations?limit=8", {
+        const res = await fetch(apiUrl("/api/dispatch/recommendations?limit=8"), {
           headers: authHeader,
         });
         const data = (await res.json()) as DispatchResponse & { error?: string };
@@ -90,7 +91,7 @@ export default function ProvisionPage() {
     setCopied(false);
 
     try {
-      const res = await fetch("/api/provision", {
+      const res = await fetch(apiUrl("/api/provision/token"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify(payload),
@@ -98,7 +99,7 @@ export default function ProvisionPage() {
       const data = (await res.json()) as IssueResponse;
       setResult(data);
     } catch {
-      setResult({ error: "Network error — is the admin app running?" });
+      setResult({ error: "Network error \u2014 is the backend API reachable?" });
     } finally {
       setLoading(false);
     }
@@ -170,9 +171,11 @@ export default function ProvisionPage() {
             Rescuer credentials
           </h1>
           <p className="text-[13px] text-gray-500 mt-1 max-w-xl">
-            Issue a JWT (role, agent name, radius, location) and show it as a QR. The admin app proxies using{" "}
-            <code className="text-[12px] bg-gray-100 px-1 rounded">ADMIN_API_KEY</code> in{" "}
-            <code className="text-[12px] bg-gray-100 px-1 rounded">.env.local</code>.
+            Issue a JWT (role, agent name, radius, location) and show it as a QR. Calls the backend
+            {" "}
+            <code className="text-[12px] bg-gray-100 px-1 rounded">POST /api/provision/token</code>
+            {" "}
+            directly; super-admin permission (<code className="text-[12px] bg-gray-100 px-1 rounded">provision:issue</code>) is required.
           </p>
         </div>
       </div>
