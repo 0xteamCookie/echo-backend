@@ -30,9 +30,8 @@ function readSeverity(entry: DeviceEntry): number {
 }
 
 function readStatus(entry: DeviceEntry): string {
-  const status = (entry as unknown as Record<string, unknown>).status;
-  if (typeof status === "string" && status.trim() !== "") {
-    const s = status.trim().toLowerCase();
+  if (typeof entry.status === "string" && entry.status.trim() !== "") {
+    const s = entry.status.trim().toLowerCase();
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
   return "Pending";

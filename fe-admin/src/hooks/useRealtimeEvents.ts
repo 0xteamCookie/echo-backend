@@ -27,6 +27,8 @@ export type DeviceEntry = {
   gps?: { lat: number; lon: number };
   meta?: Record<string, unknown>;
   receivedAt: string;
+  /** Operational status written by the admin drawer via POST /api/data/:id/status. */
+  status?: string;
 };
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -105,6 +107,7 @@ function docToEntry(id: string, data: Record<string, unknown>): DeviceEntry {
     gps,
     meta,
     receivedAt,
+    status: typeof data.status === "string" ? data.status : undefined,
   };
 }
 

@@ -142,7 +142,6 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setActionBusy("assign");
     setToast(null);
     try {
-      // TODO(backend): requires POST /api/dispatch/assign — route may not exist yet.
       const res = await fetch(apiUrl("/api/dispatch/assign"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
@@ -165,7 +164,6 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setActionBusy(status);
     setToast(null);
     try {
-      // TODO(backend): requires PATCH/POST /api/data/:id/status — route may not exist yet.
       const res = await fetch(apiUrl(`/api/data/${encodeURIComponent(entry.id)}/status`), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
