@@ -119,8 +119,8 @@ export const provisionController = {
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to issue token";
-      if (message.includes("JWT_PRIVATE_KEY")) {
-        res.status(503).json({ error: "JWT provisioning is not configured (missing JWT_PRIVATE_KEY)" });
+      if (message.includes("FIREBASE_SERVICE_ACCOUNT_JSON")) {
+        res.status(503).json({ error: "JWT provisioning is not configured (FIREBASE_SERVICE_ACCOUNT_JSON missing or invalid)" });
         return;
       }
       throw e;

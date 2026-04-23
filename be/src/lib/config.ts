@@ -1,13 +1,3 @@
-/** Normalize PEM pasted into `.env` with literal `\n` sequences. */
-function pemFromEnv(raw: string | undefined): string {
-  if (!raw) return "";
-  return raw
-    .replace(/\\n/g, "\n")   // literal \n → real newline (dotenv style)
-    .replace(/\r\n/g, "\n")  // CRLF → LF (Windows paste artefact)
-    .replace(/\r/g, "\n")    // lone CR → LF
-    .trim();
-}
-
 const nodeEnv = process.env.NODE_ENV ?? "development";
 const isProd = nodeEnv === "production";
 
@@ -74,14 +64,12 @@ export const config = {
     .map((s) => s.trim())
     .filter((s) => s.length > 0),
 
-  /** RSA PEM private key (PKCS#8) used to sign rescuer provisioning JWTs (RS256). */
-  jwtPrivateKeyPem: pemFromEnv(process.env.JWT_PRIVATE_KEY),
-  /** Issuer claim (`iss`) — must match what rescuer apps expect. */
+  // JWT_PRIVATE_KEY / JWT_PRIVATE_KEY_B64 removed — signing key is derived
+  // from FIREBASE_SERVICE_ACCOUNT_JSON at runtime (no separate key needed).
+
+  /** Issuer claim (`iss`) shared by all JWT variants (provisioning + dashboard). */
   jwtIssuer: process.env.JWT_ISSUER?.trim() || "echo",
-  /** Audience claim (`aud`) — must match embedded app config. */
-  jwtAudience: process.env.JWT_AUDIENCE?.trim() || "echo-rescuer",
-  /** Key id for JWT header and JWKS (`kid`). */
-  jwtKeyId: process.env.JWT_KEY_ID?.trim() || "echo-provisioning-1",
+
   /** Default lifetime for issued rescuer tokens (seconds). 72h per P1-12. */
   jwtDefaultExpiresInSeconds:
     Number(process.env.JWT_DEFAULT_EXPIRES_SECONDS) || 60 * 60 * 72,

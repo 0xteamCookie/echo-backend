@@ -98,7 +98,7 @@ app.get("/.well-known/jwks.json", async (_req, res) => {
     res.setHeader("Cache-Control", "public, max-age=3600");
     res.json({ keys: [jwk] });
   } catch {
-    res.status(503).json({ error: "JWKS not available (configure JWT_PRIVATE_KEY)" });
+    res.status(503).json({ error: "JWKS not available (configure FIREBASE_SERVICE_ACCOUNT_JSON)" });
   }
 });
 
