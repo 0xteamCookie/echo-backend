@@ -1,6 +1,8 @@
 import type { RequestHandler } from "express";
 import { verifyDashboardJwt } from "../lib/jwt-dashboard";
 import { config } from "../lib/config";
+import { getAdminAuth, getFirestoreDb } from "../lib/firebase";
+import { log } from "../lib/logger";
 
 export type UserType = "official" | "user" | "agents" | "ingest";
 export type Agency = "medical" | "fire" | "police";
@@ -69,13 +71,77 @@ export const identifyUser: RequestHandler = (req, _res, next) => {
               : [payload.role],
       };
     } catch {
-      req.user = undefined;
+      // Fall back to Firebase ID token verification. The admin UI uses
+      // Firebase Auth when NEXT_PUBLIC_FIREBASE_* is configured and sends a
+      // Firebase ID token as the bearer. We verify it with firebase-admin,
+      // then look up `users/{uid}` in Firestore for role/agencies. Missing
+      // profiles default to a read-only medical role.
+      try {
+        const decoded = await getAdminAuth().verifyIdToken(match[1]);
+        const uid = decoded.uid;
+        const claimRole = parseFirebaseRole(decoded.role);
+        const claimAgencies = parseFirebaseAgencies(decoded.agencies);
+
+        let role: UserRole | null = claimRole;
+        let agencies: Agency[] = claimAgencies;
+        let email: string | undefined =
+          typeof decoded.email === "string" ? decoded.email : undefined;
+
+        if (!role) {
+          try {
+            const snap = await getFirestoreDb().collection("users").doc(uid).get();
+            if (snap.exists) {
+              const data = snap.data() ?? {};
+              role = parseFirebaseRole(data.role);
+              const fromDoc = parseFirebaseAgencies(data.agencies);
+              if (fromDoc.length > 0) agencies = fromDoc;
+              if (typeof data.email === "string") email = data.email;
+            }
+          } catch (err) {
+            log.warn("authz.firestore_lookup_failed", {
+              uid,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+
+        const resolvedRole: UserRole = role ?? "medical";
+        req.user = {
+          type: "official",
+          id: uid,
+          email,
+          role: resolvedRole,
+          agencies:
+            resolvedRole === "super_admin"
+              ? [...ALL_AGENCIES]
+              : agencies.length > 0
+                ? agencies
+                : [resolvedRole],
+        };
+      } catch {
+        req.user = undefined;
+      }
     }
     next();
   };
 
   void run();
 };
+
+function parseFirebaseRole(value: unknown): UserRole | null {
+  return value === "super_admin" || value === "medical" || value === "fire" || value === "police"
+    ? value
+    : null;
+}
+
+function parseFirebaseAgencies(value: unknown): Agency[] {
+  if (!Array.isArray(value)) return [];
+  const out = new Set<Agency>();
+  for (const item of value) {
+    if (item === "medical" || item === "fire" || item === "police") out.add(item);
+  }
+  return [...out];
+}
 
 function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;

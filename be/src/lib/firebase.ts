@@ -6,8 +6,10 @@ import {
   type ServiceAccount,
 } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { getAuth, type Auth } from "firebase-admin/auth";
 
 let db: FirebaseFirestore.Firestore | null = null;
+let adminAuth: Auth | null = null;
 
 function resolveProjectId(sa?: ServiceAccount): string | undefined {
   return (
@@ -56,6 +58,18 @@ export function getFirestoreDb(): FirebaseFirestore.Firestore {
     db = getFirestore();
   }
   return db;
+}
+
+/**
+ * Firebase Admin Auth, used to verify Firebase ID tokens sent by the admin UI
+ * when it is running in Firebase-Auth mode (`NEXT_PUBLIC_FIREBASE_*` set).
+ */
+export function getAdminAuth(): Auth {
+  ensureFirebaseApp();
+  if (!adminAuth) {
+    adminAuth = getAuth();
+  }
+  return adminAuth;
 }
 
 export { FieldValue };

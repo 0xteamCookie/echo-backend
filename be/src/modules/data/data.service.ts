@@ -346,4 +346,39 @@ export const dataService = {
     const allowedAgencies = new Set(filter.agencies);
     return items.filter((item) => item.agency && allowedAgencies.has(item.agency));
   },
+
+  /**
+   * Update the triage/operational status of a device entry. Stored on the
+   * document itself (not inside `meta`) so the admin UI can filter by status
+   * without parsing nested fields.
+   */
+  async setStatus(params: {
+    id: string;
+    status: "acknowledged" | "resolved" | "assigned" | "pending";
+    actorId: string;
+    actorEmail?: string;
+  }): Promise<DeviceData & { status: string }> {
+    const db = getFirestoreDb();
+    const ref = db.collection(COLLECTION).doc(params.id);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      throw Object.assign(new Error("Device entry not found"), { statusCode: 404 });
+    }
+    const now = new Date().toISOString();
+    await ref.set(
+      {
+        status: params.status,
+        statusUpdatedAt: now,
+        statusUpdatedBy: params.actorId,
+        statusUpdatedByEmail: params.actorEmail ?? null,
+      },
+      { merge: true },
+    );
+    const next = await ref.get();
+    const nd = next.data();
+    if (!nd) {
+      throw new Error("Failed to read device entry after status update");
+    }
+    return { ...docToDevice(params.id, nd), status: params.status };
+  },
 };

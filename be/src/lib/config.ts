@@ -77,9 +77,6 @@ export const config = {
   jwtMaxExpiresInSeconds:
     Number(process.env.JWT_MAX_EXPIRES_SECONDS) || 60 * 60 * 24 * 30,
 
-  /** Required for `POST /api/provision/token`. Use a long random string in production. */
-  adminApiKey: process.env.ADMIN_API_KEY?.trim() ?? "",
-
   /** JWT secret used for dashboard/admin login tokens (P0-7: must be set in prod). */
   dashboardJwtSecret: requireEnv("DASHBOARD_JWT_SECRET", "dev-only-change-me-dashboard-secret"),
   /** Seeded super-admin credentials for dashboard login (P0-7: must be set in prod). */
