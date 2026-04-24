@@ -428,6 +428,23 @@ function toRecommendation(
   };
 }
 
+function pickAvailableResponder(
+  brief: IncidentBrief,
+  preferredResponderId: string,
+  takenResponderIds: Set<string>,
+): { responderId: string; hadToReassign: boolean } {
+  if (!takenResponderIds.has(preferredResponderId)) {
+    return { responderId: preferredResponderId, hadToReassign: false };
+  }
+  const fallback = brief.candidateResponders.find((c) => !takenResponderIds.has(c.id));
+  if (fallback) {
+    return { responderId: fallback.id, hadToReassign: true };
+  }
+  // If every shortlisted responder is already taken, keep the preferred one as
+  // a last resort instead of dropping the incident entirely.
+  return { responderId: preferredResponderId, hadToReassign: false };
+}
+
 export const dispatchService = {
   async recommend(params: {
     agencies?: AgencyScope[];
@@ -577,6 +594,7 @@ export const dispatchService = {
     const recommendations: DispatchRecommendation[] = [];
     let modelAssistedCount = 0;
     let fallbackCount = 0;
+    const takenResponderIds = new Set<string>();
 
     for (let i = 0; i < briefs.length; i += 1) {
       const pair = briefs[i];
@@ -585,9 +603,26 @@ export const dispatchService = {
         decisionResult.status === "fulfilled"
           ? decisionResult.value
           : fallbackDecision(pair.brief);
-      if (decision.modelAssisted) modelAssistedCount += 1;
+      const picked = pickAvailableResponder(
+        pair.brief,
+        decision.selectedResponderId,
+        takenResponderIds,
+      );
+      const finalDecision: DecisionWithSource = picked.hadToReassign
+        ? {
+            ...decision,
+            selectedResponderId: picked.responderId,
+            escalate: true,
+            rationale: `${decision.rationale}; reassigned to avoid duplicate responder`,
+          }
+        : {
+            ...decision,
+            selectedResponderId: picked.responderId,
+          };
+      takenResponderIds.add(finalDecision.selectedResponderId);
+      if (finalDecision.modelAssisted) modelAssistedCount += 1;
       else fallbackCount += 1;
-      recommendations.push(toRecommendation(pair.incident, pair.brief, decision));
+      recommendations.push(toRecommendation(pair.incident, pair.brief, finalDecision));
     }
 
     return {
@@ -697,5 +732,100 @@ export const dispatchService = {
       });
     }
     return { ok: true, assignedAt };
+  },
+
+  /**
+   * Reseed dummy rescuers for local/dev testing.
+   * First removes previously seeded dummy docs, then inserts a fresh set.
+   */
+  async seedDummyRescuers(): Promise<{ seeded: number; ids: string[] }> {
+    const db = getFirestoreDb();
+    const now = new Date().toISOString();
+    const seedTag = "dispatch-dev-seed";
+    const legacyDummyIds = [
+      "med-alpha-01",
+      "med-bravo-02",
+      "fire-alpha-01",
+      "fire-bravo-03",
+      "police-alpha-11",
+      "police-bravo-14",
+    ];
+    const seedSuffix = now.slice(11, 19).replace(/:/g, "");
+    const jitter = () => (Math.random() - 0.5) * 0.03;
+    const fixtures: Array<{
+      id: string;
+      name: string;
+      agency: AgencyScope;
+      currentLocation: { lat: number; lng: number };
+      specialties: string[];
+    }> = [
+      {
+        id: `med-alpha-${seedSuffix}`,
+        name: "Dr. Asha Menon",
+        agency: "medical",
+        currentLocation: { lat: 12.9716 + jitter(), lng: 77.5946 + jitter() },
+        specialties: ["medical", "critical", "trauma"],
+      },
+      {
+        id: `med-bravo-${seedSuffix}`,
+        name: "Paramedic Leo",
+        agency: "medical",
+        currentLocation: { lat: 12.9648 + jitter(), lng: 77.6021 + jitter() },
+        specialties: ["medical", "first-aid"],
+      },
+      {
+        id: `fire-alpha-${seedSuffix}`,
+        name: "Lt. Rohan Fireteam",
+        agency: "fire",
+        currentLocation: { lat: 12.9782 + jitter(), lng: 77.5877 + jitter() },
+        specialties: ["fire", "rescue"],
+      },
+      {
+        id: `fire-bravo-${seedSuffix}`,
+        name: "Engine 12",
+        agency: "fire",
+        currentLocation: { lat: 12.9592 + jitter(), lng: 77.5968 + jitter() },
+        specialties: ["fire", "hazmat"],
+      },
+      {
+        id: `police-alpha-${seedSuffix}`,
+        name: "Inspector Kavya",
+        agency: "police",
+        currentLocation: { lat: 12.9754 + jitter(), lng: 77.6102 + jitter() },
+        specialties: ["police", "crowd-control"],
+      },
+      {
+        id: `police-bravo-${seedSuffix}`,
+        name: "Patrol Unit P14",
+        agency: "police",
+        currentLocation: { lat: 12.9683 + jitter(), lng: 77.5815 + jitter() },
+        specialties: ["police", "traffic"],
+      },
+    ];
+
+    const seededSnap = await db.collection("rescuers").where("seededBy", "==", seedTag).get();
+    const staleIds = new Set<string>([
+      ...legacyDummyIds,
+      ...seededSnap.docs.map((d) => d.id),
+    ]);
+    await Promise.all([...staleIds].map((id) => db.collection("rescuers").doc(id).delete()));
+
+    await Promise.all(
+      fixtures.map((r) =>
+        db.collection("rescuers").doc(r.id).set(
+          {
+            name: r.name,
+            agency: r.agency,
+            currentLocation: r.currentLocation,
+            specialties: r.specialties,
+            onDuty: true,
+            lastSeenAt: now,
+            seededBy: seedTag,
+            seededAt: now,
+          },
+          { merge: false },
+        )),
+    );
+    return { seeded: fixtures.length, ids: fixtures.map((x) => x.id) };
   },
 };

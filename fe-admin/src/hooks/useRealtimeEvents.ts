@@ -29,6 +29,11 @@ export type DeviceEntry = {
   receivedAt: string;
   /** Operational status written by the admin drawer via POST /api/data/:id/status. */
   status?: string;
+  assignment?: {
+    rescuerId?: string;
+    rescuerName?: string;
+    assignedAt?: string;
+  };
 };
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -108,6 +113,25 @@ function docToEntry(id: string, data: Record<string, unknown>): DeviceEntry {
     meta,
     receivedAt,
     status: typeof data.status === "string" ? data.status : undefined,
+    assignment:
+      data.assignment &&
+      typeof data.assignment === "object" &&
+      !Array.isArray(data.assignment)
+        ? {
+            rescuerId:
+              typeof (data.assignment as Record<string, unknown>).rescuerId === "string"
+                ? ((data.assignment as Record<string, unknown>).rescuerId as string)
+                : undefined,
+            rescuerName:
+              typeof (data.assignment as Record<string, unknown>).rescuerName === "string"
+                ? ((data.assignment as Record<string, unknown>).rescuerName as string)
+                : undefined,
+            assignedAt:
+              typeof (data.assignment as Record<string, unknown>).assignedAt === "string"
+                ? ((data.assignment as Record<string, unknown>).assignedAt as string)
+                : undefined,
+          }
+        : undefined,
   };
 }
 

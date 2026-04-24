@@ -23,3 +23,10 @@ dispatchRouter.post(
   requirePermission("data:write"),
   dispatchController.assign,
 );
+
+// Dev-only helper to seed test rescuers in Firestore.
+dispatchRouter.post(
+  "/dev/seed-rescuers",
+  requirePermission("data:write"),
+  dispatchController.seedDummyRescuers,
+);

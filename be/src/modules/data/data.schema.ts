@@ -14,6 +14,13 @@ export type DeviceData = {
   gps?: GpsCoordinates;
   meta?: Record<string, unknown>;
   receivedAt: string;
+  status?: string;
+  assignment?: {
+    rescuerId?: string;
+    rescuerName?: string;
+    assignedAt?: string;
+    assignedBy?: string;
+  };
 };
 
 export type CreateDeviceDataBody = {

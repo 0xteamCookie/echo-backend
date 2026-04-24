@@ -19,7 +19,11 @@ let _auth: Auth | null = null;
  */
 export function hasFirebaseConfig(): boolean {
   if (typeof window === "undefined") return false;
-  return REQUIRED_VARS.every((k) => Boolean(process.env[k]));
+  return Boolean(
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  );
 }
 
 function ensureApp(): FirebaseApp | null {

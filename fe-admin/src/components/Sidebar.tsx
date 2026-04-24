@@ -10,7 +10,6 @@ import {
   Settings,
   LayoutGrid,
   ShieldAlert,
-  QrCode,
 } from "lucide-react";
 import { can } from "../lib/auth/permissions";
 import { useAuth } from "../lib/auth/provider";
@@ -47,20 +46,6 @@ export default function Sidebar() {
               active={pathname === "/announcement"}
             />
             <NavItem href="/map" icon={<Map size={16} />} label="Operations Map" active={pathname === "/map"} />
-          </nav>
-        </div>
-
-        <div className="mb-6">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">Field access</p>
-          <nav className="flex flex-col gap-0.5">
-            {can(session, "provision:issue") && (
-              <NavItem
-                href="/provision"
-                icon={<QrCode size={16} />}
-                label="Rescuer QR"
-                active={pathname === "/provision"}
-              />
-            )}
           </nav>
         </div>
 

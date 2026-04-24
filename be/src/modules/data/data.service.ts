@@ -179,6 +179,31 @@ function docToDevice(id: string, data: FirebaseFirestore.DocumentData): DeviceDa
       ? normalizeMeta(rawMeta as Record<string, unknown>)
       : undefined;
 
+  const rawAssignment = data.assignment;
+  const assignment =
+    rawAssignment &&
+    typeof rawAssignment === "object" &&
+    !Array.isArray(rawAssignment)
+      ? {
+          rescuerId:
+            typeof (rawAssignment as Record<string, unknown>).rescuerId === "string"
+              ? ((rawAssignment as Record<string, unknown>).rescuerId as string)
+              : undefined,
+          rescuerName:
+            typeof (rawAssignment as Record<string, unknown>).rescuerName === "string"
+              ? ((rawAssignment as Record<string, unknown>).rescuerName as string)
+              : undefined,
+          assignedAt:
+            typeof (rawAssignment as Record<string, unknown>).assignedAt === "string"
+              ? ((rawAssignment as Record<string, unknown>).assignedAt as string)
+              : undefined,
+          assignedBy:
+            typeof (rawAssignment as Record<string, unknown>).assignedBy === "string"
+              ? ((rawAssignment as Record<string, unknown>).assignedBy as string)
+              : undefined,
+        }
+      : undefined;
+
   return {
     id,
     macAddress: String(data.macAddress ?? ""),
@@ -188,6 +213,8 @@ function docToDevice(id: string, data: FirebaseFirestore.DocumentData): DeviceDa
     gps,
     meta,
     receivedAt: timestampToIso(data.receivedAt),
+    status: typeof data.status === "string" ? data.status : undefined,
+    assignment,
   };
 }
 

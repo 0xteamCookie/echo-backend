@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import { getAllowedAgencies } from "../../middleware/authz";
+import { config } from "../../lib/config";
 import { dispatchService } from "./dispatch.service";
 
 function parseAgency(value: unknown): "medical" | "fire" | "police" | undefined {
@@ -67,6 +68,20 @@ export const dispatchController = {
       const status = (err as { statusCode?: number }).statusCode ?? 500;
       const message = err instanceof Error ? err.message : "Assignment failed";
       res.status(status).json({ error: message });
+    }
+  }) satisfies RequestHandler,
+
+  seedDummyRescuers: (async (_req, res) => {
+    if (config.nodeEnv === "production") {
+      res.status(403).json({ error: "Disabled in production" });
+      return;
+    }
+    try {
+      const out = await dispatchService.seedDummyRescuers();
+      res.json(out);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Seeding failed";
+      res.status(500).json({ error: message });
     }
   }) satisfies RequestHandler,
 };

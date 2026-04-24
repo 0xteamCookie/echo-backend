@@ -32,6 +32,11 @@ app.use(helmet());
 // P3-11: CORS allowlist. Reject unknown origins; allow same-origin / curl
 // (no Origin header) so health checks still pass.
 const allowedOrigins = new Set(config.corsOrigins);
+if (config.nodeEnv !== "production") {
+  // Always allow local frontend dev origins, even if CORS_ORIGINS is stale.
+  allowedOrigins.add("http://localhost:3000");
+  allowedOrigins.add("http://localhost:3001");
+}
 app.use(
   cors({
     origin(origin, callback) {
