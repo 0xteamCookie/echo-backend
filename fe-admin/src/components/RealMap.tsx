@@ -119,6 +119,35 @@ function entryToClickable(entry: DeviceEntry): ClickableEntry | null {
   return { entry, lat: entry.gps.lat, lng: entry.gps.lon };
 }
 
+function readSeverity(entry: DeviceEntry): number {
+  const meta = entry.meta;
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return 1;
+  const sevRaw = (meta as Record<string, unknown>).severity;
+  if (typeof sevRaw === "number" && Number.isFinite(sevRaw)) {
+    return Math.min(5, Math.max(1, Math.round(sevRaw)));
+  }
+  const triage = (meta as Record<string, unknown>).triage;
+  if (triage && typeof triage === "object" && !Array.isArray(triage)) {
+    const triageSev = (triage as Record<string, unknown>).severity;
+    if (typeof triageSev === "number" && Number.isFinite(triageSev)) {
+      return Math.min(5, Math.max(1, Math.round(triageSev)));
+    }
+  }
+  return 1;
+}
+
+function formatRelativeTime(iso: string): string {
+  const ts = new Date(iso).getTime();
+  if (!Number.isFinite(ts)) return "--";
+  const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
+}
+
 function IncidentMarkers({
   items,
   onSelect,
@@ -350,6 +379,16 @@ export default function RealMap() {
       .filter((c): c is ClickableEntry => c !== null);
   }, [activeEvents]);
 
+  const recentSosReports = useMemo(() => {
+    return activeEvents
+      .filter((e) => Boolean(e.gps))
+      .sort((a, b) => {
+        const aTs = new Date(a.receivedAt || a.time).getTime();
+        const bTs = new Date(b.receivedAt || b.time).getTime();
+        return bTs - aTs;
+      });
+  }, [activeEvents]);
+
   const assignedCalls = useMemo(() => {
     return activeEvents
       .filter((e) => Boolean(e.assignment?.rescuerId) && Boolean(e.gps))
@@ -390,35 +429,50 @@ export default function RealMap() {
       </div>
 
       <aside className="xl:col-span-3 rounded-xl border border-gray-200 bg-white p-4 overflow-y-auto max-h-[calc(100vh-14rem)]">
-        <h3 className="text-[14px] font-semibold text-gray-900">Assigned Calls</h3>
+        <h3 className="text-[14px] font-semibold text-gray-900">Recent SOS / Reports</h3>
         <p className="text-[12px] text-gray-500 mt-1">
-          Incidents already assigned to responders.
+          Latest incidents powering the live heatmap.
         </p>
-        {assignedCalls.length === 0 ? (
+        {recentSosReports.length === 0 ? (
           <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-[12px] text-gray-600">
-            No assigned calls yet.
+            No SOS calls or reports yet.
           </div>
         ) : (
           <div className="mt-3 flex flex-col gap-2">
-            {assignedCalls.slice(0, 50).map((entry) => (
+            {recentSosReports.slice(0, 50).map((entry) => (
               <button
                 key={entry.id}
                 type="button"
                 onClick={() => focusAssigned(entry)}
                 className="text-left rounded-lg border border-gray-200 p-2.5 hover:bg-gray-50"
               >
-                <p className="text-[12px] font-semibold text-gray-900">
-                  {entry.assignment?.rescuerName ?? entry.assignment?.rescuerId ?? "Responder"}
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[12px] font-semibold text-gray-900">
+                    {(entry.agency ?? "medical").toUpperCase()} · Sev {readSeverity(entry)}
+                  </p>
+                  <span className="text-[10px] text-gray-500">
+                    {formatRelativeTime(entry.receivedAt || entry.time)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-600 mt-1 truncate">
+                  {entry.message?.trim() || `Incident ${entry.id.slice(0, 8)}`}
                 </p>
-                <p className="text-[11px] text-gray-600 mt-1">Incident {entry.id.slice(0, 8)}</p>
-                {entry.assignment?.assignedAt && (
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    {new Date(entry.assignment.assignedAt).toLocaleString()}
+                <p className="text-[11px] text-gray-500 mt-1">
+                  {entry.gps ? `${entry.gps.lat.toFixed(3)}, ${entry.gps.lon.toFixed(3)}` : "Unknown location"}
+                </p>
+                {entry.assignment?.rescuerName && (
+                  <p className="text-[11px] text-emerald-700 mt-1">
+                    Assigned to {entry.assignment.rescuerName}
                   </p>
                 )}
               </button>
             ))}
           </div>
+        )}
+        {assignedCalls.length > 0 && (
+          <p className="text-[11px] text-gray-500 mt-3">
+            {assignedCalls.length} assigned call{assignedCalls.length > 1 ? "s" : ""} in this feed.
+          </p>
         )}
       </aside>
 
