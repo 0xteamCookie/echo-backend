@@ -55,6 +55,20 @@ function agencyBadgeClass(agency?: string): string {
   return "bg-gray-100 text-gray-600";
 }
 
+function formatOperationalStatus(status: string | undefined): string | null {
+  if (typeof status !== "string" || status.trim() === "") return null;
+  const s = status.trim().toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function statusBadgeClass(status: string | undefined): string {
+  const s = typeof status === "string" ? status.trim().toLowerCase() : "";
+  if (s === "resolved") return "bg-emerald-100 text-emerald-800";
+  if (s === "acknowledged") return "bg-slate-200 text-slate-800";
+  if (s === "assigned") return "bg-amber-100 text-amber-900";
+  return "bg-gray-100 text-gray-700";
+}
+
 export function TriagedPill({ triage }: { triage: TriageInfo | null | undefined }) {
   if (!triage || triage.source !== "on-device") return null;
   return (
@@ -76,6 +90,8 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
 
   const triage = useMemo(() => (entry ? extractTriage(entry) : null), [entry]);
   const agency = entry?.agency;
+  const opStatus = formatOperationalStatus(entry?.status);
+  const isResolved = entry?.status?.trim().toLowerCase() === "resolved";
 
   // Fetch on-duty rescuers whenever a new incident opens or agency changes.
   useEffect(() => {
@@ -206,12 +222,19 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-gray-100">
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${agencyBadgeClass(agency)}`}
               >
                 {(agency ?? "unknown").toUpperCase()}
               </span>
+              {opStatus && (
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusBadgeClass(entry.status)}`}
+                >
+                  {opStatus}
+                </span>
+              )}
               <TriagedPill triage={triage} />
             </div>
             <h2 className="text-[15px] font-semibold text-gray-900">
@@ -309,6 +332,11 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
             <div className="text-[12px] font-semibold text-gray-700 uppercase tracking-wide">
               Assign responder
             </div>
+            {isResolved && (
+              <p className="text-[12px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                This SOS is marked resolved. Assignment and dispatch actions are disabled.
+              </p>
+            )}
             {loadingRescuers ? (
               <div className="inline-flex items-center gap-2 text-[12px] text-gray-500">
                 <Loader2 size={12} className="animate-spin" />
@@ -322,7 +350,8 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
               <select
                 value={rescuerId}
                 onChange={(e) => setRescuerId(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-black/10"
+                disabled={isResolved}
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-black/10 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Select a rescuer…</option>
                 {rescuers.map((r) => (
@@ -355,7 +384,7 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
           <button
             type="button"
             onClick={() => void doAssign()}
-            disabled={!rescuerId || actionBusy !== ""}
+            disabled={isResolved || !rescuerId || actionBusy !== ""}
             className="flex-1 min-w-[110px] rounded-xl bg-[#E63946] text-white py-2 text-[13px] font-medium hover:bg-[#c92d3a] disabled:opacity-50 transition-colors"
           >
             {actionBusy === "assign" ? "Assigning…" : "Assign"}
@@ -363,7 +392,7 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
           <button
             type="button"
             onClick={() => void setStatus("acknowledged")}
-            disabled={actionBusy !== ""}
+            disabled={isResolved || actionBusy !== ""}
             className="flex-1 min-w-[110px] rounded-xl bg-black text-white py-2 text-[13px] font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
             {actionBusy === "acknowledged" ? "…" : "Acknowledge"}
@@ -371,10 +400,10 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
           <button
             type="button"
             onClick={() => void setStatus("resolved")}
-            disabled={actionBusy !== ""}
+            disabled={isResolved || actionBusy !== ""}
             className="flex-1 min-w-[110px] rounded-xl border border-gray-300 bg-white text-gray-800 py-2 text-[13px] font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
-            {actionBusy === "resolved" ? "…" : "Resolve"}
+            {actionBusy === "resolved" ? "…" : isResolved ? "Resolved" : "Resolve"}
           </button>
         </div>
       </aside>

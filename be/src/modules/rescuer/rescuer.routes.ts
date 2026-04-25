@@ -3,6 +3,7 @@ import type { RequestHandler } from "express";
 import { requireRescuerJwt } from "../../middleware/rescuer-jwt";
 import { getFirestoreDb } from "../../lib/firebase";
 import { log } from "../../lib/logger";
+import { dataService } from "../data/data.service";
 
 export const rescuerRouter = Router();
 
@@ -94,3 +95,61 @@ const heartbeat: RequestHandler = async (req, res) => {
 };
 
 rescuerRouter.post("/heartbeat", requireRescuerJwt, heartbeat);
+
+/**
+ * POST /api/rescuer/sos/:id/resolve
+ *
+ * Marks a device entry (SOS / beacon record) as resolved after a rescue. Uses
+ * the same `status` field as the admin console. Rescuers may only resolve
+ * incidents whose `agency` matches their JWT `agency` when both are set.
+ */
+const resolveSos: RequestHandler = async (req, res) => {
+  const rescuer = req.rescuer;
+  if (!rescuer) {
+    res.status(401).json({ error: "Unauthenticated" });
+    return;
+  }
+  const id = typeof req.params.id === "string" ? req.params.id.trim() : "";
+  if (!id) {
+    res.status(400).json({ error: "id is required" });
+    return;
+  }
+
+  let device;
+  try {
+    device = await dataService.getById(id);
+  } catch (err) {
+    log.warn("rescuer.resolve_sos.lookup_failed", {
+      id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    res.status(500).json({ error: "lookup failed" });
+    return;
+  }
+  if (!device) {
+    res.status(404).json({ error: "SOS not found" });
+    return;
+  }
+
+  const rAgency = rescuer.agency;
+  const dAgency = device.agency;
+  if (rAgency && dAgency && rAgency !== dAgency) {
+    res.status(403).json({ error: "Agency scope does not match this incident" });
+    return;
+  }
+
+  try {
+    const updated = await dataService.setStatus({
+      id,
+      status: "resolved",
+      actorId: `rescuer:${rescuer.sub}`,
+    });
+    res.json(updated);
+  } catch (err) {
+    const status = (err as { statusCode?: number }).statusCode ?? 500;
+    const message = err instanceof Error ? err.message : "Resolve failed";
+    res.status(status).json({ error: message });
+  }
+};
+
+rescuerRouter.post("/sos/:id/resolve", requireRescuerJwt, resolveSos);

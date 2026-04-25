@@ -34,7 +34,7 @@ type CandidateIncident = {
 
 type BuildIncidentResult =
   | { incident: CandidateIncident }
-  | { incident: null; reason: "no_gps" | "low_severity" | "stale" };
+  | { incident: null; reason: "no_gps" | "low_severity" | "stale" | "resolved" };
 
 type DecisionWithSource = DispatchDecision & { modelAssisted: boolean };
 
@@ -276,6 +276,9 @@ async function driveTimesViaDistanceMatrix(
 
 function buildCandidateIncident(row: DeviceData): BuildIncidentResult {
   if (!row.gps) return { incident: null, reason: "no_gps" };
+  if (typeof row.status === "string" && row.status.trim().toLowerCase() === "resolved") {
+    return { incident: null, reason: "resolved" };
+  }
   const severity = severityFromMeta(row.meta);
   const age = ageMinutes(row.receivedAt);
   if (severity < INCIDENT_MIN_SEVERITY) return { incident: null, reason: "low_severity" };
@@ -457,7 +460,7 @@ export const dispatchService = {
       agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
     });
     const incidents: CandidateIncident[] = [];
-    const dropped = { noGps: 0, lowSeverity: 0, stale: 0 };
+    const dropped = { noGps: 0, lowSeverity: 0, stale: 0, resolved: 0 };
     let withGps = 0;
     for (const row of rows) {
       if (row.gps) withGps += 1;
@@ -468,6 +471,7 @@ export const dispatchService = {
         if (built.reason === "no_gps") dropped.noGps += 1;
         if (built.reason === "low_severity") dropped.lowSeverity += 1;
         if (built.reason === "stale") dropped.stale += 1;
+        if (built.reason === "resolved") dropped.resolved += 1;
       }
     }
     incidents.sort((a, b) => b.severity - a.severity || ageMinutes(a.receivedAt) - ageMinutes(b.receivedAt));
@@ -481,6 +485,7 @@ export const dispatchService = {
       droppedNoGps: dropped.noGps,
       droppedLowSeverity: dropped.lowSeverity,
       droppedStale: dropped.stale,
+      droppedResolved: dropped.resolved,
       thresholds: {
         minSeverity: INCIDENT_MIN_SEVERITY,
         maxAgeMinutes: INCIDENT_MAX_AGE_MINUTES,

@@ -30,7 +30,11 @@ const CATEGORY_WEIGHT: Record<string, number> = {
   unknown: 0.5,
 };
 
-type HeatPoint = { lat: number; lng: number; weight: number };
+type HeatPoint = { lat: number; lng: number; weight: number; status?: string };
+
+function isResolvedStatus(status: string | undefined): boolean {
+  return typeof status === "string" && status.trim().toLowerCase() === "resolved";
+}
 
 function entryToHeatPoint(entry: DeviceEntry): HeatPoint | null {
   if (!entry.gps) return null;
@@ -44,9 +48,17 @@ function entryToHeatPoint(entry: DeviceEntry): HeatPoint | null {
     severity = Math.min(5, Math.max(1, Math.round(meta.severity)));
   }
   const cat = entry.agency ?? "unknown";
-  const weight =
+  let weight =
     severity * (CATEGORY_WEIGHT[cat] ?? CATEGORY_WEIGHT.unknown);
-  return { lat: entry.gps.lat, lng: entry.gps.lon, weight };
+  if (isResolvedStatus(entry.status)) {
+    weight *= 0.12;
+  }
+  return {
+    lat: entry.gps.lat,
+    lng: entry.gps.lon,
+    weight,
+    status: entry.status,
+  };
 }
 
 // ─── Heatmap overlay (imperative; uses visualization library) ────────────────
@@ -166,15 +178,15 @@ function IncidentMarkers({
 
     for (const { entry, lat, lng } of items) {
       const assigned = Boolean(entry.assignment?.rescuerId);
+      const resolved = isResolvedStatus(entry.status);
       const marker = new google.maps.Marker({
         position: { lat, lng },
         map,
-        // Keep incident marker color consistent; assignment is shown via badge + popup.
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 7,
-          fillColor: "#E63946",
-          fillOpacity: 0.85,
+          fillColor: resolved ? "#16a34a" : "#E63946",
+          fillOpacity: resolved ? 0.9 : 0.85,
           strokeColor: assigned ? "#111827" : "#ffffff",
           strokeWeight: assigned ? 2.5 : 1.5,
         },
@@ -185,10 +197,19 @@ function IncidentMarkers({
               fontWeight: "700",
               fontSize: "10px",
             }
-          : undefined,
-        title: entry.assignment?.rescuerName
-          ? `Assigned: ${entry.assignment.rescuerName}`
-          : "Unassigned incident",
+          : resolved
+            ? {
+                text: "✓",
+                color: "#ffffff",
+                fontWeight: "700",
+                fontSize: "9px",
+              }
+            : undefined,
+        title: resolved
+          ? "Resolved"
+          : entry.assignment?.rescuerName
+            ? `Assigned: ${entry.assignment.rescuerName}`
+            : "Unassigned incident",
         cursor: "pointer",
         clickable: true,
         // Critical: keep the map's pan/zoom untouched on click.
@@ -196,7 +217,7 @@ function IncidentMarkers({
       marker.addListener("click", () => {
         // Assigned markers are informational on-map; use the right sidebar to
         // inspect/open details without disruptive overlay clashes.
-        if (assigned) return;
+        if (assigned && !resolved) return;
         onSelect(entry);
       });
       markersRef.current.push(marker);
@@ -265,21 +286,6 @@ export default function RealMap() {
 
     async function fetchHeatmapAndEvents() {
       try {
-        const heatmapRes = await fetch(apiUrl("/api/data/heatmap?limit=200"), { headers: authHeader });
-        if (heatmapRes.ok) {
-          const data = (await heatmapRes.json()) as {
-          points?: Array<{ lat: number; lon: number; weight?: number }>;
-          };
-          if (data.points && Array.isArray(data.points) && isActive) {
-            setFallbackPoints(
-              data.points.map((p) => ({
-                lat: p.lat,
-                lng: p.lon,
-                weight: p.weight ?? 1,
-              })),
-            );
-          }
-        }
         const eventsRes = await fetch(apiUrl("/api/data?limit=200"), { headers: authHeader });
         if (eventsRes.ok && isActive) {
           const list = (await eventsRes.json()) as unknown;
@@ -344,6 +350,11 @@ export default function RealMap() {
               })
             : [];
           setFallbackEvents(mapped);
+          setFallbackPoints(
+            mapped
+              .map(entryToHeatPoint)
+              .filter((p): p is HeatPoint => p !== null),
+          );
         }
       } catch (e) {
         console.error("Heatmap fetch error", e);
@@ -450,8 +461,15 @@ export default function RealMap() {
                   <p className="text-[12px] font-semibold text-gray-900">
                     {(entry.agency ?? "medical").toUpperCase()} · Sev {readSeverity(entry)}
                   </p>
-                  <span className="text-[10px] text-gray-500">
-                    {formatRelativeTime(entry.receivedAt || entry.time)}
+                  <span className="flex items-center gap-1.5 shrink-0">
+                    {isResolvedStatus(entry.status) && (
+                      <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                        Resolved
+                      </span>
+                    )}
+                    <span className="text-[10px] text-gray-500">
+                      {formatRelativeTime(entry.receivedAt || entry.time)}
+                    </span>
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-600 mt-1 truncate">

@@ -103,6 +103,7 @@ function heatmapPointFromDevice(d: DeviceData): HeatmapPoint | null {
     receivedAt: d.receivedAt,
     macAddress: d.macAddress,
     agency: d.agency,
+    status: d.status,
   };
 }
 

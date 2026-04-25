@@ -49,5 +49,7 @@ export type HeatmapPoint = {
   receivedAt: string;
   macAddress: string;
   agency?: AgencyScope;
+  /** Same as `DeviceData.status` when set (e.g. resolved). */
+  status?: string;
 };
 
