@@ -148,6 +148,13 @@ function readSeverity(entry: DeviceEntry): number {
   return 1;
 }
 
+function isSosEntry(entry: DeviceEntry): boolean {
+  const meta = entry.meta;
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return false;
+  const raw = (meta as Record<string, unknown>).isSos;
+  return raw === true || raw === 1 || raw === "1" || raw === "true";
+}
+
 function formatRelativeTime(iso: string): string {
   const ts = new Date(iso).getTime();
   if (!Number.isFinite(ts)) return "--";
@@ -394,6 +401,10 @@ export default function RealMap() {
     return activeEvents
       .filter((e) => Boolean(e.gps))
       .sort((a, b) => {
+        // SOS entries always rise to the top, then most-recent first.
+        const aSos = isSosEntry(a) ? 1 : 0;
+        const bSos = isSosEntry(b) ? 1 : 0;
+        if (aSos !== bSos) return bSos - aSos;
         const aTs = new Date(a.receivedAt || a.time).getTime();
         const bTs = new Date(b.receivedAt || b.time).getTime();
         return bTs - aTs;
@@ -450,15 +461,24 @@ export default function RealMap() {
           </div>
         ) : (
           <div className="mt-3 flex flex-col gap-2">
-            {recentSosReports.slice(0, 50).map((entry) => (
+            {recentSosReports.slice(0, 50).map((entry) => {
+              const sos = isSosEntry(entry);
+              return (
               <button
                 key={entry.id}
                 type="button"
                 onClick={() => focusAssigned(entry)}
-                className="text-left rounded-lg border border-gray-200 p-2.5 hover:bg-gray-50"
+                className={`text-left rounded-lg border p-2.5 hover:bg-gray-50 ${
+                  sos ? "border-red-400 bg-red-50/60 hover:bg-red-50" : "border-gray-200"
+                }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[12px] font-semibold text-gray-900">
+                  <p className="text-[12px] font-semibold text-gray-900 flex items-center gap-1.5">
+                    {sos && (
+                      <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-red-600 text-white">
+                        SOS
+                      </span>
+                    )}
                     {(entry.agency ?? "medical").toUpperCase()} · Sev {readSeverity(entry)}
                   </p>
                   <span className="flex items-center gap-1.5 shrink-0">
@@ -484,7 +504,8 @@ export default function RealMap() {
                   </p>
                 )}
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
         {assignedCalls.length > 0 && (
