@@ -1,0 +1,55 @@
+name: Bug report
+description: Something is broken in be/ or fe-admin/
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **Security issue?** Stop. Please follow [SECURITY.md](../SECURITY.md) — do not file a public issue.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected package
+      options:
+        - "be/ (Express API)"
+        - "fe-admin/ (operator console)"
+        - "both / unsure"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. `curl -X POST …` / open `/dispatch`
+        2. Observe …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit SHA / version
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "Node 20.11, Chrome 134, Firebase project echo-prod, region asia-south1"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / response bodies / screenshots
+      render: shell

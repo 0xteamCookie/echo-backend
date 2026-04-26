@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an improvement to the backend or operator console
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected package
+      options:
+        - "be/ (Express API)"
+        - "fe-admin/ (operator console)"
+        - "both"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Anchor your idea to operator or rescuer workflows.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

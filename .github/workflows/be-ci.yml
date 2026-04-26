@@ -1,0 +1,40 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "be/**"
+      - ".github/workflows/be-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "be/**"
+      - ".github/workflows/be-ci.yml"
+
+jobs:
+  build:
+    name: Type-check & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: be
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: be/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check & compile
+        run: npm run build
+
+      - name: Verify Firestore rules / indexes are valid JSON
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('firestore.indexes.json','utf8'))"
+          node -e "require('fs').readFileSync('firestore.rules','utf8')"
