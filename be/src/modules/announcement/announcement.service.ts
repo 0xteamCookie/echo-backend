@@ -2,7 +2,10 @@ import crypto from "node:crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { FieldValue, getFirestoreDb } from "../../lib/firebase";
 import { haversineMeters } from "../../lib/geo";
-import type { Announcement, CreateAnnouncementBody } from "./announcement.schema";
+import type {
+  Announcement,
+  CreateAnnouncementBody,
+} from "./announcement.schema";
 import { translateForAll } from "./translation.service";
 
 const COLLECTION = "announcements";
@@ -39,10 +42,18 @@ function normalizeTranslations(raw: unknown): Record<string, string> {
   return out;
 }
 
-function docToAnnouncement(id: string, data: FirebaseFirestore.DocumentData): Announcement {
-  const title = typeof data.title === "string" && data.title.trim() !== "" ? data.title : undefined;
+function docToAnnouncement(
+  id: string,
+  data: FirebaseFirestore.DocumentData,
+): Announcement {
+  const title =
+    typeof data.title === "string" && data.title.trim() !== ""
+      ? data.title
+      : undefined;
   const createdBy =
-    typeof data.createdBy === "string" && data.createdBy.trim() !== "" ? data.createdBy : undefined;
+    typeof data.createdBy === "string" && data.createdBy.trim() !== ""
+      ? data.createdBy
+      : undefined;
   return {
     id,
     message: String(data.message ?? data.body ?? ""),
@@ -68,7 +79,10 @@ function projectForLang(a: Announcement, lang?: string): Announcement {
 }
 
 export const announcementService = {
-  async create(payload: CreateAnnouncementBody, userId?: string): Promise<Announcement> {
+  async create(
+    payload: CreateAnnouncementBody,
+    userId?: string,
+  ): Promise<Announcement> {
     const db = getFirestoreDb();
     const id = crypto.randomUUID();
     const ref = db.collection(COLLECTION).doc(id);
@@ -104,7 +118,11 @@ export const announcementService = {
   }): Promise<Announcement[]> {
     const db = getFirestoreDb();
     const limit = Math.max(1, Math.min(200, params.limit ?? 100));
-    const snap = await db.collection(COLLECTION).orderBy("createdAt", "desc").limit(limit).get();
+    const snap = await db
+      .collection(COLLECTION)
+      .orderBy("createdAt", "desc")
+      .limit(limit)
+      .get();
     const items = snap.docs.map((doc) => docToAnnouncement(doc.id, doc.data()));
 
     return items
@@ -119,10 +137,16 @@ export const announcementService = {
   },
 
   /** P2-6: latest announcements (no geo filter) optionally rendered in `lang`. */
-  async listLatest(params: { lang?: string; limit?: number } = {}): Promise<Announcement[]> {
+  async listLatest(
+    params: { lang?: string; limit?: number } = {},
+  ): Promise<Announcement[]> {
     const db = getFirestoreDb();
     const limit = Math.max(1, Math.min(200, params.limit ?? 50));
-    const snap = await db.collection(COLLECTION).orderBy("createdAt", "desc").limit(limit).get();
+    const snap = await db
+      .collection(COLLECTION)
+      .orderBy("createdAt", "desc")
+      .limit(limit)
+      .get();
     return snap.docs
       .map((doc) => docToAnnouncement(doc.id, doc.data()))
       .map((item) => projectForLang(item, params.lang));

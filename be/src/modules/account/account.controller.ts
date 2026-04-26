@@ -54,7 +54,9 @@ export const accountController = {
     }
 
     if (Object.keys(patch).length === 0) {
-      res.status(400).json({ error: "Provide at least one of email, device, location" });
+      res
+        .status(400)
+        .json({ error: "Provide at least one of email, device, location" });
       return;
     }
 

@@ -51,13 +51,19 @@ export default function AnnouncementPanel() {
   const authValue = authHeader.Authorization ?? "";
   const [message, setMessage] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
-  const [submitState, setSubmitState] = useState<{ pending: boolean; error: string; success: string }>({
+  const [submitState, setSubmitState] = useState<{
+    pending: boolean;
+    error: string;
+    success: string;
+  }>({
     pending: false,
     error: "",
     success: "",
   });
 
-  const heatmapKey = authValue ? ([apiUrl("/api/data/heatmap?limit=300"), authValue] as const) : null;
+  const heatmapKey = authValue
+    ? ([apiUrl("/api/data/heatmap?limit=300"), authValue] as const)
+    : null;
   const {
     data: heatmapData,
     error: heatmapError,
@@ -66,9 +72,12 @@ export default function AnnouncementPanel() {
   } = useSWR<HeatmapPayload>(
     heatmapKey,
     async ([url, authorization]: readonly [string, string]) => {
-      const res = await fetch(url, { headers: { Authorization: authorization } });
+      const res = await fetch(url, {
+        headers: { Authorization: authorization },
+      });
       const data = (await res.json()) as HeatmapPayload;
-      if (!res.ok) throw new Error(data.error ?? "Failed to load heatmap points");
+      if (!res.ok)
+        throw new Error(data.error ?? "Failed to load heatmap points");
       return data;
     },
     { refreshInterval: 15000, revalidateOnFocus: false },
@@ -78,20 +87,31 @@ export default function AnnouncementPanel() {
     const points = Array.isArray(heatmapData?.points) ? heatmapData.points : [];
     const byKey = new Map<string, LocationOption>();
     for (const point of points) {
-      if (typeof point.lat !== "number" || typeof point.lon !== "number") continue;
-      const nameRaw = typeof point.locationName === "string" ? point.locationName.trim() : "";
-      const name = nameRaw || `Point (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)})`;
+      if (typeof point.lat !== "number" || typeof point.lon !== "number")
+        continue;
+      const nameRaw =
+        typeof point.locationName === "string" ? point.locationName.trim() : "";
+      const name =
+        nameRaw || `Point (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)})`;
       const key = `${name}::${point.lat.toFixed(6)}::${point.lon.toFixed(6)}`;
       const existing = byKey.get(key);
       const recency = point.receivedAt ?? "";
       if (!existing || recency > existing.recency) {
-        byKey.set(key, { key, name, lat: point.lat, lon: point.lon, recency, weight: point.weight });
+        byKey.set(key, {
+          key,
+          name,
+          lat: point.lat,
+          lon: point.lon,
+          recency,
+          weight: point.weight,
+        });
       }
     }
     return [...byKey.values()].sort((a, b) => (a.recency < b.recency ? 1 : -1));
   }, [heatmapData]);
 
-  const selectedLocation = locations.find((item) => item.key === selectedKey) ?? null;
+  const selectedLocation =
+    locations.find((item) => item.key === selectedKey) ?? null;
   const handleSelectLocation = useCallback((key: string) => {
     setSelectedKey(key);
     setSubmitState((prev) => ({ ...prev, error: "", success: "" }));
@@ -99,7 +119,12 @@ export default function AnnouncementPanel() {
 
   const nearbyKey =
     authValue && selectedLocation
-      ? ([apiUrl(`/api/announcement?lat=${selectedLocation.lat}&long=${selectedLocation.lon}&limit=50`), authValue] as const)
+      ? ([
+          apiUrl(
+            `/api/announcement?lat=${selectedLocation.lat}&long=${selectedLocation.lon}&limit=50`,
+          ),
+          authValue,
+        ] as const)
       : null;
   const {
     data: nearbyData,
@@ -109,9 +134,12 @@ export default function AnnouncementPanel() {
   } = useSWR<NearbyPayload>(
     nearbyKey,
     async ([url, authorization]: readonly [string, string]) => {
-      const res = await fetch(url, { headers: { Authorization: authorization } });
+      const res = await fetch(url, {
+        headers: { Authorization: authorization },
+      });
       const data = (await res.json()) as NearbyPayload;
-      if (!res.ok) throw new Error(data.error ?? "Failed to load nearby announcements");
+      if (!res.ok)
+        throw new Error(data.error ?? "Failed to load nearby announcements");
       return data;
     },
     { refreshInterval: 12000, revalidateOnFocus: false },
@@ -122,12 +150,20 @@ export default function AnnouncementPanel() {
     setSubmitState({ pending: true, error: "", success: "" });
 
     if (!selectedLocation) {
-      setSubmitState({ pending: false, error: "Please choose a location from heatmap data.", success: "" });
+      setSubmitState({
+        pending: false,
+        error: "Please choose a location from heatmap data.",
+        success: "",
+      });
       return;
     }
     const trimmed = message.trim();
     if (!trimmed) {
-      setSubmitState({ pending: false, error: "Please enter an announcement message.", success: "" });
+      setSubmitState({
+        pending: false,
+        error: "Please enter an announcement message.",
+        success: "",
+      });
       return;
     }
 
@@ -149,7 +185,11 @@ export default function AnnouncementPanel() {
         throw new Error(data.error ?? "Failed to create announcement");
       }
       setMessage("");
-      setSubmitState({ pending: false, error: "", success: "Announcement sent successfully." });
+      setSubmitState({
+        pending: false,
+        error: "",
+        success: "Announcement sent successfully.",
+      });
       await refreshNearby();
     } catch (err) {
       const reason = err instanceof Error ? err.message : "Unexpected error";
@@ -177,14 +217,17 @@ export default function AnnouncementPanel() {
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            <p className="text-[12px] font-medium text-gray-700">Select location from heatmap</p>
+            <p className="text-[12px] font-medium text-gray-700">
+              Select location from heatmap
+            </p>
             <AnnouncementLocationMap
               points={locations}
               selectedKey={selectedKey}
               onSelect={handleSelectLocation}
             />
             <p className="text-[11px] text-gray-500">
-              Click a map point to choose location. The orange circle shows the 1km announcement radius.
+              Click a map point to choose location. The orange circle shows the
+              1km announcement radius.
             </p>
           </div>
 
@@ -195,7 +238,8 @@ export default function AnnouncementPanel() {
                 {selectedLocation.name}
               </span>
               <span className="text-gray-500">
-                {selectedLocation.lat.toFixed(5)}, {selectedLocation.lon.toFixed(5)}
+                {selectedLocation.lat.toFixed(5)},{" "}
+                {selectedLocation.lon.toFixed(5)}
               </span>
             </div>
           )}
@@ -214,13 +258,23 @@ export default function AnnouncementPanel() {
             />
           </label>
 
-          {heatmapError && <p className="text-[12px] text-red-700">{heatmapError.message}</p>}
-          {submitState.error && <p className="text-[12px] text-red-700">{submitState.error}</p>}
-          {submitState.success && <p className="text-[12px] text-emerald-700">{submitState.success}</p>}
+          {heatmapError && (
+            <p className="text-[12px] text-red-700">{heatmapError.message}</p>
+          )}
+          {submitState.error && (
+            <p className="text-[12px] text-red-700">{submitState.error}</p>
+          )}
+          {submitState.success && (
+            <p className="text-[12px] text-emerald-700">
+              {submitState.success}
+            </p>
+          )}
 
           <button
             type="submit"
-            disabled={submitState.pending || !selectedLocation || message.trim() === ""}
+            disabled={
+              submitState.pending || !selectedLocation || message.trim() === ""
+            }
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#E63946] text-white px-4 py-2 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send size={14} />
@@ -228,13 +282,17 @@ export default function AnnouncementPanel() {
           </button>
         </form>
         {heatmapLoading && (
-          <p className="text-[12px] text-gray-500">Loading heatmap points for location selection...</p>
+          <p className="text-[12px] text-gray-500">
+            Loading heatmap points for location selection...
+          </p>
         )}
       </section>
 
       <section className="col-span-12 lg:col-span-7 rounded-2xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-semibold text-gray-900">Nearby Announcements</h3>
+          <h3 className="text-[16px] font-semibold text-gray-900">
+            Nearby Announcements
+          </h3>
           <button
             type="button"
             onClick={() => void refreshNearby()}
@@ -273,19 +331,31 @@ export default function AnnouncementPanel() {
             </div>
           )}
 
-        {selectedLocation && !nearbyLoading && !nearbyError && (nearbyData?.announcements.length ?? 0) > 0 && (
-          <div className="flex flex-col gap-3">
-            {nearbyData!.announcements.map((item) => (
-              <article key={item.id} className="rounded-xl border border-gray-200 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[13px] font-semibold text-gray-900">{item.locationName}</p>
-                  <p className="text-[11px] text-gray-500">{new Date(item.createdAt).toLocaleString()}</p>
-                </div>
-                <p className="text-[13px] text-gray-700 mt-2">{item.message}</p>
-              </article>
-            ))}
-          </div>
-        )}
+        {selectedLocation &&
+          !nearbyLoading &&
+          !nearbyError &&
+          (nearbyData?.announcements.length ?? 0) > 0 && (
+            <div className="flex flex-col gap-3">
+              {nearbyData!.announcements.map((item) => (
+                <article
+                  key={item.id}
+                  className="rounded-xl border border-gray-200 p-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[13px] font-semibold text-gray-900">
+                      {item.locationName}
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      {new Date(item.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <p className="text-[13px] text-gray-700 mt-2">
+                    {item.message}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
       </section>
     </div>
   );

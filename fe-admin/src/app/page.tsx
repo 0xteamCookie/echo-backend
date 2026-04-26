@@ -16,8 +16,12 @@ export default function Dashboard() {
     <>
       <div className="flex justify-between items-center bg-white">
         <div>
-          <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">DisasterOps</h1>
-          <p className="text-[13px] text-gray-500 mt-1">Live SOS mesh · admin console</p>
+          <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">
+            DisasterOps
+          </h1>
+          <p className="text-[13px] text-gray-500 mt-1">
+            Live SOS mesh · admin console
+          </p>
         </div>
       </div>
 

@@ -73,7 +73,10 @@ export const identifyUser: RequestHandler = (req, _res, next) => {
 
       if (!role) {
         try {
-          const snap = await getFirestoreDb().collection("users").doc(uid).get();
+          const snap = await getFirestoreDb()
+            .collection("users")
+            .doc(uid)
+            .get();
           if (snap.exists) {
             const data = snap.data() ?? {};
             role = parseFirebaseRole(data.role);
@@ -112,7 +115,10 @@ export const identifyUser: RequestHandler = (req, _res, next) => {
 };
 
 function parseFirebaseRole(value: unknown): UserRole | null {
-  return value === "super_admin" || value === "medical" || value === "fire" || value === "police"
+  return value === "super_admin" ||
+    value === "medical" ||
+    value === "fire" ||
+    value === "police"
     ? value
     : null;
 }
@@ -121,7 +127,8 @@ function parseFirebaseAgencies(value: unknown): Agency[] {
   if (!Array.isArray(value)) return [];
   const out = new Set<Agency>();
   for (const item of value) {
-    if (item === "medical" || item === "fire" || item === "police") out.add(item);
+    if (item === "medical" || item === "fire" || item === "police")
+      out.add(item);
   }
   return [...out];
 }
@@ -194,4 +201,3 @@ export const requireIngestAuth: RequestHandler = (req, res, next) => {
   }
   res.status(403).json({ error: "Forbidden" });
 };
-

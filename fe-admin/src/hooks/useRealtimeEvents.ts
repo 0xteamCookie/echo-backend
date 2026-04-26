@@ -74,11 +74,12 @@ function parseAgency(v: unknown): AgencyScope | undefined {
 }
 
 function docToEntry(id: string, data: Record<string, unknown>): DeviceEntry {
-  const rawGps = data.gps as { lat?: unknown; lon?: unknown } | null | undefined;
+  const rawGps = data.gps as
+    | { lat?: unknown; lon?: unknown }
+    | null
+    | undefined;
   const gps =
-    rawGps &&
-    typeof rawGps.lat === "number" &&
-    typeof rawGps.lon === "number"
+    rawGps && typeof rawGps.lat === "number" && typeof rawGps.lon === "number"
       ? { lat: rawGps.lat, lon: rawGps.lon }
       : undefined;
 
@@ -119,16 +120,22 @@ function docToEntry(id: string, data: Record<string, unknown>): DeviceEntry {
       !Array.isArray(data.assignment)
         ? {
             rescuerId:
-              typeof (data.assignment as Record<string, unknown>).rescuerId === "string"
-                ? ((data.assignment as Record<string, unknown>).rescuerId as string)
+              typeof (data.assignment as Record<string, unknown>).rescuerId ===
+              "string"
+                ? ((data.assignment as Record<string, unknown>)
+                    .rescuerId as string)
                 : undefined,
             rescuerName:
-              typeof (data.assignment as Record<string, unknown>).rescuerName === "string"
-                ? ((data.assignment as Record<string, unknown>).rescuerName as string)
+              typeof (data.assignment as Record<string, unknown>)
+                .rescuerName === "string"
+                ? ((data.assignment as Record<string, unknown>)
+                    .rescuerName as string)
                 : undefined,
             assignedAt:
-              typeof (data.assignment as Record<string, unknown>).assignedAt === "string"
-                ? ((data.assignment as Record<string, unknown>).assignedAt as string)
+              typeof (data.assignment as Record<string, unknown>).assignedAt ===
+              "string"
+                ? ((data.assignment as Record<string, unknown>)
+                    .assignedAt as string)
                 : undefined,
           }
         : undefined,

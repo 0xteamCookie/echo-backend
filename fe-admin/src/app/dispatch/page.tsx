@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import React, { useMemo, useState } from "react";
 import useSWR from "swr";
@@ -76,7 +76,9 @@ export default function DispatchPage() {
   const [issueError, setIssueError] = useState("");
   const [qrToken, setQrToken] = useState("");
   const [expiresIn, setExpiresIn] = useState<number | null>(null);
-  const [selectedRec, setSelectedRec] = useState<DispatchRecommendation | null>(null);
+  const [selectedRec, setSelectedRec] = useState<DispatchRecommendation | null>(
+    null,
+  );
   const [copied, setCopied] = useState(false);
   const [seedMsg, setSeedMsg] = useState("");
   const [assignState, setAssignState] = useState<{
@@ -84,7 +86,9 @@ export default function DispatchPage() {
     okMsg: string;
     errMsg: string;
   }>({ pending: false, okMsg: "", errMsg: "" });
-  const [agencyFilter, setAgencyFilter] = useState<"all" | "medical" | "fire" | "police">("all");
+  const [agencyFilter, setAgencyFilter] = useState<
+    "all" | "medical" | "fire" | "police"
+  >("all");
   const [searchIncident, setSearchIncident] = useState("");
 
   const swrKey = authValue
@@ -93,9 +97,12 @@ export default function DispatchPage() {
   const { data, error, isLoading, mutate } = useSWR<DispatchPayload>(
     swrKey,
     async ([url, authorization]: readonly [string, string]) => {
-      const res = await fetch(url, { headers: { Authorization: authorization } });
+      const res = await fetch(url, {
+        headers: { Authorization: authorization },
+      });
       const out = (await res.json()) as DispatchPayload;
-      if (!res.ok) throw new Error(out.error ?? "Failed to load recommendations");
+      if (!res.ok)
+        throw new Error(out.error ?? "Failed to load recommendations");
       return out;
     },
     { refreshInterval: 12000, revalidateOnFocus: false },
@@ -124,9 +131,12 @@ export default function DispatchPage() {
         }),
       });
       const out = (await res.json()) as IssueResponse;
-      if (!res.ok || !out.token) throw new Error(out.error ?? "Failed to issue token");
+      if (!res.ok || !out.token)
+        throw new Error(out.error ?? "Failed to issue token");
       setQrToken(out.token);
-      setExpiresIn(typeof out.expiresInSeconds === "number" ? out.expiresInSeconds : null);
+      setExpiresIn(
+        typeof out.expiresInSeconds === "number" ? out.expiresInSeconds : null,
+      );
     } catch (e) {
       setQrToken("");
       setExpiresIn(null);
@@ -149,7 +159,8 @@ export default function DispatchPage() {
         }),
       });
       const out = (await res.json()) as AssignResponse;
-      if (!res.ok || !out.ok) throw new Error(out.error ?? "Failed to assign responder");
+      if (!res.ok || !out.ok)
+        throw new Error(out.error ?? "Failed to assign responder");
       setAssignState({
         pending: false,
         okMsg: `Assigned ${selectedRec.selectedResponderName} to incident ${selectedRec.incidentId.slice(0, 8)}.`,
@@ -192,12 +203,16 @@ export default function DispatchPage() {
     return top.filter((rec) => {
       if (agencyFilter !== "all" && rec.agency !== agencyFilter) return false;
       if (!searchIncident.trim()) return true;
-      return rec.incidentId.toLowerCase().includes(searchIncident.trim().toLowerCase());
+      return rec.incidentId
+        .toLowerCase()
+        .includes(searchIncident.trim().toLowerCase());
     });
   }, [top, agencyFilter, searchIncident]);
   const qrOk = qrToken.length > 0 && qrToken.length <= 2800;
   const avgEta = filtered.length
-    ? Math.round(filtered.reduce((sum, x) => sum + x.etaMinutes, 0) / filtered.length)
+    ? Math.round(
+        filtered.reduce((sum, x) => sum + x.etaMinutes, 0) / filtered.length,
+      )
     : 0;
   const escalations = filtered.filter((x) => x.escalate).length;
 
@@ -211,7 +226,8 @@ export default function DispatchPage() {
               Agentic Dispatch Console
             </h1>
             <p className="text-[13px] text-gray-600 mt-1 max-w-2xl">
-              Unified workflow: AI shortlist -&gt; operator validation -&gt; one-click rescuer credential QR.
+              Unified workflow: AI shortlist -&gt; operator validation -&gt;
+              one-click rescuer credential QR.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -234,10 +250,26 @@ export default function DispatchPage() {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          <MetricCard icon={<Radar size={14} />} label="Incidents in scope" value={String(data?.meta.totalIncidents ?? 0)} />
-          <MetricCard icon={<Sparkles size={14} />} label="AI-assisted" value={String(data?.meta.modelAssistedCount ?? 0)} />
-          <MetricCard icon={<Clock3 size={14} />} label="Avg ETA" value={avgEta ? `${avgEta}m` : "-"} />
-          <MetricCard icon={<AlertTriangle size={14} />} label="Escalations" value={String(escalations)} />
+          <MetricCard
+            icon={<Radar size={14} />}
+            label="Incidents in scope"
+            value={String(data?.meta.totalIncidents ?? 0)}
+          />
+          <MetricCard
+            icon={<Sparkles size={14} />}
+            label="AI-assisted"
+            value={String(data?.meta.modelAssistedCount ?? 0)}
+          />
+          <MetricCard
+            icon={<Clock3 size={14} />}
+            label="Avg ETA"
+            value={avgEta ? `${avgEta}m` : "-"}
+          />
+          <MetricCard
+            icon={<AlertTriangle size={14} />}
+            label="Escalations"
+            value={String(escalations)}
+          />
         </div>
       </div>
       {seedMsg && (
@@ -254,7 +286,8 @@ export default function DispatchPage() {
                 Step 1: Review Agentic Recommendations
               </h2>
               <p className="text-[12px] text-gray-500 mt-1">
-                Pick a recommendation to auto-generate credentials for that responder.
+                Pick a recommendation to auto-generate credentials for that
+                responder.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -280,7 +313,11 @@ export default function DispatchPage() {
               ))}
             </div>
           </div>
-          {isLoading && <p className="text-[13px] text-gray-500">Loading recommendations...</p>}
+          {isLoading && (
+            <p className="text-[13px] text-gray-500">
+              Loading recommendations...
+            </p>
+          )}
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
               {error.message}
@@ -288,7 +325,8 @@ export default function DispatchPage() {
           )}
           {!isLoading && !error && filtered.length === 0 && (
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
-              No dispatch recommendations yet. Seed dummy rescuers and refresh to test.
+              No dispatch recommendations yet. Seed dummy rescuers and refresh
+              to test.
             </div>
           )}
           {!isLoading && !error && filtered.length > 0 && (
@@ -310,15 +348,23 @@ export default function DispatchPage() {
                       <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold">
                         {rec.agency.toUpperCase()}
                       </span>
-                      <span className="text-[11px] text-gray-500">Incident {rec.incidentId.slice(0, 8)}</span>
+                      <span className="text-[11px] text-gray-500">
+                        Incident {rec.incidentId.slice(0, 8)}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-gray-600">Confidence {rec.confidenceLevel}/3</span>
+                    <span className="text-[11px] text-gray-600">
+                      Confidence {rec.confidenceLevel}/3
+                    </span>
                   </div>
-                  <p className="text-[14px] font-semibold text-gray-900 mt-2">{rec.selectedResponderName}</p>
+                  <p className="text-[14px] font-semibold text-gray-900 mt-2">
+                    {rec.selectedResponderName}
+                  </p>
                   <p className="text-[12px] text-gray-600 mt-1">
                     {rec.selectedResponderSourceSystem} | ETA {rec.etaMinutes}m
                   </p>
-                  <p className="text-[12px] text-gray-600 mt-1">{rec.summary}</p>
+                  <p className="text-[12px] text-gray-600 mt-1">
+                    {rec.summary}
+                  </p>
                   <div className="mt-2 flex items-center gap-2 text-[11px]">
                     <span className="px-2 py-0.5 rounded-full border border-gray-200 text-gray-600">
                       Radius {rec.provisioningPreset.radiusM}m
@@ -342,17 +388,25 @@ export default function DispatchPage() {
           </h2>
           {selectedRec && (
             <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
-              <p className="text-[11px] text-gray-500 uppercase">Selected recommendation</p>
-              <p className="text-[14px] font-semibold text-gray-900 mt-1">{selectedRec.selectedResponderName}</p>
-              <p className="text-[12px] text-gray-600 mt-1">
-                Incident {selectedRec.incidentId.slice(0, 8)} | {selectedRec.selectedResponderSourceSystem}
+              <p className="text-[11px] text-gray-500 uppercase">
+                Selected recommendation
               </p>
-              <p className="text-[12px] text-gray-600 mt-1">{selectedRec.rationale}</p>
+              <p className="text-[14px] font-semibold text-gray-900 mt-1">
+                {selectedRec.selectedResponderName}
+              </p>
+              <p className="text-[12px] text-gray-600 mt-1">
+                Incident {selectedRec.incidentId.slice(0, 8)} |{" "}
+                {selectedRec.selectedResponderSourceSystem}
+              </p>
+              <p className="text-[12px] text-gray-600 mt-1">
+                {selectedRec.rationale}
+              </p>
             </div>
           )}
           {!canIssue && (
             <p className="text-[12px] text-amber-700 mt-3">
-              Your role cannot issue provisioning tokens (`provision:issue` required).
+              Your role cannot issue provisioning tokens (`provision:issue`
+              required).
             </p>
           )}
           {issueError && (
@@ -379,18 +433,30 @@ export default function DispatchPage() {
             <div className="mt-4">
               {selectedRec && (
                 <p className="text-[12px] text-gray-600 mb-3">
-                  Token for <span className="font-semibold text-gray-900">{selectedRec.selectedResponderName}</span>
+                  Token for{" "}
+                  <span className="font-semibold text-gray-900">
+                    {selectedRec.selectedResponderName}
+                  </span>
                 </p>
               )}
               <div className="rounded-xl border border-gray-100 p-3 inline-block bg-white">
                 {qrOk ? (
-                  <QRCodeSVG value={qrToken} size={260} level="M" includeMargin />
+                  <QRCodeSVG
+                    value={qrToken}
+                    size={260}
+                    level="M"
+                    includeMargin
+                  />
                 ) : (
-                  <p className="text-[12px] text-amber-800">Token too long for QR. Copy JWT below.</p>
+                  <p className="text-[12px] text-amber-800">
+                    Token too long for QR. Copy JWT below.
+                  </p>
                 )}
               </div>
               {typeof expiresIn === "number" && (
-                <p className="text-[12px] text-gray-500 mt-3">Expires in {expiresIn}s</p>
+                <p className="text-[12px] text-gray-500 mt-3">
+                  Expires in {expiresIn}s
+                </p>
               )}
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
@@ -406,7 +472,11 @@ export default function DispatchPage() {
                   onClick={copyToken}
                   className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-[12px] font-medium hover:bg-gray-50"
                 >
-                  {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                  {copied ? (
+                    <Check size={14} className="text-green-600" />
+                  ) : (
+                    <Copy size={14} />
+                  )}
                   {copied ? "Copied" : "Copy JWT"}
                 </button>
               </div>
@@ -423,7 +493,8 @@ export default function DispatchPage() {
           <div className="mt-5 rounded-xl border border-dashed border-gray-300 p-3">
             <p className="text-[11px] text-gray-500 uppercase">Step 3</p>
             <p className="text-[12px] text-gray-700 mt-1">
-              Share QR with field responder app, then confirm heartbeat updates from the issued `sub`.
+              Share QR with field responder app, then confirm heartbeat updates
+              from the issued `sub`.
             </p>
           </div>
         </aside>
@@ -432,11 +503,21 @@ export default function DispatchPage() {
   );
 }
 
-function MetricCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function MetricCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-3">
       <div className="text-gray-400">{icon}</div>
-      <p className="text-[11px] text-gray-500 mt-2 uppercase tracking-wide">{label}</p>
+      <p className="text-[11px] text-gray-500 mt-2 uppercase tracking-wide">
+        {label}
+      </p>
       <p className="text-[20px] font-semibold text-gray-900 mt-1">{value}</p>
     </div>
   );

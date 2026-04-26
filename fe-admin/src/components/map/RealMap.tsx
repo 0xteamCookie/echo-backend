@@ -25,8 +25,7 @@ import {
   type HeatPoint,
 } from "./types";
 
-const GOOGLE_MAPS_API_KEY =
-  process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 const DEFAULT_CENTER = { lat: 12.9716, lng: 77.5946 };
 const DEFAULT_ZOOM = 11;
@@ -74,7 +73,8 @@ function useFallbackEvents(enabled: boolean) {
         const list = (await res.json()) as unknown;
         if (!Array.isArray(list)) return;
         const mapped: DeviceEntry[] = list.flatMap((item): DeviceEntry[] => {
-          if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+          if (!item || typeof item !== "object" || Array.isArray(item))
+            return [];
           const rec = item as Record<string, unknown>;
           const id = typeof rec.id === "string" ? rec.id : "";
           if (!id) return [];
@@ -121,7 +121,9 @@ function useFallbackEvents(enabled: boolean) {
               time: typeof rec.time === "string" ? rec.time : "",
               gps,
               meta:
-                rec.meta && typeof rec.meta === "object" && !Array.isArray(rec.meta)
+                rec.meta &&
+                typeof rec.meta === "object" &&
+                !Array.isArray(rec.meta)
                   ? (rec.meta as Record<string, unknown>)
                   : undefined,
               receivedAt:

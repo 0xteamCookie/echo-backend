@@ -26,7 +26,9 @@ const registerHandler: RequestHandler = async (req, res) => {
     res.status(400).json({ error: "Invalid JSON body" });
     return;
   }
-  const fcmToken = String((body as Record<string, unknown>).fcmToken ?? "").trim();
+  const fcmToken = String(
+    (body as Record<string, unknown>).fcmToken ?? "",
+  ).trim();
   if (!fcmToken) {
     res.status(400).json({ error: "fcmToken is required" });
     return;
@@ -37,7 +39,9 @@ const registerHandler: RequestHandler = async (req, res) => {
     return;
   }
   const agency =
-    rescuer.agency === "medical" || rescuer.agency === "fire" || rescuer.agency === "police"
+    rescuer.agency === "medical" ||
+    rescuer.agency === "fire" ||
+    rescuer.agency === "police"
       ? rescuer.agency
       : undefined;
   await upsertRescuerToken(rescuer.sub, fcmToken, agency);

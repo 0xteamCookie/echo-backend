@@ -47,8 +47,17 @@ const heartbeat: RequestHandler = async (req, res) => {
   const lngRaw = (loc as Record<string, unknown>).lng;
   const lat = typeof latRaw === "number" ? latRaw : Number(latRaw);
   const lng = typeof lngRaw === "number" ? lngRaw : Number(lngRaw);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-    res.status(400).json({ error: "currentLocation must be valid WGS84 coordinates" });
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+    lat < -90 ||
+    lat > 90 ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    res
+      .status(400)
+      .json({ error: "currentLocation must be valid WGS84 coordinates" });
     return;
   }
 
@@ -66,10 +75,15 @@ const heartbeat: RequestHandler = async (req, res) => {
       : undefined;
 
   const agency =
-    rescuer.agency === "medical" || rescuer.agency === "fire" || rescuer.agency === "police"
+    rescuer.agency === "medical" ||
+    rescuer.agency === "fire" ||
+    rescuer.agency === "police"
       ? rescuer.agency
       : null;
-  const name = typeof rescuer.name === "string" && rescuer.name ? rescuer.name : rescuer.sub;
+  const name =
+    typeof rescuer.name === "string" && rescuer.name
+      ? rescuer.name
+      : rescuer.sub;
 
   const db = getFirestoreDb();
   const doc: Record<string, unknown> = {
@@ -134,7 +148,9 @@ const resolveSos: RequestHandler = async (req, res) => {
   const rAgency = rescuer.agency;
   const dAgency = device.agency;
   if (rAgency && dAgency && rAgency !== dAgency) {
-    res.status(403).json({ error: "Agency scope does not match this incident" });
+    res
+      .status(403)
+      .json({ error: "Agency scope does not match this incident" });
     return;
   }
 

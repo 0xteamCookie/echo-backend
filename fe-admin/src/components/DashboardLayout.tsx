@@ -7,7 +7,11 @@ import Header from "./Header";
 import { canAccessPath } from "../lib/auth/permissions";
 import { useAuth } from "../lib/auth/provider";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { ready, session } = useAuth();

@@ -37,11 +37,17 @@ export default function LoginPage() {
         onSubmit={onSubmit}
         className="w-full max-w-md bg-white rounded-2xl border border-gray-200 p-6 flex flex-col gap-4"
       >
-        <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">DisasterOps Login</h1>
-        <p className="text-[13px] text-gray-500">Sign in as super admin to access the dashboard.</p>
+        <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">
+          DisasterOps Login
+        </h1>
+        <p className="text-[13px] text-gray-500">
+          Sign in as super admin to access the dashboard.
+        </p>
 
         <div>
-          <label className="block text-[12px] font-semibold text-gray-600 mb-1">Email</label>
+          <label className="block text-[12px] font-semibold text-gray-600 mb-1">
+            Email
+          </label>
           <input
             type="email"
             value={email}
@@ -51,7 +57,9 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="block text-[12px] font-semibold text-gray-600 mb-1">Password</label>
+          <label className="block text-[12px] font-semibold text-gray-600 mb-1">
+            Password
+          </label>
           <input
             type="password"
             value={password}

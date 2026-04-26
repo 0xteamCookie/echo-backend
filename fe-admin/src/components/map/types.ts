@@ -23,7 +23,9 @@ const CATEGORY_WEIGHT: Record<string, number> = {
 };
 
 export function isResolvedStatus(status: string | undefined): boolean {
-  return typeof status === "string" && status.trim().toLowerCase() === "resolved";
+  return (
+    typeof status === "string" && status.trim().toLowerCase() === "resolved"
+  );
 }
 
 export function readSeverity(entry: DeviceEntry): number {

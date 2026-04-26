@@ -52,4 +52,3 @@ export type HeatmapPoint = {
   /** Same as `DeviceData.status` when set (e.g. resolved). */
   status?: string;
 };
-

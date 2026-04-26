@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -114,12 +114,15 @@
   <body>
     <h1>Echo backend — dummy ingest & heatmap (polls API, no WebSocket)</h1>
     <p class="muted">
-      Serve this page from the API server: <code>http://localhost:PORT/demo.html</code> — CORS is enabled for other
+      Serve this page from the API server:
+      <code>http://localhost:PORT/demo.html</code> — CORS is enabled for other
       origins too.
     </p>
 
     <div class="row">
-      <label>API base <input type="text" id="base" placeholder="(same origin)" /></label>
+      <label
+        >API base <input type="text" id="base" placeholder="(same origin)"
+      /></label>
       <label
         >Poll ms
         <input type="text" id="pollMs" value="4000" style="width: 5rem" />
@@ -128,15 +131,23 @@
     </div>
 
     <div class="row">
-      <button type="button" class="primary" id="btnMedical">Post dummy medical (SF)</button>
+      <button type="button" class="primary" id="btnMedical">
+        Post dummy medical (SF)
+      </button>
       <button type="button" id="btnFire">Post dummy fire (nearby)</button>
       <button type="button" id="btnPolice">Post police / Oakland</button>
-      <button type="button" id="btnDup">Send duplicate (same messageId — expect dedup)</button>
-      <button type="button" id="btnNoTriageNote">Post without GPS (triage still runs if key set)</button>
+      <button type="button" id="btnDup">
+        Send duplicate (same messageId — expect dedup)
+      </button>
+      <button type="button" id="btnNoTriageNote">
+        Post without GPS (triage still runs if key set)
+      </button>
     </div>
 
     <div id="map"></div>
-    <p class="muted" id="heatmapMeta">Heatmap: polling <code>/api/data/heatmap</code></p>
+    <p class="muted" id="heatmapMeta">
+      Heatmap: polling <code>/api/data/heatmap</code>
+    </p>
 
     <div class="grid">
       <div>
@@ -183,7 +194,8 @@
         appId: "1:390640342159:web:f7b86c206484e63ede4cfa",
         measurementId: "G-QQ24VGK0DM",
       };
-      if (typeof window !== "undefined") window.__ECHO_FIREBASE_CONFIG = firebaseConfig;
+      if (typeof window !== "undefined")
+        window.__ECHO_FIREBASE_CONFIG = firebaseConfig;
 
       const $ = (id) => document.getElementById(id);
       const apiBase = () => ($("base").value || "").replace(/\/$/, "") || "";
@@ -198,7 +210,9 @@
         const bearing = Math.random() * 2 * Math.PI;
         const dLat = ((dist * Math.cos(bearing)) / R_EARTH_M) * (180 / Math.PI);
         const dLon =
-          ((dist * Math.sin(bearing)) / (R_EARTH_M * Math.cos((lat * Math.PI) / 180))) * (180 / Math.PI);
+          ((dist * Math.sin(bearing)) /
+            (R_EARTH_M * Math.cos((lat * Math.PI) / 180))) *
+          (180 / Math.PI);
         return { lat: lat + dLat, lon: lon + dLon };
       }
 
@@ -221,15 +235,26 @@
           heatLayer = null;
         }
         if (!points || !points.length || !L.heatLayer) {
-          $("heatmapMeta").textContent = "Heatmap: no points or leaflet.heat missing";
+          $("heatmapMeta").textContent =
+            "Heatmap: no points or leaflet.heat missing";
           return;
         }
-        const latlngs = points.map((p) => [p.lat, p.lon, Math.max(0.15, p.weight / 8)]);
-        heatLayer = L.heatLayer(latlngs, { radius: 28, blur: 22, maxZoom: 14 }).addTo(map);
+        const latlngs = points.map((p) => [
+          p.lat,
+          p.lon,
+          Math.max(0.15, p.weight / 8),
+        ]);
+        heatLayer = L.heatLayer(latlngs, {
+          radius: 28,
+          blur: 22,
+          maxZoom: 14,
+        }).addTo(map);
         const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lon]));
         map.fitBounds(bounds.pad(0.15));
         $("heatmapMeta").textContent =
-          "Heatmap: " + points.length + " points (weight = severity × category multiplier)";
+          "Heatmap: " +
+          points.length +
+          " points (weight = severity × category multiplier)";
       }
 
       async function fetchJson(path, opts) {
@@ -255,7 +280,10 @@
       /** Labels for table: supports categories[], legacy category string, array-like objects, comma-separated. */
       function formatTriageCategories(tri) {
         if (!tri || typeof tri !== "object") return "—";
-        if (typeof tri.categories === "string" && tri.categories.trim() !== "") {
+        if (
+          typeof tri.categories === "string" &&
+          tri.categories.trim() !== ""
+        ) {
           return tri.categories.trim();
         }
         let list = tri.categories;
@@ -283,7 +311,9 @@
           const tri = r.meta && r.meta.triage;
           const cat = formatTriageCategories(tri);
           const sev =
-            tri && typeof tri === "object" && tri.severity != null ? tri.severity : "—";
+            tri && typeof tri === "object" && tri.severity != null
+              ? tri.severity
+              : "—";
           tr.innerHTML =
             "<td>" +
             (r.time || "").slice(11, 19) +
@@ -317,7 +347,12 @@
           macAddress: "aa:bb:cc:dd:ee:01",
           message: "Person unconscious, need medical assistance",
           time: now(),
-          gps: randomOffsetFrom(BASE_SF.lat, BASE_SF.lon, JITTER_MIN_M, JITTER_MAX_M),
+          gps: randomOffsetFrom(
+            BASE_SF.lat,
+            BASE_SF.lon,
+            JITTER_MIN_M,
+            JITTER_MAX_M,
+          ),
           meta: { hopCount: 2, battery: 61, messageId: "demo-" + Date.now() },
         });
 
@@ -326,7 +361,12 @@
           macAddress: "aa:bb:cc:dd:ee:02",
           message: "Building on fire, smoke on floor 3",
           time: now(),
-          gps: randomOffsetFrom(BASE_SF.lat, BASE_SF.lon, JITTER_MIN_M, JITTER_MAX_M),
+          gps: randomOffsetFrom(
+            BASE_SF.lat,
+            BASE_SF.lon,
+            JITTER_MIN_M,
+            JITTER_MAX_M,
+          ),
           meta: { hopCount: 4, messageId: "demo-" + Date.now() },
         });
 
@@ -335,7 +375,12 @@
           macAddress: "aa:bb:cc:dd:ee:03",
           message: "Looting reported at intersection",
           time: now(),
-          gps: randomOffsetFrom(BASE_OAK.lat, BASE_OAK.lon, JITTER_MIN_M, JITTER_MAX_M),
+          gps: randomOffsetFrom(
+            BASE_OAK.lat,
+            BASE_OAK.lon,
+            JITTER_MIN_M,
+            JITTER_MAX_M,
+          ),
           meta: { hopCount: 1, messageId: "demo-" + Date.now() },
         });
 
@@ -347,13 +392,15 @@
           time: now(),
           gps: { lat: 37.77, lon: -122.42 },
           meta: { messageId: id },
-        }).then(() => postEvent({
-          macAddress: "aa:bb:cc:dd:ee:99",
-          message: "duplicate test",
-          time: now(),
-          gps: { lat: 37.77, lon: -122.42 },
-          meta: { messageId: id },
-        }));
+        }).then(() =>
+          postEvent({
+            macAddress: "aa:bb:cc:dd:ee:99",
+            message: "duplicate test",
+            time: now(),
+            gps: { lat: 37.77, lon: -122.42 },
+            meta: { messageId: id },
+          }),
+        );
       };
 
       $("btnNoTriageNote").onclick = () =>

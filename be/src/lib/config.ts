@@ -57,9 +57,7 @@ export const config = {
       ? process.env.FCM_ENABLED !== "false"
       : isProd,
   /** Allow browser demos (e.g. `public/demo.html`) to call the API from another origin. */
-  corsOrigins: (
-    process.env.CORS_ORIGINS?.trim() || "http://localhost:3000"
-  )
+  corsOrigins: (process.env.CORS_ORIGINS?.trim() || "http://localhost:3000")
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0),

@@ -3,7 +3,7 @@
 @theme {
   --color-background: #ffffff;
   --color-foreground: #101010;
-  --color-border: #FAFAFA;
+  --color-border: #fafafa;
 }
 
 body {
@@ -12,4 +12,3 @@ body {
   font-family: Inter, Arial, Helvetica, sans-serif;
   letter-spacing: -0.01em;
 }
-

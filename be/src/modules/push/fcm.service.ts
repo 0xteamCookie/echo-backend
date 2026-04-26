@@ -3,7 +3,10 @@ import type { MulticastMessage } from "firebase-admin/messaging";
 import { FieldValue, getFirestoreDb } from "../../lib/firebase";
 import { config } from "../../lib/config";
 import type { DeviceData } from "../data/data.schema";
-import { categoriesFromTriageMeta, type TriageCategory } from "../triage/triage.schema";
+import {
+  categoriesFromTriageMeta,
+  type TriageCategory,
+} from "../triage/triage.schema";
 
 /** Firestore collection storing per-rescuer FCM registrations. */
 const RESCUER_TOKENS_COLLECTION = "rescuer_tokens";
@@ -41,7 +44,10 @@ export async function upsertRescuerToken(
     updatedAt: FieldValue.serverTimestamp(),
   };
   if (agency) doc.agency = agency;
-  await db.collection(RESCUER_TOKENS_COLLECTION).doc(rescuerId).set(doc, { merge: true });
+  await db
+    .collection(RESCUER_TOKENS_COLLECTION)
+    .doc(rescuerId)
+    .set(doc, { merge: true });
 }
 
 /** Send a data+notification message to a single rescuer by id. */
@@ -51,7 +57,10 @@ export async function sendToRescuer(
 ): Promise<{ sent: boolean; reason?: string }> {
   if (!config.fcmEnabled) return { sent: false, reason: "fcm_disabled" };
   const db = getFirestoreDb();
-  const snap = await db.collection(RESCUER_TOKENS_COLLECTION).doc(rescuerId).get();
+  const snap = await db
+    .collection(RESCUER_TOKENS_COLLECTION)
+    .doc(rescuerId)
+    .get();
   if (!snap.exists) return { sent: false, reason: "no_token_registered" };
   const data = snap.data() ?? {};
   const token = isTruthyString(data.fcmToken) ? data.fcmToken : "";
@@ -71,7 +80,11 @@ export async function sendToRescuer(
 export async function sendToAgency(
   agency: "medical" | "fire" | "police",
   payload: IncidentAlertPayload,
-): Promise<{ successCount: number; failureCount: number; invalidTokens: string[] }> {
+): Promise<{
+  successCount: number;
+  failureCount: number;
+  invalidTokens: string[];
+}> {
   if (!config.fcmEnabled) {
     return { successCount: 0, failureCount: 0, invalidTokens: [] };
   }
@@ -133,7 +146,9 @@ export async function sendIncidentAlert(record: DeviceData): Promise<void> {
   const agency = pickAgencyFromCategories(categories);
   if (!agency) return;
 
-  const summary = String((triage as { summary?: unknown }).summary ?? "").trim();
+  const summary = String(
+    (triage as { summary?: unknown }).summary ?? "",
+  ).trim();
   const payload: IncidentAlertPayload = {
     messageId: record.id,
     severity: sev,
@@ -155,7 +170,9 @@ function pickAgencyFromCategories(
 }
 
 /** FCM `data` payloads must be string-keyed strings. */
-function serializePayload(payload: IncidentAlertPayload): Record<string, string> {
+function serializePayload(
+  payload: IncidentAlertPayload,
+): Record<string, string> {
   return {
     messageId: payload.messageId,
     severity: String(payload.severity),
@@ -170,6 +187,9 @@ function buildNotification(payload: IncidentAlertPayload): {
   body: string;
 } {
   const head = `SEV ${payload.severity} \u2014 ${payload.categories.join(", ")}`;
-  const body = payload.summary.length > 180 ? `${payload.summary.slice(0, 177)}...` : payload.summary;
+  const body =
+    payload.summary.length > 180
+      ? `${payload.summary.slice(0, 177)}...`
+      : payload.summary;
   return { title: head, body };
 }

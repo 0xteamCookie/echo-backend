@@ -69,7 +69,11 @@ function statusBadgeClass(status: string | undefined): string {
   return "bg-gray-100 text-gray-700";
 }
 
-export function TriagedPill({ triage }: { triage: TriageInfo | null | undefined }) {
+export function TriagedPill({
+  triage,
+}: {
+  triage: TriageInfo | null | undefined;
+}) {
   if (!triage || triage.source !== "on-device") return null;
   return (
     <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
@@ -81,12 +85,19 @@ export function TriagedPill({ triage }: { triage: TriageInfo | null | undefined 
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentDrawerProps) {
+export default function IncidentDrawer({
+  entry,
+  onClose,
+  authHeader,
+}: IncidentDrawerProps) {
   const [rescuers, setRescuers] = useState<RescuerOption[]>([]);
   const [rescuerId, setRescuerId] = useState<string>("");
   const [loadingRescuers, setLoadingRescuers] = useState(false);
   const [actionBusy, setActionBusy] = useState<string>("");
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const [toast, setToast] = useState<{
+    kind: "ok" | "err";
+    msg: string;
+  } | null>(null);
 
   const triage = useMemo(() => (entry ? extractTriage(entry) : null), [entry]);
   const agency = entry?.agency;
@@ -100,12 +111,13 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setRescuers([]);
     setRescuerId("");
     setLoadingRescuers(true);
-    const url =
-      apiUrl("/api/dispatch/rescuers?" +
+    const url = apiUrl(
+      "/api/dispatch/rescuers?" +
         new URLSearchParams({
           ...(agency ? { agency } : {}),
           onDuty: "true",
-        }).toString());
+        }).toString(),
+    );
 
     (async () => {
       try {
@@ -180,11 +192,14 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
     setActionBusy(status);
     setToast(null);
     try {
-      const res = await fetch(apiUrl(`/api/data/${encodeURIComponent(entry.id)}/status`), {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
-        body: JSON.stringify({ status }),
-      });
+      const res = await fetch(
+        apiUrl(`/api/data/${encodeURIComponent(entry.id)}/status`),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeader },
+          body: JSON.stringify({ status }),
+        },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setToast({ kind: "ok", msg: `Marked ${status}.` });
     } catch (e) {
@@ -334,7 +349,8 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
             </div>
             {isResolved && (
               <p className="text-[12px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
-                This SOS is marked resolved. Assignment and dispatch actions are disabled.
+                This SOS is marked resolved. Assignment and dispatch actions are
+                disabled.
               </p>
             )}
             {loadingRescuers ? (
@@ -403,7 +419,11 @@ export default function IncidentDrawer({ entry, onClose, authHeader }: IncidentD
             disabled={isResolved || actionBusy !== ""}
             className="flex-1 min-w-[110px] rounded-xl border border-gray-300 bg-white text-gray-800 py-2 text-[13px] font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
-            {actionBusy === "resolved" ? "…" : isResolved ? "Resolved" : "Resolve"}
+            {actionBusy === "resolved"
+              ? "…"
+              : isResolved
+                ? "Resolved"
+                : "Resolve"}
           </button>
         </div>
       </aside>

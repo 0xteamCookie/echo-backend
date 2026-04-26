@@ -35,7 +35,7 @@ export type VerifiedRescuerPayload = {
 const ALG = "RS256" as const;
 
 // Default issuer/audience — can be overridden by env vars if needed.
-const ISSUER  = process.env.JWT_ISSUER?.trim()   || "echo";
+const ISSUER = process.env.JWT_ISSUER?.trim() || "echo";
 const AUDIENCE = process.env.JWT_AUDIENCE?.trim() || "echo-rescuer";
 
 /** `jose` is ESM-only; load it dynamically so CommonJS `tsc` output still runs in Node. */
@@ -61,7 +61,9 @@ function getServiceAccountKey(): { pem: string; kid: string } {
     throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON");
   }
   if (!sa.private_key || !sa.private_key.includes("BEGIN")) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON does not contain a valid private_key");
+    throw new Error(
+      "FIREBASE_SERVICE_ACCOUNT_JSON does not contain a valid private_key",
+    );
   }
   // Firebase stores the key with literal \n — normalize to real newlines.
   const pem = sa.private_key.replace(/\\n/g, "\n").trim();
@@ -136,7 +138,9 @@ export async function signRescuerJwt(
 }
 
 /** Verify a rescuer JWT (same rules as a rescuer app with the public key). */
-export async function verifyRescuerJwt(token: string): Promise<VerifiedRescuerPayload> {
+export async function verifyRescuerJwt(
+  token: string,
+): Promise<VerifiedRescuerPayload> {
   const { importJWK, jwtVerify } = await loadJose();
   const publicJwk = await getProvisioningPublicJwk();
   const key = await importJWK(publicJwk, ALG);
@@ -150,5 +154,3 @@ export async function verifyRescuerJwt(token: string): Promise<VerifiedRescuerPa
   }
   return payload as VerifiedRescuerPayload;
 }
-
-

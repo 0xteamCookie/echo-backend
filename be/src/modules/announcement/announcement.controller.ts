@@ -29,15 +29,20 @@ export const announcementController = {
     const message = String(body.message ?? body.body ?? "").trim();
     const locationName = String(body.locationName ?? "").trim();
     const title =
-      typeof body.title === "string" && body.title.trim() !== "" ? body.title.trim() : undefined;
-    const agencyRaw = typeof body.agency === "string" ? body.agency.trim().toLowerCase() : "";
+      typeof body.title === "string" && body.title.trim() !== ""
+        ? body.title.trim()
+        : undefined;
+    const agencyRaw =
+      typeof body.agency === "string" ? body.agency.trim().toLowerCase() : "";
     const agency =
       agencyRaw === "medical" || agencyRaw === "fire" || agencyRaw === "police"
         ? (agencyRaw as "medical" | "fire" | "police")
         : undefined;
     const gpsRaw = body.gps;
     const gps =
-      isRecord(gpsRaw) && toNumber(gpsRaw.lat) !== undefined && toNumber(gpsRaw.lon) !== undefined
+      isRecord(gpsRaw) &&
+      toNumber(gpsRaw.lat) !== undefined &&
+      toNumber(gpsRaw.lon) !== undefined
         ? { lat: toNumber(gpsRaw.lat)!, lon: toNumber(gpsRaw.lon)! }
         : undefined;
 
@@ -50,7 +55,9 @@ export const announcementController = {
       return;
     }
     if (!gps || !isValidGps(gps.lat, gps.lon)) {
-      res.status(400).json({ error: "gps.lat and gps.lon must be valid WGS84 coordinates" });
+      res
+        .status(400)
+        .json({ error: "gps.lat and gps.lon must be valid WGS84 coordinates" });
       return;
     }
 
@@ -74,7 +81,9 @@ export const announcementController = {
     const limitRaw = req.query.limit;
     const langRaw = req.query.lang;
     const lang =
-      typeof langRaw === "string" && langRaw.trim() !== "" ? langRaw.trim() : undefined;
+      typeof langRaw === "string" && langRaw.trim() !== ""
+        ? langRaw.trim()
+        : undefined;
 
     const lat = toNumber(latRaw);
     const lon = toNumber(lonRaw);
@@ -95,14 +104,17 @@ export const announcementController = {
     }
 
     if (lat === undefined || lon === undefined || !isValidGps(lat, lon)) {
-      res.status(400).json({ error: "lat and long must be valid WGS84 coordinates" });
+      res
+        .status(400)
+        .json({ error: "lat and long must be valid WGS84 coordinates" });
       return;
     }
 
     const announcements = await announcementService.listNearby({
       lat,
       lon,
-      limit: typeof limit === "number" && Number.isFinite(limit) ? limit : undefined,
+      limit:
+        typeof limit === "number" && Number.isFinite(limit) ? limit : undefined,
       lang,
     });
 

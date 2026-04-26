@@ -5,12 +5,12 @@ build Looker Studio agency reports over real data.
 
 ## Environment
 
-| Variable              | Default        | Notes                                                   |
-| --------------------- | -------------- | ------------------------------------------------------- |
-| `BIGQUERY_ENABLED`    | `true` in prod | Set `false` to disable streaming entirely.              |
-| `BIGQUERY_DATASET`    | `beacon`       | Dataset name. Must exist in the same GCP project.       |
-| `BIGQUERY_TABLE`      | `events`       | Table name; DDL below.                                  |
-| `GOOGLE_CLOUD_PROJECT`| *(none)*       | Required for the BigQuery client; falls back to ADC.    |
+| Variable               | Default        | Notes                                                |
+| ---------------------- | -------------- | ---------------------------------------------------- |
+| `BIGQUERY_ENABLED`     | `true` in prod | Set `false` to disable streaming entirely.           |
+| `BIGQUERY_DATASET`     | `beacon`       | Dataset name. Must exist in the same GCP project.    |
+| `BIGQUERY_TABLE`       | `events`       | Table name; DDL below.                               |
+| `GOOGLE_CLOUD_PROJECT` | _(none)_       | Required for the BigQuery client; falls back to ADC. |
 
 Auth uses Application Default Credentials. The runtime service account must
 have `roles/bigquery.dataEditor` on the target dataset.

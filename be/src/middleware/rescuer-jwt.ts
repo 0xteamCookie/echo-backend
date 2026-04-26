@@ -1,5 +1,8 @@
 import type { RequestHandler } from "express";
-import { verifyRescuerJwt, type VerifiedRescuerPayload } from "../lib/jwt-provisioning";
+import {
+  verifyRescuerJwt,
+  type VerifiedRescuerPayload,
+} from "../lib/jwt-provisioning";
 
 declare global {
   // eslint-disable-next-line no-var

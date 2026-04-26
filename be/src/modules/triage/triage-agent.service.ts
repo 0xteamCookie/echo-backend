@@ -57,7 +57,9 @@ const triageJsonSchema: Schema = {
 
 function normalizeCategory(raw: string): TriageCategory {
   const c = raw.trim().toLowerCase();
-  return (TRIAGE_CATEGORIES as readonly string[]).includes(c) ? (c as TriageCategory) : "unknown";
+  return (TRIAGE_CATEGORIES as readonly string[]).includes(c)
+    ? (c as TriageCategory)
+    : "unknown";
 }
 
 function normalizeCategoriesList(raw: unknown): TriageCategory[] {
@@ -85,9 +87,12 @@ function parseTriageJson(text: string): TriageSnapshot {
   const severity = clampSeverity(parsed.severity);
   const summary = String(parsed.summary ?? "").trim() || "(no summary)";
   const victimInstructions = Array.isArray(parsed.victimInstructions)
-    ? parsed.victimInstructions.map((x) => String(x)).filter((s) => s.trim() !== "")
+    ? parsed.victimInstructions
+        .map((x) => String(x))
+        .filter((s) => s.trim() !== "")
     : [];
-  const dispatchMessage = String(parsed.dispatchMessage ?? "").trim() || summary;
+  const dispatchMessage =
+    String(parsed.dispatchMessage ?? "").trim() || summary;
   const reasoning = String(parsed.reasoning ?? "").trim() || "(no reasoning)";
   return {
     categories,
@@ -102,7 +107,8 @@ function parseTriageJson(text: string): TriageSnapshot {
 function metaHopCount(meta?: Record<string, unknown>): number | undefined {
   const h = meta?.hopCount;
   if (typeof h === "number" && Number.isFinite(h)) return h;
-  if (typeof h === "string" && h.trim() !== "" && Number.isFinite(Number(h))) return Number(h);
+  if (typeof h === "string" && h.trim() !== "" && Number.isFinite(Number(h)))
+    return Number(h);
   return undefined;
 }
 
@@ -110,7 +116,8 @@ function triageSummaryForNearby(d: DeviceData): string {
   const t = d.meta?.triage;
   if (t && typeof t === "object" && !Array.isArray(t)) {
     const summary = (t as { summary?: unknown }).summary;
-    if (typeof summary === "string" && summary.trim() !== "") return sanitizeUntrusted(summary.trim());
+    if (typeof summary === "string" && summary.trim() !== "")
+      return sanitizeUntrusted(summary.trim());
   }
   const msg = d.message.trim();
   const sliced = msg.length > 160 ? `${msg.slice(0, 157)}...` : msg;
@@ -136,7 +143,9 @@ function sanitizeUntrusted(raw: string, maxLen = 2000): string {
     .replace(/^##\s+/gm, "# ")
     .replace(/\[UNTRUSTED_(BEGIN|END)\]/gi, "[redacted]")
     .trim();
-  return collapsed.length > maxLen ? `${collapsed.slice(0, maxLen)}\u2026` : collapsed;
+  return collapsed.length > maxLen
+    ? `${collapsed.slice(0, maxLen)}\u2026`
+    : collapsed;
 }
 
 function selectNearby(
@@ -156,7 +165,11 @@ function selectNearby(
   return out.slice(0, max).map((x) => x.d);
 }
 
-function buildUserPayload(current: DeviceData, history: DeviceData[], nearby: DeviceData[]): string {
+function buildUserPayload(
+  current: DeviceData,
+  history: DeviceData[],
+  nearby: DeviceData[],
+): string {
   // P1-11: all strings that came from the BLE mesh are considered untrusted
   // and wrapped in sentinel markers. The system instruction tells the model
   // to treat everything inside the markers as data, never as directives.
@@ -218,7 +231,9 @@ function buildUserPayload(current: DeviceData, history: DeviceData[], nearby: De
         nearby.map((n) => ({
           id: n.id,
           approxDistanceMeters:
-            current.gps && n.gps ? Math.round(haversineMeters(current.gps, n.gps)) : null,
+            current.gps && n.gps
+              ? Math.round(haversineMeters(current.gps, n.gps))
+              : null,
           macAddress: n.macAddress,
           time: n.time,
           summary: triageSummaryForNearby(n),
@@ -249,14 +264,14 @@ function buildUserPayload(current: DeviceData, history: DeviceData[], nearby: De
  * `meta.triage`, returns updated record. No-op if triage is disabled.
  * Throws on unrecoverable errors. Auth uses GEMINI_API_KEY.
  */
-export async function triageAfterIngest(eventId: string): Promise<DeviceData | null> {
+export async function triageAfterIngest(
+  eventId: string,
+): Promise<DeviceData | null> {
   if (!config.triageEnabled) {
     return null;
   }
   if (!config.geminiApiKey) {
-    throw new Error(
-      "Gemini triage requires GEMINI_API_KEY to be set",
-    );
+    throw new Error("Gemini triage requires GEMINI_API_KEY to be set");
   }
 
   const record = await dataService.getById(eventId);
@@ -276,7 +291,10 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
     },
   });
 
-  const thread = await dataService.list({ macAddress: record.macAddress, limit: MAC_THREAD_FETCH_LIMIT });
+  const thread = await dataService.list({
+    macAddress: record.macAddress,
+    limit: MAC_THREAD_FETCH_LIMIT,
+  });
   const chronological = [...thread].reverse();
   const priorOnly = chronological.filter((h) => h.id !== record.id);
   const historyForPrompt = priorOnly.slice(-PRIOR_MESSAGES_FOR_TRIAGE);
@@ -294,7 +312,6 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
   }
 
   const userText = buildUserPayload(record, historyForPrompt, nearby);
-
 
   const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: userText }] }],
@@ -317,7 +334,10 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
   // response cannot accidentally downgrade a panic-button event.
   const isSosRaw = record.meta?.isSos;
   const isSos =
-    isSosRaw === true || isSosRaw === 1 || isSosRaw === "1" || isSosRaw === "true";
+    isSosRaw === true ||
+    isSosRaw === 1 ||
+    isSosRaw === "1" ||
+    isSosRaw === "true";
   if (isSos && triage.severity < 4) {
     triage = { ...triage, severity: 4 };
   }
@@ -344,7 +364,9 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
 }
 
 /** Persists `meta.triageError` on failure so ingest still succeeds. */
-export async function triageAfterIngestSafe(eventId: string): Promise<DeviceData | null> {
+export async function triageAfterIngestSafe(
+  eventId: string,
+): Promise<DeviceData | null> {
   try {
     return await triageAfterIngest(eventId);
   } catch (err) {

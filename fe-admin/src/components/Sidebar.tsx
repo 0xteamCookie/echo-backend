@@ -29,10 +29,22 @@ export default function Sidebar() {
 
       <div className="flex-1 overflow-y-auto px-4 py-2">
         <div className="mb-6">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">Dashboard</p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">
+            Dashboard
+          </p>
           <nav className="flex flex-col gap-0.5">
-            <NavItem href="/" icon={<LayoutGrid size={16} />} label="Overview" active={pathname === "/"} />
-            <NavItem href="/live-feed" icon={<Activity size={16} />} label="Live Feed" active={pathname === "/live-feed"} />
+            <NavItem
+              href="/"
+              icon={<LayoutGrid size={16} />}
+              label="Overview"
+              active={pathname === "/"}
+            />
+            <NavItem
+              href="/live-feed"
+              icon={<Activity size={16} />}
+              label="Live Feed"
+              active={pathname === "/live-feed"}
+            />
             <NavItem
               href="/dispatch"
               icon={<BrainCircuit size={16} />}
@@ -45,7 +57,12 @@ export default function Sidebar() {
               label="Announcements"
               active={pathname === "/announcement"}
             />
-            <NavItem href="/map" icon={<Map size={16} />} label="Operations Map" active={pathname === "/map"} />
+            <NavItem
+              href="/map"
+              icon={<Map size={16} />}
+              label="Operations Map"
+              active={pathname === "/map"}
+            />
           </nav>
         </div>
 
@@ -67,15 +84,31 @@ export default function Sidebar() {
   );
 }
 
-function NavItem({ href, icon, label, active, badge }: { href: string, icon: React.ReactNode, label: string, active?: boolean, badge?: number }) {
+function NavItem({
+  href,
+  icon,
+  label,
+  active,
+  badge,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  badge?: number;
+}) {
   return (
-    <Link 
-      href={href} 
+    <Link
+      href={href}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-[14px] ${
-        active ? "bg-white shadow-sm font-medium text-black" : "hover:bg-gray-200 text-gray-600 hover:text-black"
+        active
+          ? "bg-white shadow-sm font-medium text-black"
+          : "hover:bg-gray-200 text-gray-600 hover:text-black"
       }`}
     >
-      <span className={active ? "text-[#E63946]" : "text-gray-400"}>{icon}</span>
+      <span className={active ? "text-[#E63946]" : "text-gray-400"}>
+        {icon}
+      </span>
       <span className="flex-1">{label}</span>
       {badge && (
         <span className="bg-[#E63946] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">

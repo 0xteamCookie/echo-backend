@@ -1,11 +1,19 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import type { Schema } from "@google/generative-ai";
-import { Client as GoogleMapsClient, TravelMode, UnitSystem } from "@googlemaps/google-maps-services-js";
+import {
+  Client as GoogleMapsClient,
+  TravelMode,
+  UnitSystem,
+} from "@googlemaps/google-maps-services-js";
 import { config } from "../../lib/config";
 import { getFirestoreDb } from "../../lib/firebase";
 import { log } from "../../lib/logger";
 import { haversineMeters } from "../../lib/geo";
-import type { AgencyScope, DeviceData, HeatmapPoint } from "../data/data.schema";
+import type {
+  AgencyScope,
+  DeviceData,
+  HeatmapPoint,
+} from "../data/data.schema";
 import { dataService } from "../data/data.service";
 import { categoriesFromTriageMeta } from "../triage/triage.schema";
 import type {
@@ -34,7 +42,10 @@ type CandidateIncident = {
 
 type BuildIncidentResult =
   | { incident: CandidateIncident }
-  | { incident: null; reason: "no_gps" | "low_severity" | "stale" | "resolved" };
+  | {
+      incident: null;
+      reason: "no_gps" | "low_severity" | "stale" | "resolved";
+    };
 
 type DecisionWithSource = DispatchDecision & { modelAssisted: boolean };
 
@@ -51,7 +62,10 @@ type DbRescuer = {
   specialties: string[];
 };
 
-const AGENCY_TO_SOURCE_SYSTEM: Record<AgencyScope, RescuerProfile["sourceSystem"]> = {
+const AGENCY_TO_SOURCE_SYSTEM: Record<
+  AgencyScope,
+  RescuerProfile["sourceSystem"]
+> = {
   medical: "Medical CAD",
   fire: "Fire Dispatch",
   police: "Police RMS",
@@ -92,7 +106,8 @@ function docToRescuer(
     : [];
   return {
     id,
-    name: typeof data.name === "string" && data.name.trim() !== "" ? data.name : id,
+    name:
+      typeof data.name === "string" && data.name.trim() !== "" ? data.name : id,
     agency,
     currentLocation: { lat, lng },
     onDuty: data.onDuty === true,
@@ -101,9 +116,14 @@ function docToRescuer(
 }
 
 /** Load on-duty rescuers from Firestore, optionally scoped to caller agencies. */
-async function loadOnDutyRescuers(allowed: Set<AgencyScope>): Promise<DbRescuer[]> {
+async function loadOnDutyRescuers(
+  allowed: Set<AgencyScope>,
+): Promise<DbRescuer[]> {
   const db = getFirestoreDb();
-  const snap = await db.collection("rescuers").where("onDuty", "==", true).get();
+  const snap = await db
+    .collection("rescuers")
+    .where("onDuty", "==", true)
+    .get();
   const out: DbRescuer[] = [];
   for (const doc of snap.docs) {
     const r = docToRescuer(doc.id, doc.data());
@@ -127,7 +147,8 @@ function severityFromMeta(meta?: Record<string, unknown>): number {
   const tri = meta?.triage;
   if (tri && typeof tri === "object" && !Array.isArray(tri)) {
     const raw = (tri as { severity?: unknown }).severity;
-    if (typeof raw === "number" && Number.isFinite(raw)) return Math.min(5, Math.max(1, Math.round(raw)));
+    if (typeof raw === "number" && Number.isFinite(raw))
+      return Math.min(5, Math.max(1, Math.round(raw)));
   }
   return 1;
 }
@@ -136,7 +157,8 @@ function summaryFromMeta(d: DeviceData): string {
   const tri = d.meta?.triage;
   if (tri && typeof tri === "object" && !Array.isArray(tri)) {
     const raw = (tri as { summary?: unknown }).summary;
-    if (typeof raw === "string" && raw.trim() !== "") return raw.trim().slice(0, 200);
+    if (typeof raw === "string" && raw.trim() !== "")
+      return raw.trim().slice(0, 200);
   }
   const msg = d.message.trim();
   return (msg || "Incident with limited details").slice(0, 200);
@@ -148,10 +170,14 @@ function ageMinutes(receivedAt: string): number {
   return Math.max(0, Math.round(ms / 60000));
 }
 
-function inferAgencies(categories: string[], fallback?: AgencyScope): AgencyScope[] {
+function inferAgencies(
+  categories: string[],
+  fallback?: AgencyScope,
+): AgencyScope[] {
   const out = new Set<AgencyScope>();
   for (const category of categories) {
-    if (category === "medical" || category === "fire" || category === "police") out.add(category);
+    if (category === "medical" || category === "fire" || category === "police")
+      out.add(category);
     if (category === "rescue") out.add("fire");
   }
   if (out.size === 0 && fallback) out.add(fallback);
@@ -177,7 +203,10 @@ function historicalRiskTier(
   incident: CandidateIncident,
   hotspotCounts: Map<string, number>,
 ): 1 | 2 | 3 {
-  const current = hotspotCounts.get(hotspotKey(incident.location.lat, incident.location.lon)) ?? 0;
+  const current =
+    hotspotCounts.get(
+      hotspotKey(incident.location.lat, incident.location.lon),
+    ) ?? 0;
   const all = [...hotspotCounts.values()].sort((a, b) => a - b);
   if (all.length === 0) return 1;
   const p50 = all[Math.floor(all.length * 0.5)] ?? 0;
@@ -187,7 +216,10 @@ function historicalRiskTier(
   return 1;
 }
 
-function nearbyActiveCount(incident: CandidateIncident, incidents: CandidateIncident[]): number {
+function nearbyActiveCount(
+  incident: CandidateIncident,
+  incidents: CandidateIncident[],
+): number {
   let count = 0;
   for (const other of incidents) {
     if (other.id === incident.id) continue;
@@ -197,8 +229,14 @@ function nearbyActiveCount(incident: CandidateIncident, incidents: CandidateInci
   return count;
 }
 
-function heatIntensity(incident: CandidateIncident, points: HeatmapPoint[]): "low" | "medium" | "high" {
-  const local = points.filter((p) => haversineMeters(incident.location, { lat: p.lat, lon: p.lon }) <= 2000);
+function heatIntensity(
+  incident: CandidateIncident,
+  points: HeatmapPoint[],
+): "low" | "medium" | "high" {
+  const local = points.filter(
+    (p) =>
+      haversineMeters(incident.location, { lat: p.lat, lon: p.lon }) <= 2000,
+  );
   if (local.length === 0) return "low";
   const avg = local.reduce((sum, p) => sum + p.weight, 0) / local.length;
   if (avg >= 4) return "high";
@@ -212,7 +250,10 @@ function baseLoad(_responder: DbRescuer): number {
   return 0;
 }
 
-function specialtyScore(incident: CandidateIncident, responder: DbRescuer): number {
+function specialtyScore(
+  incident: CandidateIncident,
+  responder: DbRescuer,
+): number {
   if (responder.specialties.length === 0) return 0;
   const cats = new Set(incident.categories.map((c) => c.toLowerCase()));
   let hits = 0;
@@ -253,7 +294,9 @@ async function driveTimesViaDistanceMatrix(
           lat: r.currentLocation.lat,
           lng: r.currentLocation.lng,
         })),
-        destinations: [{ lat: incident.location.lat, lng: incident.location.lon }],
+        destinations: [
+          { lat: incident.location.lat, lng: incident.location.lon },
+        ],
         mode: TravelMode.driving,
         units: UnitSystem.metric,
       },
@@ -276,13 +319,18 @@ async function driveTimesViaDistanceMatrix(
 
 function buildCandidateIncident(row: DeviceData): BuildIncidentResult {
   if (!row.gps) return { incident: null, reason: "no_gps" };
-  if (typeof row.status === "string" && row.status.trim().toLowerCase() === "resolved") {
+  if (
+    typeof row.status === "string" &&
+    row.status.trim().toLowerCase() === "resolved"
+  ) {
     return { incident: null, reason: "resolved" };
   }
   const severity = severityFromMeta(row.meta);
   const age = ageMinutes(row.receivedAt);
-  if (severity < INCIDENT_MIN_SEVERITY) return { incident: null, reason: "low_severity" };
-  if (age > INCIDENT_MAX_AGE_MINUTES) return { incident: null, reason: "stale" };
+  if (severity < INCIDENT_MIN_SEVERITY)
+    return { incident: null, reason: "low_severity" };
+  if (age > INCIDENT_MAX_AGE_MINUTES)
+    return { incident: null, reason: "stale" };
   const categories = categoriesFromTriageMeta(row.meta?.triage);
   return {
     incident: {
@@ -306,7 +354,8 @@ function parseDecision(raw: string): DispatchDecision {
   const parsed = JSON.parse(cleaned) as Record<string, unknown>;
   const selectedResponderId = String(parsed.selectedResponderId ?? "").trim();
   const confidenceRaw =
-    typeof parsed.confidenceLevel === "number" && Number.isFinite(parsed.confidenceLevel)
+    typeof parsed.confidenceLevel === "number" &&
+    Number.isFinite(parsed.confidenceLevel)
       ? Math.round(parsed.confidenceLevel)
       : 1;
   const confidenceLevel = Math.min(3, Math.max(1, confidenceRaw)) as 1 | 2 | 3;
@@ -365,12 +414,20 @@ function applyGuardrails(
     safe.escalate = true;
   }
   const selected = valid.get(safe.selectedResponderId)!;
-  if (!brief.categories.includes(selected.agency) && !brief.categories.includes("rescue")) {
-    const agencyMatch = brief.candidateResponders.find((c) => brief.categories.includes(c.agency));
+  if (
+    !brief.categories.includes(selected.agency) &&
+    !brief.categories.includes("rescue")
+  ) {
+    const agencyMatch = brief.candidateResponders.find((c) =>
+      brief.categories.includes(c.agency),
+    );
     if (agencyMatch) safe.selectedResponderId = agencyMatch.id;
   }
   if (selected.currentLoad >= MAX_LOAD) safe.escalate = true;
-  safe.confidenceLevel = Math.min(3, Math.max(1, Math.round(safe.confidenceLevel))) as 1 | 2 | 3;
+  safe.confidenceLevel = Math.min(
+    3,
+    Math.max(1, Math.round(safe.confidenceLevel)),
+  ) as 1 | 2 | 3;
   safe.rationale = safe.rationale.split(/\s+/).slice(0, 25).join(" ");
   return safe;
 }
@@ -403,7 +460,9 @@ function toRecommendation(
   brief: IncidentBrief,
   decision: DecisionWithSource,
 ): DispatchRecommendation {
-  const selected = brief.candidateResponders.find((c) => c.id === decision.selectedResponderId);
+  const selected = brief.candidateResponders.find(
+    (c) => c.id === decision.selectedResponderId,
+  );
   const fallback = brief.candidateResponders[0];
   const picked = selected ?? fallback;
   return {
@@ -439,7 +498,9 @@ function pickAvailableResponder(
   if (!takenResponderIds.has(preferredResponderId)) {
     return { responderId: preferredResponderId, hadToReassign: false };
   }
-  const fallback = brief.candidateResponders.find((c) => !takenResponderIds.has(c.id));
+  const fallback = brief.candidateResponders.find(
+    (c) => !takenResponderIds.has(c.id),
+  );
   if (fallback) {
     return { responderId: fallback.id, hadToReassign: true };
   }
@@ -457,7 +518,10 @@ export const dispatchService = {
 
     const rows = await dataService.list({
       limit: 500,
-      agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
+      agencies:
+        params.agencies && params.agencies.length > 0
+          ? params.agencies
+          : undefined,
     });
     const incidents: CandidateIncident[] = [];
     const dropped = { noGps: 0, lowSeverity: 0, stale: 0, resolved: 0 };
@@ -474,7 +538,11 @@ export const dispatchService = {
         if (built.reason === "resolved") dropped.resolved += 1;
       }
     }
-    incidents.sort((a, b) => b.severity - a.severity || ageMinutes(a.receivedAt) - ageMinutes(b.receivedAt));
+    incidents.sort(
+      (a, b) =>
+        b.severity - a.severity ||
+        ageMinutes(a.receivedAt) - ageMinutes(b.receivedAt),
+    );
     const trimmedIncidents = incidents.slice(0, maxIncidents);
 
     const eligibilitySummary = {
@@ -504,19 +572,25 @@ export const dispatchService = {
       };
     }
 
-    const allowed = new Set<AgencyScope>(params.agencies ?? ["medical", "fire", "police"]);
+    const allowed = new Set<AgencyScope>(
+      params.agencies ?? ["medical", "fire", "police"],
+    );
     // P2-10: fetch on-duty rescuers from Firestore instead of using a hardcoded list.
     const responders = await loadOnDutyRescuers(allowed);
     const hotspotCounts = buildHotspotCounts(rows);
     const heatmap = await dataService.heatmapPoints({
       limit: 400,
-      agencies: params.agencies && params.agencies.length > 0 ? params.agencies : undefined,
+      agencies:
+        params.agencies && params.agencies.length > 0
+          ? params.agencies
+          : undefined,
     });
 
     // P2-10: drive-time lookups are async and potentially billable — compute per incident
     // with a Distance Matrix call (when enabled + key present) and fall back to haversine
     // per-responder on failures or disabled flag.
-    const useDm = config.distanceMatrixEnabled && config.googleMapsApiKey.trim() !== "";
+    const useDm =
+      config.distanceMatrixEnabled && config.googleMapsApiKey.trim() !== "";
 
     const briefPairs = await Promise.all(
       trimmedIncidents.map(async (incident) => {
@@ -538,7 +612,8 @@ export const dispatchService = {
             return { responder, etaMinutes, specialty };
           })
           .sort((a, b) => {
-            if (a.etaMinutes !== b.etaMinutes) return a.etaMinutes - b.etaMinutes;
+            if (a.etaMinutes !== b.etaMinutes)
+              return a.etaMinutes - b.etaMinutes;
             return b.specialty - a.specialty;
           })
           .slice(0, SHORTLIST_SIZE);
@@ -570,10 +645,12 @@ export const dispatchService = {
     );
 
     const briefs = briefPairs.filter(
-      (x): x is { incident: CandidateIncident; brief: IncidentBrief } => x !== null,
+      (x): x is { incident: CandidateIncident; brief: IncidentBrief } =>
+        x !== null,
     );
 
-    let model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]> | null = null;
+    let model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]> | null =
+      null;
     if (config.geminiApiKey) {
       const genAI = new GoogleGenerativeAI(config.geminiApiKey);
       model = genAI.getGenerativeModel({
@@ -627,7 +704,9 @@ export const dispatchService = {
       takenResponderIds.add(finalDecision.selectedResponderId);
       if (finalDecision.modelAssisted) modelAssistedCount += 1;
       else fallbackCount += 1;
-      recommendations.push(toRecommendation(pair.incident, pair.brief, finalDecision));
+      recommendations.push(
+        toRecommendation(pair.incident, pair.brief, finalDecision),
+      );
     }
 
     return {
@@ -650,14 +729,16 @@ export const dispatchService = {
     agency?: AgencyScope;
     onDuty?: boolean;
     allowedAgencies?: AgencyScope[];
-  }): Promise<Array<{
-    id: string;
-    name: string;
-    agency: AgencyScope;
-    onDuty: boolean;
-    currentLocation: { lat: number; lng: number };
-    specialties: string[];
-  }>> {
+  }): Promise<
+    Array<{
+      id: string;
+      name: string;
+      agency: AgencyScope;
+      onDuty: boolean;
+      currentLocation: { lat: number; lng: number };
+      specialties: string[];
+    }>
+  > {
     const db = getFirestoreDb();
     let query: FirebaseFirestore.Query = db.collection("rescuers");
     if (params.onDuty !== undefined) {
@@ -667,9 +748,10 @@ export const dispatchService = {
       query = query.where("agency", "==", params.agency);
     }
     const snap = await query.get();
-    const allowed = params.allowedAgencies && params.allowedAgencies.length > 0
-      ? new Set(params.allowedAgencies)
-      : null;
+    const allowed =
+      params.allowedAgencies && params.allowedAgencies.length > 0
+        ? new Set(params.allowedAgencies)
+        : null;
     const out: Array<{
       id: string;
       name: string;
@@ -699,7 +781,10 @@ export const dispatchService = {
     assignedByEmail?: string;
   }): Promise<{ ok: true; assignedAt: string }> {
     const db = getFirestoreDb();
-    const rescuerSnap = await db.collection("rescuers").doc(params.rescuerId).get();
+    const rescuerSnap = await db
+      .collection("rescuers")
+      .doc(params.rescuerId)
+      .get();
     if (!rescuerSnap.exists) {
       throw Object.assign(new Error("Rescuer not found"), { statusCode: 404 });
     }
@@ -708,28 +793,35 @@ export const dispatchService = {
     const dispatchDoc = {
       messageId: params.messageId,
       rescuerId: params.rescuerId,
-      rescuerName: typeof rescuer.name === "string" ? rescuer.name : params.rescuerId,
+      rescuerName:
+        typeof rescuer.name === "string" ? rescuer.name : params.rescuerId,
       rescuerAgency: typeof rescuer.agency === "string" ? rescuer.agency : null,
       assignedAt,
       assignedBy: params.assignedBy,
       assignedByEmail: params.assignedByEmail ?? null,
       status: "assigned" as const,
     };
-    await db.collection("dispatches").doc(params.messageId).set(dispatchDoc, { merge: true });
+    await db
+      .collection("dispatches")
+      .doc(params.messageId)
+      .set(dispatchDoc, { merge: true });
     // Best-effort: mirror onto the device entry so /api/data responses reflect it.
     try {
-      await db.collection("device_entries").doc(params.messageId).set(
-        {
-          assignment: {
-            rescuerId: params.rescuerId,
-            rescuerName: dispatchDoc.rescuerName,
-            assignedAt,
-            assignedBy: params.assignedBy,
+      await db
+        .collection("device_entries")
+        .doc(params.messageId)
+        .set(
+          {
+            assignment: {
+              rescuerId: params.rescuerId,
+              rescuerName: dispatchDoc.rescuerName,
+              assignedAt,
+              assignedBy: params.assignedBy,
+            },
+            status: "assigned",
           },
-          status: "assigned",
-        },
-        { merge: true },
-      );
+          { merge: true },
+        );
     } catch (err) {
       log.warn("dispatch.assign.mirror_failed", {
         messageId: params.messageId,
@@ -808,12 +900,17 @@ export const dispatchService = {
       },
     ];
 
-    const seededSnap = await db.collection("rescuers").where("seededBy", "==", seedTag).get();
+    const seededSnap = await db
+      .collection("rescuers")
+      .where("seededBy", "==", seedTag)
+      .get();
     const staleIds = new Set<string>([
       ...legacyDummyIds,
       ...seededSnap.docs.map((d) => d.id),
     ]);
-    await Promise.all([...staleIds].map((id) => db.collection("rescuers").doc(id).delete()));
+    await Promise.all(
+      [...staleIds].map((id) => db.collection("rescuers").doc(id).delete()),
+    );
 
     await Promise.all(
       fixtures.map((r) =>
@@ -829,7 +926,8 @@ export const dispatchService = {
             seededAt: now,
           },
           { merge: false },
-        )),
+        ),
+      ),
     );
     return { seeded: fixtures.length, ids: fixtures.map((x) => x.id) };
   },

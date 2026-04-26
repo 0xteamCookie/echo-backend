@@ -7,7 +7,9 @@
  * backend must allow the admin origin via `CORS_ORIGINS`.
  */
 export function apiUrl(path: string): string {
-  const base = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const base = (
+    process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:3000"
+  ).replace(/\/$/, "");
   const suffix = path.startsWith("/") ? path : `/${path}`;
   return `${base}${suffix}`;
 }

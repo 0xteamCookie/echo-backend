@@ -3,8 +3,12 @@ import { getAllowedAgencies } from "../../middleware/authz";
 import { config } from "../../lib/config";
 import { dispatchService } from "./dispatch.service";
 
-function parseAgency(value: unknown): "medical" | "fire" | "police" | undefined {
-  return value === "medical" || value === "fire" || value === "police" ? value : undefined;
+function parseAgency(
+  value: unknown,
+): "medical" | "fire" | "police" | undefined {
+  return value === "medical" || value === "fire" || value === "police"
+    ? value
+    : undefined;
 }
 
 export const dispatchController = {
@@ -14,20 +18,24 @@ export const dispatchController = {
         ? Number(req.query.limit)
         : undefined;
     const recommendations = await dispatchService.recommend({
-      agencies: req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
-      maxIncidents: typeof limitRaw === "number" && Number.isFinite(limitRaw) ? limitRaw : undefined,
+      agencies:
+        req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
+      maxIncidents:
+        typeof limitRaw === "number" && Number.isFinite(limitRaw)
+          ? limitRaw
+          : undefined,
     });
     res.json(recommendations);
   }) satisfies RequestHandler,
 
   listRescuers: (async (req, res) => {
     const agency = parseAgency(req.query.agency);
-    const onDuty = req.query.onDuty === undefined
-      ? undefined
-      : String(req.query.onDuty).toLowerCase() === "true";
-    const allowedAgencies = req.user?.role === "super_admin"
-      ? undefined
-      : getAllowedAgencies(req);
+    const onDuty =
+      req.query.onDuty === undefined
+        ? undefined
+        : String(req.query.onDuty).toLowerCase() === "true";
+    const allowedAgencies =
+      req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req);
     const rescuers = await dispatchService.listRescuers({
       agency,
       onDuty,
@@ -46,12 +54,14 @@ export const dispatchController = {
       res.status(400).json({ error: "Invalid JSON body" });
       return;
     }
-    const messageId = typeof (body as Record<string, unknown>).messageId === "string"
-      ? ((body as Record<string, unknown>).messageId as string).trim()
-      : "";
-    const rescuerId = typeof (body as Record<string, unknown>).rescuerId === "string"
-      ? ((body as Record<string, unknown>).rescuerId as string).trim()
-      : "";
+    const messageId =
+      typeof (body as Record<string, unknown>).messageId === "string"
+        ? ((body as Record<string, unknown>).messageId as string).trim()
+        : "";
+    const rescuerId =
+      typeof (body as Record<string, unknown>).rescuerId === "string"
+        ? ((body as Record<string, unknown>).rescuerId as string).trim()
+        : "";
     if (!messageId || !rescuerId) {
       res.status(400).json({ error: "messageId and rescuerId are required" });
       return;

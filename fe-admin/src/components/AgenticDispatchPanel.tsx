@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { AlertTriangle, BrainCircuit, RefreshCcw, Siren, Timer } from "lucide-react";
+import {
+  AlertTriangle,
+  BrainCircuit,
+  RefreshCcw,
+  Siren,
+  Timer,
+} from "lucide-react";
 import useSWR from "swr";
 import { useAuth } from "../lib/auth/provider";
 import { apiUrl } from "../lib/api";
@@ -42,7 +48,12 @@ export default function AgenticDispatchPanel() {
   const swrKey = authValue
     ? ([apiUrl("/api/dispatch/recommendations?limit=12"), authValue] as const)
     : null;
-  const { data: payload, error, isLoading, mutate } = useSWR<DispatchPayload>(
+  const {
+    data: payload,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<DispatchPayload>(
     swrKey,
     async ([url, authorization]: readonly [string, string]) => {
       const res = await fetch(url, {
@@ -57,7 +68,10 @@ export default function AgenticDispatchPanel() {
     { refreshInterval: 12000, revalidateOnFocus: false },
   );
 
-  const top = useMemo(() => payload?.recommendations.slice(0, 6) ?? [], [payload]);
+  const top = useMemo(
+    () => payload?.recommendations.slice(0, 6) ?? [],
+    [payload],
+  );
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col gap-4">
@@ -68,7 +82,8 @@ export default function AgenticDispatchPanel() {
             Agentic Dispatch Recommendations
           </h3>
           <p className="text-[12px] text-gray-500 mt-1">
-            Per-incident Gemini decisions with deterministic guardrails and fallback.
+            Per-incident Gemini decisions with deterministic guardrails and
+            fallback.
           </p>
         </div>
         <button
@@ -90,13 +105,17 @@ export default function AgenticDispatchPanel() {
             </p>
           </div>
           <div className="rounded-xl bg-[#FAFAFA] border border-gray-100 p-3">
-            <p className="text-[11px] text-gray-500 uppercase">AI recommended</p>
+            <p className="text-[11px] text-gray-500 uppercase">
+              AI recommended
+            </p>
             <p className="text-[20px] font-semibold text-gray-900 mt-1">
               {payload.meta.modelAssistedCount}
             </p>
           </div>
           <div className="rounded-xl bg-[#FAFAFA] border border-gray-100 p-3">
-            <p className="text-[11px] text-gray-500 uppercase">Fallback assigned</p>
+            <p className="text-[11px] text-gray-500 uppercase">
+              Fallback assigned
+            </p>
             <p className="text-[20px] font-semibold text-[#E63946] mt-1">
               {payload.meta.fallbackCount}
             </p>
@@ -104,7 +123,11 @@ export default function AgenticDispatchPanel() {
         </div>
       )}
 
-      {isLoading && <p className="text-[13px] text-gray-500">Computing dispatch recommendations...</p>}
+      {isLoading && (
+        <p className="text-[13px] text-gray-500">
+          Computing dispatch recommendations...
+        </p>
+      )}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
           {error.message}
@@ -113,40 +136,59 @@ export default function AgenticDispatchPanel() {
 
       {!isLoading && !error && top.length === 0 && (
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
-          No actionable incidents found yet. As new events are triaged, dispatch suggestions will appear here.
+          No actionable incidents found yet. As new events are triaged, dispatch
+          suggestions will appear here.
         </div>
       )}
 
       {!isLoading && !error && top.length > 0 && (
         <div className="flex flex-col gap-3">
           {top.map((item) => (
-            <div key={`${item.incidentId}-${item.agency}`} className="rounded-xl border border-gray-200 p-3">
+            <div
+              key={`${item.incidentId}-${item.agency}`}
+              className="rounded-xl border border-gray-200 p-3"
+            >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${agencyBadge(item.agency)}`}>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${agencyBadge(item.agency)}`}
+                  >
                     {item.agency.toUpperCase()}
                   </span>
-                  <span className="text-[11px] text-gray-500">Incident {item.incidentId.slice(0, 8)}</span>
+                  <span className="text-[11px] text-gray-500">
+                    Incident {item.incidentId.slice(0, 8)}
+                  </span>
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full ${
-                      item.modelAssisted ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                      item.modelAssisted
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-amber-100 text-amber-700"
                     }`}
                   >
                     {item.modelAssisted ? "AI recommended" : "Auto-assigned"}
                   </span>
                 </div>
                 <div className="text-[11px] text-gray-600">
-                  Confidence <span className="font-semibold">{item.confidenceLevel}/3</span>
+                  Confidence{" "}
+                  <span className="font-semibold">
+                    {item.confidenceLevel}/3
+                  </span>
                 </div>
               </div>
 
-              <p className="text-[13px] font-semibold text-gray-900 mt-2">{item.summary}</p>
+              <p className="text-[13px] font-semibold text-gray-900 mt-2">
+                {item.summary}
+              </p>
               <div className="mt-3 rounded-lg bg-[#FAFAFA] border border-gray-100 p-2.5">
                 <div className="flex items-center justify-between gap-2 text-[12px]">
                   <div className="flex items-center gap-2">
                     <Siren size={14} className="text-gray-500" />
-                      <span className="font-medium text-gray-800">{item.selectedResponderName}</span>
-                      <span className="text-gray-500">({item.selectedResponderId})</span>
+                    <span className="font-medium text-gray-800">
+                      {item.selectedResponderName}
+                    </span>
+                    <span className="text-gray-500">
+                      ({item.selectedResponderId})
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-600">
                     <Timer size={13} />
@@ -167,7 +209,8 @@ export default function AgenticDispatchPanel() {
       )}
       {payload && (
         <div className="rounded-xl bg-gray-50 border border-gray-200 p-3 text-[12px] text-gray-600">
-          Generated at {new Date(payload.generatedAt).toLocaleTimeString()} with deterministic guardrails.
+          Generated at {new Date(payload.generatedAt).toLocaleTimeString()} with
+          deterministic guardrails.
         </div>
       )}
     </div>

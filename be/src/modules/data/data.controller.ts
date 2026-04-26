@@ -21,10 +21,16 @@ function isValidGps(lat: number, lon: number): boolean {
   return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
 
-function parseAgency(value: unknown): "medical" | "fire" | "police" | undefined {
+function parseAgency(
+  value: unknown,
+): "medical" | "fire" | "police" | undefined {
   if (typeof value !== "string") return undefined;
   const normalized = value.trim().toLowerCase();
-  if (normalized === "medical" || normalized === "fire" || normalized === "police") {
+  if (
+    normalized === "medical" ||
+    normalized === "fire" ||
+    normalized === "police"
+  ) {
     return normalized;
   }
   return undefined;
@@ -53,27 +59,42 @@ export const dataController = {
 
     const gpsRaw = body.gps;
     const gps =
-      isRecord(gpsRaw) && toNumber(gpsRaw.lat) !== undefined && toNumber(gpsRaw.lon) !== undefined
+      isRecord(gpsRaw) &&
+      toNumber(gpsRaw.lat) !== undefined &&
+      toNumber(gpsRaw.lon) !== undefined
         ? { lat: toNumber(gpsRaw.lat)!, lon: toNumber(gpsRaw.lon)! }
         : undefined;
 
     if (gps && !isValidGps(gps.lat, gps.lon)) {
-      res.status(400).json({ error: "gps.lat and gps.lon must be valid WGS84 coordinates" });
+      res
+        .status(400)
+        .json({ error: "gps.lat and gps.lon must be valid WGS84 coordinates" });
       return;
     }
 
     const meta = isRecord(body.meta) ? body.meta : undefined;
-    const agency = parseAgency(body.agency) ?? parseAgency(meta?.agency) ?? parseAgency(meta?.category);
+    const agency =
+      parseAgency(body.agency) ??
+      parseAgency(meta?.agency) ??
+      parseAgency(meta?.category);
     const allowedAgencies = getAllowedAgencies(req);
-    if (allowedAgencies.length > 0 && agency && !allowedAgencies.includes(agency)) {
-      res.status(403).json({ error: "Forbidden: cannot create data outside your agency scope" });
+    if (
+      allowedAgencies.length > 0 &&
+      agency &&
+      !allowedAgencies.includes(agency)
+    ) {
+      res.status(403).json({
+        error: "Forbidden: cannot create data outside your agency scope",
+      });
       return;
     }
 
     const { record, deduplicated } = await dataService.create({
       macAddress,
       message,
-      agency: agency ?? (req.user?.role === "super_admin" ? undefined : allowedAgencies[0]),
+      agency:
+        agency ??
+        (req.user?.role === "super_admin" ? undefined : allowedAgencies[0]),
       time,
       gps,
       meta,
@@ -103,23 +124,33 @@ export const dataController = {
   }) satisfies RequestHandler,
 
   heatmap: (async (req, res) => {
-    const since = typeof req.query.since === "string" ? req.query.since : undefined;
-    const category = typeof req.query.category === "string" ? req.query.category : undefined;
+    const since =
+      typeof req.query.since === "string" ? req.query.since : undefined;
+    const category =
+      typeof req.query.category === "string" ? req.query.category : undefined;
     const limitRaw =
       typeof req.query.limit === "string" && req.query.limit.trim() !== ""
         ? Number(req.query.limit)
         : undefined;
 
-    if (since !== undefined && since.trim() !== "" && Number.isNaN(new Date(since).getTime())) {
+    if (
+      since !== undefined &&
+      since.trim() !== "" &&
+      Number.isNaN(new Date(since).getTime())
+    ) {
       res.status(400).json({ error: "since must be a valid ISO8601 datetime" });
       return;
     }
 
     const points = await dataService.heatmapPoints({
       since: since?.trim() || undefined,
-      limit: typeof limitRaw === "number" && Number.isFinite(limitRaw) ? limitRaw : undefined,
+      limit:
+        typeof limitRaw === "number" && Number.isFinite(limitRaw)
+          ? limitRaw
+          : undefined,
       category: category?.trim() || undefined,
-      agencies: req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
+      agencies:
+        req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
     });
 
     res.json({ points, polledAt: new Date().toISOString() });
@@ -127,7 +158,9 @@ export const dataController = {
 
   list: (async (req, res) => {
     const macAddress =
-      typeof req.query.macAddress === "string" ? req.query.macAddress : undefined;
+      typeof req.query.macAddress === "string"
+        ? req.query.macAddress
+        : undefined;
     const limit =
       typeof req.query.limit === "string" && req.query.limit.trim() !== ""
         ? Number(req.query.limit)
@@ -135,8 +168,10 @@ export const dataController = {
 
     const items = await dataService.list({
       macAddress,
-      limit: typeof limit === "number" && Number.isFinite(limit) ? limit : undefined,
-      agencies: req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
+      limit:
+        typeof limit === "number" && Number.isFinite(limit) ? limit : undefined,
+      agencies:
+        req.user?.role === "super_admin" ? undefined : getAllowedAgencies(req),
     });
 
     res.json(items);
@@ -210,8 +245,14 @@ export const dataController = {
 
         const meta = isRecord(p.meta) ? p.meta : undefined;
         const agency =
-          parseAgency(p.agency) ?? parseAgency(meta?.agency) ?? parseAgency(meta?.category);
-        if (allowedAgencies.length > 0 && agency && !allowedAgencies.includes(agency)) {
+          parseAgency(p.agency) ??
+          parseAgency(meta?.agency) ??
+          parseAgency(meta?.category);
+        if (
+          allowedAgencies.length > 0 &&
+          agency &&
+          !allowedAgencies.includes(agency)
+        ) {
           results.push({ index: i, ok: false, error: "agency outside scope" });
           continue;
         }
@@ -219,7 +260,9 @@ export const dataController = {
         const { record, deduplicated } = await dataService.create({
           macAddress,
           message,
-          agency: agency ?? (req.user?.role === "super_admin" ? undefined : allowedAgencies[0]),
+          agency:
+            agency ??
+            (req.user?.role === "super_admin" ? undefined : allowedAgencies[0]),
           time,
           gps,
           meta,
@@ -273,8 +316,16 @@ export const dataController = {
       return;
     }
     const body = req.body;
-    const statusRaw = isRecord(body) && typeof body.status === "string" ? body.status.trim().toLowerCase() : "";
-    const allowed = new Set(["acknowledged", "resolved", "assigned", "pending"]);
+    const statusRaw =
+      isRecord(body) && typeof body.status === "string"
+        ? body.status.trim().toLowerCase()
+        : "";
+    const allowed = new Set([
+      "acknowledged",
+      "resolved",
+      "assigned",
+      "pending",
+    ]);
     if (!allowed.has(statusRaw)) {
       res.status(400).json({
         error: `status must be one of: ${[...allowed].join(", ")}`,
@@ -284,14 +335,19 @@ export const dataController = {
     try {
       const updated = await dataService.setStatus({
         id,
-        status: statusRaw as "acknowledged" | "resolved" | "assigned" | "pending",
+        status: statusRaw as
+          | "acknowledged"
+          | "resolved"
+          | "assigned"
+          | "pending",
         actorId: req.user.id,
         actorEmail: req.user.email,
       });
       res.json(updated);
     } catch (err) {
       const status = (err as { statusCode?: number }).statusCode ?? 500;
-      const message = err instanceof Error ? err.message : "Status update failed";
+      const message =
+        err instanceof Error ? err.message : "Status update failed";
       res.status(status).json({ error: message });
     }
   }) satisfies RequestHandler,

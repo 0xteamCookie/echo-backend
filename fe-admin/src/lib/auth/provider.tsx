@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   onIdTokenChanged,
   signInWithEmailAndPassword,
@@ -8,7 +15,13 @@ import {
   type User,
 } from "firebase/auth";
 import { can } from "./permissions";
-import { defaultSession, type Agency, type AuthSession, type Permission, type Role } from "./types";
+import {
+  defaultSession,
+  type Agency,
+  type AuthSession,
+  type Permission,
+  type Role,
+} from "./types";
 import { getAuthClient } from "../firebase-client";
 import { apiUrl } from "../api";
 
@@ -16,7 +29,10 @@ type AuthContextValue = {
   session: AuthSession;
   ready: boolean;
   token: string;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
   can: (permission: Permission) => boolean;
   authHeader: Record<string, string>;
@@ -24,7 +40,12 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const ROLES: readonly Role[] = ["super_admin", "medical", "fire", "police"] as const;
+const ROLES: readonly Role[] = [
+  "super_admin",
+  "medical",
+  "fire",
+  "police",
+] as const;
 const AGENCIES: readonly Agency[] = ["medical", "fire", "police"] as const;
 
 function isRole(v: unknown): v is Role {
@@ -119,8 +140,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               : [];
             resolved = {
               authenticated: true,
-              userId: typeof data.id === "string" && data.id ? data.id : user.uid,
-              email: typeof data.email === "string" ? data.email : user.email ?? "",
+              userId:
+                typeof data.id === "string" && data.id ? data.id : user.uid,
+              email:
+                typeof data.email === "string"
+                  ? data.email
+                  : (user.email ?? ""),
               role: data.role,
               agencies,
             };

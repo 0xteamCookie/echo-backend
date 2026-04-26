@@ -2,7 +2,12 @@ import crypto from "node:crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { FieldValue, getFirestoreDb } from "../../lib/firebase";
 import { categoriesFromTriageMeta } from "../triage/triage.schema";
-import type { AgencyScope, CreateDeviceDataBody, DeviceData, HeatmapPoint } from "./data.schema";
+import type {
+  AgencyScope,
+  CreateDeviceDataBody,
+  DeviceData,
+  HeatmapPoint,
+} from "./data.schema";
 
 const COLLECTION = "device_entries";
 
@@ -46,7 +51,10 @@ function categoryMultiplier(category: string): number {
   return CATEGORY_WEIGHT[category] ?? CATEGORY_WEIGHT.unknown;
 }
 
-function triageFromMeta(meta?: Record<string, unknown>): { severity: number; categories: string[] } {
+function triageFromMeta(meta?: Record<string, unknown>): {
+  severity: number;
+  categories: string[];
+} {
   let severity = 1;
   let categories: string[] = ["unknown"];
 
@@ -57,7 +65,11 @@ function triageFromMeta(meta?: Record<string, unknown>): { severity: number; cat
       severity = Math.min(5, Math.max(1, Math.round(t.severity)));
     }
     categories = categoriesFromTriageMeta(triage);
-  } else if (meta && typeof meta.category === "string" && meta.category.trim() !== "") {
+  } else if (
+    meta &&
+    typeof meta.category === "string" &&
+    meta.category.trim() !== ""
+  ) {
     categories = meta.category
       .split(",")
       .map((x) => x.trim().toLowerCase())
@@ -65,16 +77,27 @@ function triageFromMeta(meta?: Record<string, unknown>): { severity: number; cat
     if (categories.length === 0) categories = ["unknown"];
   }
 
-  if (meta && typeof meta.severity === "number" && Number.isFinite(meta.severity)) {
+  if (
+    meta &&
+    typeof meta.severity === "number" &&
+    Number.isFinite(meta.severity)
+  ) {
     severity = Math.min(5, Math.max(1, Math.round(meta.severity)));
   }
 
   return { severity, categories };
 }
 
-function locationNameFromMeta(meta?: Record<string, unknown>): string | undefined {
+function locationNameFromMeta(
+  meta?: Record<string, unknown>,
+): string | undefined {
   if (!meta) return undefined;
-  const candidates = [meta.locationName, meta.location, meta.locationLabel, meta.placeName];
+  const candidates = [
+    meta.locationName,
+    meta.location,
+    meta.locationLabel,
+    meta.placeName,
+  ];
   for (const value of candidates) {
     if (typeof value === "string" && value.trim() !== "") {
       return value.trim().slice(0, 120);
@@ -114,7 +137,11 @@ function normalizeMac(input: string): string {
 function parseAgencyScope(value: unknown): AgencyScope | undefined {
   if (typeof value !== "string") return undefined;
   const normalized = value.trim().toLowerCase();
-  if (normalized === "medical" || normalized === "fire" || normalized === "police") {
+  if (
+    normalized === "medical" ||
+    normalized === "fire" ||
+    normalized === "police"
+  ) {
     return normalized;
   }
   return undefined;
@@ -164,7 +191,10 @@ function normalizeMeta(raw: Record<string, unknown>): Record<string, unknown> {
   return meta;
 }
 
-function docToDevice(id: string, data: FirebaseFirestore.DocumentData): DeviceData {
+function docToDevice(
+  id: string,
+  data: FirebaseFirestore.DocumentData,
+): DeviceData {
   const rawGps = data.gps;
   const gps =
     rawGps &&
@@ -187,20 +217,27 @@ function docToDevice(id: string, data: FirebaseFirestore.DocumentData): DeviceDa
     !Array.isArray(rawAssignment)
       ? {
           rescuerId:
-            typeof (rawAssignment as Record<string, unknown>).rescuerId === "string"
+            typeof (rawAssignment as Record<string, unknown>).rescuerId ===
+            "string"
               ? ((rawAssignment as Record<string, unknown>).rescuerId as string)
               : undefined,
           rescuerName:
-            typeof (rawAssignment as Record<string, unknown>).rescuerName === "string"
-              ? ((rawAssignment as Record<string, unknown>).rescuerName as string)
+            typeof (rawAssignment as Record<string, unknown>).rescuerName ===
+            "string"
+              ? ((rawAssignment as Record<string, unknown>)
+                  .rescuerName as string)
               : undefined,
           assignedAt:
-            typeof (rawAssignment as Record<string, unknown>).assignedAt === "string"
-              ? ((rawAssignment as Record<string, unknown>).assignedAt as string)
+            typeof (rawAssignment as Record<string, unknown>).assignedAt ===
+            "string"
+              ? ((rawAssignment as Record<string, unknown>)
+                  .assignedAt as string)
               : undefined,
           assignedBy:
-            typeof (rawAssignment as Record<string, unknown>).assignedBy === "string"
-              ? ((rawAssignment as Record<string, unknown>).assignedBy as string)
+            typeof (rawAssignment as Record<string, unknown>).assignedBy ===
+            "string"
+              ? ((rawAssignment as Record<string, unknown>)
+                  .assignedBy as string)
               : undefined,
         }
       : undefined;
@@ -269,7 +306,10 @@ export const dataService = {
   /**
    * Shallow-merge keys into `meta`. When `patch` includes `triage`, clears `triageError`.
    */
-  async mergeDeviceMeta(id: string, patch: Record<string, unknown>): Promise<DeviceData> {
+  async mergeDeviceMeta(
+    id: string,
+    patch: Record<string, unknown>,
+  ): Promise<DeviceData> {
     const db = getFirestoreDb();
     const ref = db.collection(COLLECTION).doc(id);
     const snap = await ref.get();
@@ -299,9 +339,14 @@ export const dataService = {
   async listRecentWithGps(max: number): Promise<DeviceData[]> {
     const db = getFirestoreDb();
     const cap = Math.min(500, Math.max(1, max));
-    const q = db.collection(COLLECTION).orderBy("receivedAt", "desc").limit(cap);
+    const q = db
+      .collection(COLLECTION)
+      .orderBy("receivedAt", "desc")
+      .limit(cap);
     const snap = await q.get();
-    return snap.docs.map((d) => docToDevice(d.id, d.data())).filter((d) => d.gps !== undefined);
+    return snap.docs
+      .map((d) => docToDevice(d.id, d.data()))
+      .filter((d) => d.gps !== undefined);
   },
 
   /**
@@ -341,7 +386,9 @@ export const dataService = {
 
     if (filter?.agencies && filter.agencies.length > 0) {
       const allowedAgencies = new Set(filter.agencies);
-      points = points.filter((point) => point.agency && allowedAgencies.has(point.agency));
+      points = points.filter(
+        (point) => point.agency && allowedAgencies.has(point.agency),
+      );
     }
 
     if (categoryFilter) {
@@ -358,7 +405,9 @@ export const dataService = {
   }): Promise<DeviceData[]> {
     const db = getFirestoreDb();
     const limit = Math.max(0, Math.min(1000, filter?.limit ?? 100));
-    const mac = filter?.macAddress ? normalizeMac(filter.macAddress) : undefined;
+    const mac = filter?.macAddress
+      ? normalizeMac(filter.macAddress)
+      : undefined;
 
     const q: FirebaseFirestore.Query = mac
       ? db
@@ -372,7 +421,9 @@ export const dataService = {
     const items = snap.docs.map((d) => docToDevice(d.id, d.data()));
     if (!filter?.agencies || filter.agencies.length === 0) return items;
     const allowedAgencies = new Set(filter.agencies);
-    return items.filter((item) => item.agency && allowedAgencies.has(item.agency));
+    return items.filter(
+      (item) => item.agency && allowedAgencies.has(item.agency),
+    );
   },
 
   /**
@@ -390,7 +441,9 @@ export const dataService = {
     const ref = db.collection(COLLECTION).doc(params.id);
     const snap = await ref.get();
     if (!snap.exists) {
-      throw Object.assign(new Error("Device entry not found"), { statusCode: 404 });
+      throw Object.assign(new Error("Device entry not found"), {
+        statusCode: 404,
+      });
     }
     const now = new Date().toISOString();
     await ref.set(

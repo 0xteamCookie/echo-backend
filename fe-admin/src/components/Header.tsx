@@ -62,8 +62,12 @@ export default function Header() {
               onMouseLeave={() => setOpen(false)}
             >
               <div className="px-3 py-2 border-b border-gray-100">
-                <div className="font-semibold text-gray-800 truncate">{session.email}</div>
-                <div className="text-[11px] text-gray-500 capitalize">{session.role.replace("_", " ")}</div>
+                <div className="font-semibold text-gray-800 truncate">
+                  {session.email}
+                </div>
+                <div className="text-[11px] text-gray-500 capitalize">
+                  {session.role.replace("_", " ")}
+                </div>
               </div>
               <button
                 onClick={() => void handleLogout()}
@@ -79,4 +83,3 @@ export default function Header() {
     </header>
   );
 }
-

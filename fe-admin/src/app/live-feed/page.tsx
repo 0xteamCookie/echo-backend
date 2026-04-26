@@ -7,7 +7,9 @@ export default function LiveFeed() {
     <>
       <div className="flex justify-between items-center bg-white mb-2 pb-4">
         <div>
-          <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">Live Dispatch Feed</h1>
+          <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">
+            Live Dispatch Feed
+          </h1>
         </div>
       </div>
       <div className="grid grid-cols-12 gap-6 flex-1">
@@ -21,4 +23,3 @@ export default function LiveFeed() {
     </>
   );
 }
-

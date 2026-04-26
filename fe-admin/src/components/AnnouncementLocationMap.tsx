@@ -9,8 +9,7 @@ import {
   AdvancedMarker,
 } from "@vis.gl/react-google-maps";
 
-const GOOGLE_MAPS_API_KEY =
-  process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 export type AnnouncementMapPoint = {
   key: string;
@@ -120,8 +119,12 @@ function ConfigurePanel() {
         Google Maps API key is not configured
       </div>
       <div className="text-amber-800 text-xs max-w-sm">
-        Set <code className="font-mono bg-amber-100 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
-        in <code className="font-mono bg-amber-100 px-1 rounded">.env.local</code>{" "}
+        Set{" "}
+        <code className="font-mono bg-amber-100 px-1 rounded">
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        </code>{" "}
+        in{" "}
+        <code className="font-mono bg-amber-100 px-1 rounded">.env.local</code>{" "}
         to enable the announcement heatmap.
       </div>
     </div>
@@ -170,10 +173,7 @@ export default function AnnouncementLocationMap({
               />
             </AdvancedMarker>
           ))}
-          <HeatmapAndSelection
-            points={points}
-            selectedPoint={selectedPoint}
-          />
+          <HeatmapAndSelection points={points} selectedPoint={selectedPoint} />
         </Map>
       </APIProvider>
     </div>

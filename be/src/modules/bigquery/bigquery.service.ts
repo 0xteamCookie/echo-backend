@@ -40,7 +40,9 @@ function toNumberOrNull(v: unknown): number | null {
   return null;
 }
 
-function categoriesFromMeta(meta: Record<string, unknown> | undefined): string[] {
+function categoriesFromMeta(
+  meta: Record<string, unknown> | undefined,
+): string[] {
   const tri = meta?.triage;
   if (tri && typeof tri === "object" && !Array.isArray(tri)) {
     const raw = (tri as Record<string, unknown>).categories;
@@ -48,7 +50,11 @@ function categoriesFromMeta(meta: Record<string, unknown> | undefined): string[]
       return raw.map((x) => String(x)).filter((s) => s.trim() !== "");
     }
   }
-  if (meta && typeof meta.category === "string" && meta.category.trim() !== "") {
+  if (
+    meta &&
+    typeof meta.category === "string" &&
+    meta.category.trim() !== ""
+  ) {
     return meta.category
       .split(",")
       .map((s) => s.trim())
@@ -57,7 +63,9 @@ function categoriesFromMeta(meta: Record<string, unknown> | undefined): string[]
   return [];
 }
 
-function severityFromMeta(meta: Record<string, unknown> | undefined): number | null {
+function severityFromMeta(
+  meta: Record<string, unknown> | undefined,
+): number | null {
   const tri = meta?.triage;
   if (tri && typeof tri === "object" && !Array.isArray(tri)) {
     const raw = (tri as Record<string, unknown>).severity;

@@ -23,9 +23,7 @@ export function SosPanel({ reports, assignedCount, onSelect }: Props) {
   return (
     <div
       className={`pointer-events-auto absolute top-3 right-3 z-10 flex flex-col rounded-xl border border-gray-200 bg-white/95 backdrop-blur shadow-lg transition-all duration-200 ${
-        collapsed
-          ? "w-auto"
-          : "w-[320px] max-h-[calc(100%-1.5rem)]"
+        collapsed ? "w-auto" : "w-[320px] max-h-[calc(100%-1.5rem)]"
       }`}
     >
       {/* Header */}

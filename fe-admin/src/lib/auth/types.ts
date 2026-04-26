@@ -1,7 +1,11 @@
 export type Agency = "medical" | "fire" | "police";
 export type Role = "super_admin" | Agency;
 
-export type Permission = "data:read" | "data:write" | "provision:issue" | "settings:read";
+export type Permission =
+  | "data:read"
+  | "data:write"
+  | "provision:issue"
+  | "settings:read";
 
 export type AuthSession = {
   authenticated: boolean;

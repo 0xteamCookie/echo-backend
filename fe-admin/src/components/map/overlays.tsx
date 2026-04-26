@@ -4,11 +4,7 @@
 import { useEffect, useRef } from "react";
 import { useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import type { DeviceEntry } from "../../hooks/useRealtimeEvents";
-import {
-  isResolvedStatus,
-  type ClickableEntry,
-  type HeatPoint,
-} from "./types";
+import { isResolvedStatus, type ClickableEntry, type HeatPoint } from "./types";
 
 // ─── Heatmap overlay ─────────────────────────────────────────────────────────
 

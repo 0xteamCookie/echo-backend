@@ -23,18 +23,24 @@ export type TriageSnapshot = {
 
 function normalizeLabel(s: string): TriageCategory {
   const c = s.trim().toLowerCase();
-  return (TRIAGE_CATEGORIES as readonly string[]).includes(c) ? (c as TriageCategory) : "unknown";
+  return (TRIAGE_CATEGORIES as readonly string[]).includes(c)
+    ? (c as TriageCategory)
+    : "unknown";
 }
 
 /** Read categories from stored `meta.triage` (new `categories[]` or legacy `category` string / comma-separated). */
 export function categoriesFromTriageMeta(triage: unknown): TriageCategory[] {
-  if (!triage || typeof triage !== "object" || Array.isArray(triage)) return ["unknown"];
+  if (!triage || typeof triage !== "object" || Array.isArray(triage))
+    return ["unknown"];
   const t = triage as Record<string, unknown>;
   let raw: string[] = [];
   if (Array.isArray(t.categories) && t.categories.length > 0) {
     raw = t.categories.map((x) => String(x)).filter((s) => s.trim() !== "");
   } else if (typeof t.category === "string" && t.category.trim() !== "") {
-    raw = t.category.split(",").map((s) => s.trim()).filter((s) => s !== "");
+    raw = t.category
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s !== "");
   }
   if (raw.length === 0) return ["unknown"];
   const mapped = raw.map((s) => normalizeLabel(s));

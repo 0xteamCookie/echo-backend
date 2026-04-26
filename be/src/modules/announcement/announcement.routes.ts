@@ -5,4 +5,8 @@ import { announcementController } from "./announcement.controller";
 export const announcementRouter = Router();
 
 announcementRouter.get("/", announcementController.listNearby);
-announcementRouter.post("/", requirePermission("data:write"), announcementController.create);
+announcementRouter.post(
+  "/",
+  requirePermission("data:write"),
+  announcementController.create,
+);

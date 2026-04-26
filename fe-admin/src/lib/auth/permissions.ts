@@ -31,8 +31,10 @@ export function canAccessPath(session: AuthSession, pathname: string): boolean {
   if (!session.authenticated) return false;
   if (pathname.startsWith("/provision")) return can(session, "provision:issue");
   if (pathname.startsWith("/settings")) return can(session, "settings:read");
-  if (pathname.startsWith("/medical")) return hasAgencyAccess(session, "medical");
-  if (pathname.startsWith("/fire-rescue")) return hasAgencyAccess(session, "fire");
+  if (pathname.startsWith("/medical"))
+    return hasAgencyAccess(session, "medical");
+  if (pathname.startsWith("/fire-rescue"))
+    return hasAgencyAccess(session, "fire");
   if (pathname.startsWith("/police")) return hasAgencyAccess(session, "police");
   return can(session, "data:read");
 }

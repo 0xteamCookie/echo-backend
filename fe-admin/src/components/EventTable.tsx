@@ -2,7 +2,11 @@
 
 import React, { useMemo } from "react";
 import { cn } from "./StatCard";
-import { useRealtimeEvents, FIRESTORE_NO_CLIENT, type DeviceEntry } from "../hooks/useRealtimeEvents";
+import {
+  useRealtimeEvents,
+  FIRESTORE_NO_CLIENT,
+  type DeviceEntry,
+} from "../hooks/useRealtimeEvents";
 
 type Row = {
   id: string;
@@ -24,7 +28,8 @@ function readSeverity(entry: DeviceEntry): number {
   const t = entry.meta?.triage;
   if (t && typeof t === "object" && !Array.isArray(t)) {
     const sev = (t as Record<string, unknown>).severity;
-    if (typeof sev === "number" && Number.isFinite(sev)) return Math.min(5, Math.max(1, Math.round(sev)));
+    if (typeof sev === "number" && Number.isFinite(sev))
+      return Math.min(5, Math.max(1, Math.round(sev)));
   }
   return 1;
 }
@@ -38,7 +43,8 @@ function readStatus(entry: DeviceEntry): string {
 }
 
 function readLocation(entry: DeviceEntry): string {
-  if (entry.gps) return `${entry.gps.lat.toFixed(3)}, ${entry.gps.lon.toFixed(3)}`;
+  if (entry.gps)
+    return `${entry.gps.lat.toFixed(3)}, ${entry.gps.lon.toFixed(3)}`;
   return entry.macAddress || "Unknown";
 }
 
@@ -73,7 +79,9 @@ export default function EventTable() {
   return (
     <div className="bg-[#FAFAFA] rounded-2xl p-6 border border-[#FAFAFA] h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-semibold text-[14px] text-gray-800">Recent Dispatch</h3>
+        <h3 className="font-semibold text-[14px] text-gray-800">
+          Recent Dispatch
+        </h3>
         <a
           href="/live-feed"
           className="text-[12px] font-medium text-gray-500 hover:text-black transition-colors bg-white px-3 py-1 rounded-full shadow-sm"
@@ -84,11 +92,17 @@ export default function EventTable() {
 
       <div className="flex-1">
         {loading && rows.length === 0 ? (
-          <div className="text-[12px] text-gray-400 py-6 text-center">Loading recent incidents...</div>
+          <div className="text-[12px] text-gray-400 py-6 text-center">
+            Loading recent incidents...
+          </div>
         ) : error && error !== FIRESTORE_NO_CLIENT ? (
-          <div className="text-[12px] text-red-500 py-6 text-center">Unable to load incidents.</div>
+          <div className="text-[12px] text-red-500 py-6 text-center">
+            Unable to load incidents.
+          </div>
         ) : rows.length === 0 ? (
-          <div className="text-[12px] text-gray-400 py-6 text-center">No incidents yet.</div>
+          <div className="text-[12px] text-gray-400 py-6 text-center">
+            No incidents yet.
+          </div>
         ) : (
           <table className="w-full text-left">
             <thead>
@@ -101,7 +115,10 @@ export default function EventTable() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {rows.map((inc) => (
-                <tr key={inc.id} className="hover:bg-gray-50 transition-colors group">
+                <tr
+                  key={inc.id}
+                  className="hover:bg-gray-50 transition-colors group"
+                >
                   <td className="py-3">
                     <div className="flex items-center gap-2">
                       <div
@@ -110,8 +127,8 @@ export default function EventTable() {
                           inc.badge === "M"
                             ? "bg-blue-500"
                             : inc.badge === "F"
-                            ? "bg-orange-500"
-                            : "bg-black",
+                              ? "bg-orange-500"
+                              : "bg-black",
                         )}
                       >
                         {inc.badge}
@@ -120,8 +137,12 @@ export default function EventTable() {
                   </td>
                   <td className="py-3">
                     <div className="flex flex-col">
-                      <span className="font-bold text-gray-800 text-[12px]">{inc.code}</span>
-                      <span className="text-[10px] text-gray-500 truncate max-w-[140px]">{inc.loc}</span>
+                      <span className="font-bold text-gray-800 text-[12px]">
+                        {inc.code}
+                      </span>
+                      <span className="text-[10px] text-gray-500 truncate max-w-[140px]">
+                        {inc.loc}
+                      </span>
                     </div>
                   </td>
                   <td className="py-3">
@@ -138,11 +159,12 @@ export default function EventTable() {
                     <span
                       className={cn(
                         "text-[11px] font-bold",
-                        inc.status === "Assigned" || inc.status === "Dispatching"
+                        inc.status === "Assigned" ||
+                          inc.status === "Dispatching"
                           ? "text-[#E63946]"
                           : inc.status === "Resolved"
-                          ? "text-emerald-600"
-                          : "text-gray-600",
+                            ? "text-emerald-600"
+                            : "text-gray-600",
                       )}
                     >
                       {inc.status}
@@ -157,4 +179,3 @@ export default function EventTable() {
     </div>
   );
 }
-
