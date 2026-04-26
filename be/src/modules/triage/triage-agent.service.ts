@@ -313,6 +313,15 @@ export async function triageAfterIngest(eventId: string): Promise<DeviceData | n
     throw new Error(`Gemini triage JSON parse failed: ${raw.slice(0, 200)}`);
   }
 
+  // Floor severity at 4 for SOS-flagged ingests so an under-confident model
+  // response cannot accidentally downgrade a panic-button event.
+  const isSosRaw = record.meta?.isSos;
+  const isSos =
+    isSosRaw === true || isSosRaw === 1 || isSosRaw === "1" || isSosRaw === "true";
+  if (isSos && triage.severity < 4) {
+    triage = { ...triage, severity: 4 };
+  }
+
   const updated = await dataService.mergeDeviceMeta(eventId, {
     triage,
     triagedAt: new Date().toISOString(),
