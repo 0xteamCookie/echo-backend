@@ -77,14 +77,6 @@ export const config = {
   jwtMaxExpiresInSeconds:
     Number(process.env.JWT_MAX_EXPIRES_SECONDS) || 60 * 60 * 24 * 30,
 
-  /** JWT secret used for dashboard/admin login tokens (P0-7: must be set in prod). */
-  dashboardJwtSecret: requireEnv("DASHBOARD_JWT_SECRET", "dev-only-change-me-dashboard-secret"),
-  /** Seeded super-admin credentials for dashboard login (P0-7: must be set in prod). */
-  superAdminEmail: (
-    requireEnv("SUPER_ADMIN_EMAIL", "admin@disasterrecov.com")
-  ).toLowerCase(),
-  superAdminPassword: requireEnv("SUPER_ADMIN_PASSWORD", "dev-only-disasterrecov@123"),
-
   /** Shared bearer token the Flutter app sends on POST /api/data (P0-8). */
   ingestToken: requireEnv("BEACON_INGEST_TOKEN", "dev-only-ingest-token"),
 
