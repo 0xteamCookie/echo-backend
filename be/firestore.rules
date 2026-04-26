@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin dashboard reads (Firebase Auth + super_admin/agency custom claims).
+    function isOfficial() {
+      return request.auth != null
+        && request.auth.token.role in ["super_admin", "medical", "fire", "police"];
+    }
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.role == "super_admin";
+    }
+
+    // Incident ingest stream — read for admins, writes only via backend Admin SDK.
+    match /device_entries/{id} {
+      allow read: if isOfficial();
+      allow write: if false;
+    }
+
+    // Live rescuer locations — read for admins, writes via backend (heartbeat).
+    match /rescuers/{id} {
+      allow read: if isOfficial();
+      allow write: if false;
+    }
+
+    // User profile docs — admins read, super_admin writes (role grants).
+    match /users/{uid} {
+      allow read: if isOfficial();
+      allow write: if isSuperAdmin();
+    }
+
+    // Announcements — admins read & write; backend handles translation merges.
+    match /announcements/{id} {
+      allow read: if isOfficial();
+      allow write: if isOfficial();
+    }
+
+    // Default deny.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -23,7 +23,7 @@ export default function Dashboard() {
 
       <LatestAnnouncement />
 
-      <div className="flex-1 min-h-[600px] rounded-2xl border-2 border-gray-300 overflow-hidden relative">
+      <div className="h-150 min-h-120">
         <MapHeatmap />
       </div>
     </>
