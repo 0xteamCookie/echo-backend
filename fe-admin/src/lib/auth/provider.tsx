@@ -9,8 +9,10 @@ import {
 } from "firebase/auth";
 import { can } from "./permissions";
 import { defaultSession, type Agency, type AuthSession, type Permission, type Role } from "./types";
-import { getAuthClient } from "../firebase-client";
+import { getAuthClient, hasFirebaseConfig } from "../firebase-client";
 import { apiUrl } from "../api";
+
+const STORAGE_KEY = "echo-admin-session";
 
 type AuthContextValue = {
   session: AuthSession;
@@ -32,6 +34,29 @@ function isRole(v: unknown): v is Role {
 }
 function isAgency(v: unknown): v is Agency {
   return typeof v === "string" && (AGENCIES as readonly string[]).includes(v);
+}
+
+function normalizeLegacySession(input: unknown): { session: AuthSession; token: string } {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return { session: defaultSession(), token: "" };
+  }
+  const raw = input as { token?: unknown; session?: Partial<AuthSession> };
+  const token = typeof raw.token === "string" ? raw.token : "";
+  const sessionRaw = raw.session ?? {};
+  const role: Role = isRole(sessionRaw.role) ? sessionRaw.role : "medical";
+  const agencies: Agency[] = Array.isArray(sessionRaw.agencies)
+    ? sessionRaw.agencies.filter(isAgency)
+    : [];
+  return {
+    token,
+    session: {
+      authenticated: Boolean(token),
+      userId: typeof sessionRaw.userId === "string" ? sessionRaw.userId : "",
+      email: typeof sessionRaw.email === "string" ? sessionRaw.email : "",
+      role,
+      agencies,
+    },
+  };
 }
 
 /** Best-effort decode of the payload portion of a JWT. Returns empty object on failure. */
@@ -70,12 +95,31 @@ function sessionFromClaims(user: User, token: string): AuthSession {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<AuthSession>(defaultSession());
-  const [token, setToken] = useState<string>("");
-  const [ready, setReady] = useState<boolean>(false);
+  const firebaseEnabled = hasFirebaseConfig();
+
+  // Legacy bootstrap from localStorage only if Firebase is NOT configured.
+  const initial = (() => {
+    if (typeof window === "undefined" || firebaseEnabled) {
+      return { session: defaultSession(), token: "" };
+    }
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { session: defaultSession(), token: "" };
+      return normalizeLegacySession(JSON.parse(raw) as unknown);
+    } catch {
+      return { session: defaultSession(), token: "" };
+    }
+  })();
+
+  const [session, setSession] = useState<AuthSession>(initial.session);
+  const [token, setToken] = useState<string>(initial.token);
+  // When firebase is enabled we aren't "ready" until the first onIdTokenChanged fires.
+  const [ready, setReady] = useState<boolean>(!firebaseEnabled);
   const meFetchIdRef = useRef(0);
 
+  // ─── Firebase: subscribe to ID token changes ──────────────────────────────
   useEffect(() => {
+    if (!firebaseEnabled) return;
     const auth = getAuthClient();
     if (!auth) {
       setReady(true);
@@ -133,7 +177,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsub();
-  }, []);
+  }, [firebaseEnabled]);
+
+  // ─── Legacy: persist localStorage session (only when firebase is off) ─────
+  useEffect(() => {
+    if (firebaseEnabled) return;
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ session, token }));
+  }, [firebaseEnabled, session, token]);
+
+  // ─── Legacy: hydrate session from stored token via /api/auth/me ───────────
+  useEffect(() => {
+    if (firebaseEnabled) return;
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(apiUrl("/api/auth/me"), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setToken("");
+          setSession(defaultSession());
+          return;
+        }
+        const data = (await res.json()) as {
+          id?: string;
+          email?: string;
+          role?: unknown;
+          agencies?: unknown;
+        };
+        if (!isRole(data.role)) {
+          setToken("");
+          setSession(defaultSession());
+          return;
+        }
+        const agencies: Agency[] = Array.isArray(data.agencies)
+          ? data.agencies.filter(isAgency)
+          : [];
+        setSession({
+          authenticated: true,
+          userId: typeof data.id === "string" ? data.id : "",
+          email: typeof data.email === "string" ? data.email : "",
+          role: data.role,
+          agencies,
+        });
+      } catch {
+        if (!cancelled) {
+          setToken("");
+          setSession(defaultSession());
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [firebaseEnabled, token]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -141,38 +241,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ready,
       token,
       login: async (email, password) => {
-        const auth = getAuthClient();
-        if (!auth) return { ok: false, error: "Firebase Auth not initialized" };
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-          // onIdTokenChanged will populate session/token.
-          return { ok: true };
-        } catch (e) {
-          const msg =
-            e instanceof Error
-              ? e.message.replace(/^Firebase:\s*/, "")
-              : "Login failed";
-          return { ok: false, error: msg };
+        if (firebaseEnabled) {
+          const auth = getAuthClient();
+          if (!auth) return { ok: false, error: "Firebase Auth not initialized" };
+          try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // onIdTokenChanged will populate session/token.
+            return { ok: true };
+          } catch (e) {
+            const msg =
+              e instanceof Error
+                ? e.message.replace(/^Firebase:\s*/, "")
+                : "Login failed";
+            return { ok: false, error: msg };
+          }
         }
+
+        // ── Legacy custom-JWT login ───────────────────────────────────────
+        const res = await fetch(apiUrl("/api/auth/login"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = (await res.json()) as {
+          token?: string;
+          user?: {
+            id?: string;
+            email?: string;
+            role?: unknown;
+            agencies?: unknown;
+          };
+          error?: string;
+        };
+        if (!res.ok || !data.token || !data.user || !isRole(data.user.role)) {
+          return { ok: false, error: data.error ?? "Login failed" };
+        }
+        const agencies: Agency[] = Array.isArray(data.user.agencies)
+          ? data.user.agencies.filter(isAgency)
+          : ["medical", "fire", "police"];
+        setToken(data.token);
+        setSession({
+          authenticated: true,
+          userId: typeof data.user.id === "string" ? data.user.id : "super-admin",
+          email: typeof data.user.email === "string" ? data.user.email : "",
+          role: data.user.role,
+          agencies,
+        });
+        return { ok: true };
       },
       logout: async () => {
-        const auth = getAuthClient();
-        if (auth) {
-          try {
-            await signOut(auth);
-          } catch {
-            // ignore — state is cleared below regardless
+        if (firebaseEnabled) {
+          const auth = getAuthClient();
+          if (auth) {
+            try {
+              await signOut(auth);
+            } catch {
+              // ignore — state is cleared below regardless
+            }
           }
         }
         setToken("");
         setSession(defaultSession());
+        if (!firebaseEnabled && typeof window !== "undefined") {
+          window.localStorage.removeItem(STORAGE_KEY);
+        }
       },
       can: (permission) => can(session, permission),
       authHeader: token
         ? { Authorization: `Bearer ${token}` }
         : ({} as Record<string, string>),
     }),
-    [ready, session, token],
+    [firebaseEnabled, ready, session, token],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
