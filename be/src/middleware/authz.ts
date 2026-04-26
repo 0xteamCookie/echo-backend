@@ -1,5 +1,4 @@
 import type { RequestHandler } from "express";
-import { verifyDashboardJwt } from "../lib/jwt-dashboard";
 import { config } from "../lib/config";
 import { getAdminAuth, getFirestoreDb } from "../lib/firebase";
 import { log } from "../lib/logger";
@@ -27,10 +26,11 @@ declare global {
 }
 
 /**
- * Authenticates the caller via `Authorization: Bearer <jwt>` against the
- * dashboard HS256 secret. Legacy `x-user-*` header-trust fallback was removed
- * in P0-6; if no valid token is present, `req.user` is left undefined and
- * route-level `requirePermission` / `requireIngestAuth` will 401.
+ * Authenticates the caller via `Authorization: Bearer <jwt>`. Accepts:
+ *   - the shared ingest bearer token (mobile devices), or
+ *   - a Firebase ID token (admin dashboard via Firebase Auth).
+ * If no valid token is present, `req.user` is left undefined and route-level
+ * `requirePermission` / `requireIngestAuth` will 401.
  */
 export const identifyUser: RequestHandler = (req, _res, next) => {
   const run = async () => {
@@ -56,71 +56,54 @@ export const identifyUser: RequestHandler = (req, _res, next) => {
       return;
     }
 
+    // Verify as a Firebase ID token. The admin UI uses Firebase Auth and
+    // sends a Firebase ID token as the bearer. We verify it with
+    // firebase-admin, then look up `users/{uid}` in Firestore for
+    // role/agencies. Missing profiles default to a read-only medical role.
     try {
-      const payload = await verifyDashboardJwt(match[1]);
+      const decoded = await getAdminAuth().verifyIdToken(match[1]);
+      const uid = decoded.uid;
+      const claimRole = parseFirebaseRole(decoded.role);
+      const claimAgencies = parseFirebaseAgencies(decoded.agencies);
+
+      let role: UserRole | null = claimRole;
+      let agencies: Agency[] = claimAgencies;
+      let email: string | undefined =
+        typeof decoded.email === "string" ? decoded.email : undefined;
+
+      if (!role) {
+        try {
+          const snap = await getFirestoreDb().collection("users").doc(uid).get();
+          if (snap.exists) {
+            const data = snap.data() ?? {};
+            role = parseFirebaseRole(data.role);
+            const fromDoc = parseFirebaseAgencies(data.agencies);
+            if (fromDoc.length > 0) agencies = fromDoc;
+            if (typeof data.email === "string") email = data.email;
+          }
+        } catch (err) {
+          log.warn("authz.firestore_lookup_failed", {
+            uid,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+
+      const resolvedRole: UserRole = role ?? "medical";
       req.user = {
         type: "official",
-        id: payload.sub,
-        email: payload.email,
-        role: payload.role,
+        id: uid,
+        email,
+        role: resolvedRole,
         agencies:
-          payload.role === "super_admin"
+          resolvedRole === "super_admin"
             ? [...ALL_AGENCIES]
-            : payload.agencies.length > 0
-              ? payload.agencies
-              : [payload.role],
+            : agencies.length > 0
+              ? agencies
+              : [resolvedRole],
       };
     } catch {
-      // Fall back to Firebase ID token verification. The admin UI uses
-      // Firebase Auth when NEXT_PUBLIC_FIREBASE_* is configured and sends a
-      // Firebase ID token as the bearer. We verify it with firebase-admin,
-      // then look up `users/{uid}` in Firestore for role/agencies. Missing
-      // profiles default to a read-only medical role.
-      try {
-        const decoded = await getAdminAuth().verifyIdToken(match[1]);
-        const uid = decoded.uid;
-        const claimRole = parseFirebaseRole(decoded.role);
-        const claimAgencies = parseFirebaseAgencies(decoded.agencies);
-
-        let role: UserRole | null = claimRole;
-        let agencies: Agency[] = claimAgencies;
-        let email: string | undefined =
-          typeof decoded.email === "string" ? decoded.email : undefined;
-
-        if (!role) {
-          try {
-            const snap = await getFirestoreDb().collection("users").doc(uid).get();
-            if (snap.exists) {
-              const data = snap.data() ?? {};
-              role = parseFirebaseRole(data.role);
-              const fromDoc = parseFirebaseAgencies(data.agencies);
-              if (fromDoc.length > 0) agencies = fromDoc;
-              if (typeof data.email === "string") email = data.email;
-            }
-          } catch (err) {
-            log.warn("authz.firestore_lookup_failed", {
-              uid,
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        }
-
-        const resolvedRole: UserRole = role ?? "medical";
-        req.user = {
-          type: "official",
-          id: uid,
-          email,
-          role: resolvedRole,
-          agencies:
-            resolvedRole === "super_admin"
-              ? [...ALL_AGENCIES]
-              : agencies.length > 0
-                ? agencies
-                : [resolvedRole],
-        };
-      } catch {
-        req.user = undefined;
-      }
+      req.user = undefined;
     }
     next();
   };
