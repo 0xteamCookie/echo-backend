@@ -4,7 +4,7 @@
 
 # Echo Backend
 
-**The cloud half of [Echo](https://github.com/PLACEHOLDER/echo) — a BLE-mesh crisis-response platform.**
+**The cloud half of [Echo](https://github.com/0xteamCookie/echo) — a BLE-mesh crisis-response platform.**
 
 Express 5 API · Firebase · Gemini AI · Next.js operator console
 
@@ -38,7 +38,7 @@ Express 5 API · Firebase · Gemini AI · Next.js operator console
 
 ## What is this?
 
-When a disaster knocks out cell towers, the [Echo mobile app](https://github.com/PLACEHOLDER/echo) keeps people connected through an ad-hoc Bluetooth Low Energy mesh. Sooner or later, **one** phone in that mesh gets a single bar of signal — and at that moment it uplinks the entire neighbourhood's accumulated SOS backlog to **this backend**.
+When a disaster knocks out cell towers, the [Echo mobile app](https://github.com/0xteamCookie/echo) keeps people connected through an ad-hoc Bluetooth Low Energy mesh. Sooner or later, **one** phone in that mesh gets a single bar of signal — and at that moment it uplinks the entire neighbourhood's accumulated SOS backlog to **this backend**.
 
 This repo is what happens on the other end of that uplink:
 

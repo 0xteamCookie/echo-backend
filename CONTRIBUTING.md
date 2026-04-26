@@ -1,6 +1,6 @@
 # Contributing to Echo Backend
 
-Thanks for taking the time to contribute! Echo Backend powers the cloud half of [Echo](https://github.com/PLACEHOLDER/echo), a Google Solution Challenge 2026 project addressing **Rapid Crisis Response**.
+Thanks for taking the time to contribute! Echo Backend powers the cloud half of [Echo](https://github.com/0xteamCookie/echo), a Google Solution Challenge 2026 project addressing **Rapid Crisis Response**.
 
 This repo is a **two-package monorepo**:
 

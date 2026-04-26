@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/PLACEHOLDER/echo-backend/security/advisories/new
+    url: https://github.com/0xteamCookie/echo-backend/security/advisories/new
     about: Please report security issues privately, never as a public issue. See SECURITY.md.
   - name: Question or discussion
-    url: https://github.com/PLACEHOLDER/echo-backend/discussions
+    url: https://github.com/0xteamCookie/echo-backend/discussions
     about: Open-ended questions and ideas belong in Discussions.
