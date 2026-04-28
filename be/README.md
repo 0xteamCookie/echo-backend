@@ -47,7 +47,7 @@ npm run firebase:deploy:indexes
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Single-line JSON; also derives the RS256 signing key |
 | `BEACON_INGEST_TOKEN` | Must match the Flutter app's `dart-defines.json` |
 | `GEMINI_API_KEY` | From [aistudio.google.com](https://aistudio.google.com) (not Vertex AI) |
-| `GEMINI_MODEL` | Default `gemini-2.5-flash-lite` |
+| `GEMINI_MODEL` | Default `gemini-3.1-flash-lite-preview` |
 | `GOOGLE_MAPS_API_KEY` | Distance Matrix enabled |
 | `SUPER_ADMIN_EMAIL` | Used by `scripts/set-super-admin.ts` |
 
