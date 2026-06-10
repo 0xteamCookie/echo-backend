@@ -2,38 +2,86 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
+import { useMap } from "@vis.gl/react-google-maps";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import type { DeviceEntry } from "../../hooks/useRealtimeEvents";
 import { isResolvedStatus, type ClickableEntry, type HeatPoint } from "./types";
 
-// ─── Heatmap overlay ─────────────────────────────────────────────────────────
+// ─── Heatmap overlay (using marker clustering) ──────────────────────────────
 
 export function HeatmapOverlay({ points }: { points: HeatPoint[] }) {
   const map = useMap();
-  const visualization = useMapsLibrary("visualization");
-  const layerRef = useRef<google.maps.visualization.HeatmapLayer | null>(null);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
 
   useEffect(() => {
-    if (!map || !visualization) return;
-    if (!layerRef.current) {
-      layerRef.current = new visualization.HeatmapLayer({
+    if (!map) return;
+
+    // Initialize clusterer if not exists
+    if (!clustererRef.current) {
+      clustererRef.current = new MarkerClusterer({
         map,
-        radius: 28,
-        opacity: 0.7,
+        algorithmOptions: {
+          radius: 100,
+        },
+        renderer: {
+          render: ({ count, position }) => {
+            const color = count > 50 ? "#dc2626" : count > 20 ? "#f97316" : "#16a34a";
+            const size = Math.min(50, 25 + Math.log(count) * 3);
+            return new google.maps.Marker({
+              position,
+              label: {
+                text: String(count),
+                color: "#fff",
+                fontSize: "12px",
+                fontWeight: "bold",
+              },
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: size / 2,
+                fillColor: color,
+                fillOpacity: 0.8,
+                strokeColor: "#fff",
+                strokeWeight: 2,
+              },
+            });
+          },
+        },
       });
     }
-    layerRef.current.setData(
-      points.map((p) => ({
-        location: new google.maps.LatLng(p.lat, p.lng),
-        weight: Math.max(0.15, p.weight / 8),
-      })),
+
+    // Create markers from heatmap points
+    for (const m of markersRef.current) m.setMap(null);
+    markersRef.current = [];
+
+    const newMarkers = points.map(
+      (p) =>
+        new google.maps.Marker({
+          position: { lat: p.lat, lng: p.lng },
+          title: `Weight: ${p.weight.toFixed(1)}`,
+          opacity: Math.min(1, 0.3 + p.weight / 10),
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: Math.max(2, p.weight / 3),
+            fillColor: "#3b82f6",
+            fillOpacity: 0.6,
+            strokeColor: "#1e40af",
+            strokeWeight: 1,
+          },
+        }),
     );
-  }, [map, visualization, points]);
+
+    markersRef.current = newMarkers;
+    clustererRef.current.clearMarkers();
+    clustererRef.current.addMarkers(newMarkers);
+  }, [map, points]);
 
   useEffect(() => {
     return () => {
-      layerRef.current?.setMap(null);
-      layerRef.current = null;
+      clustererRef.current?.clearMarkers();
+      clustererRef.current = null;
+      for (const m of markersRef.current) m.setMap(null);
+      markersRef.current = [];
     };
   }, []);
 
