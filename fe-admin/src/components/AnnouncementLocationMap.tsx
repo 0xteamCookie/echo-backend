@@ -5,9 +5,9 @@ import {
   APIProvider,
   Map,
   useMap,
-  useMapsLibrary,
   AdvancedMarker,
 } from "@vis.gl/react-google-maps";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
@@ -27,7 +27,7 @@ type Props = {
 
 const RADIUS_M = 1000;
 
-// ─── Heatmap + selection circle (imperative) ────────────────────────────────
+// ─── Heatmap + selection circle (using marker clustering) ──────────────────
 
 function HeatmapAndSelection({
   points,
@@ -37,30 +37,74 @@ function HeatmapAndSelection({
   selectedPoint: AnnouncementMapPoint | null;
 }) {
   const map = useMap();
-  const visualization = useMapsLibrary("visualization");
-  const heatmapRef = useRef<google.maps.visualization.HeatmapLayer | null>(
-    null,
-  );
+  const clustererRef = useRef<MarkerClusterer | null>(null);
+  const heatmapMarkersRef = useRef<google.maps.Marker[]>([]);
   const circleRef = useRef<google.maps.Circle | null>(null);
   const hasFitted = useRef(false);
 
-  // Heatmap layer.
+  // Heatmap layer using marker clustering.
   useEffect(() => {
-    if (!map || !visualization) return;
+    if (!map) return;
 
-    if (!heatmapRef.current) {
-      heatmapRef.current = new visualization.HeatmapLayer({
+    // Initialize clusterer if not exists
+    if (!clustererRef.current) {
+      clustererRef.current = new MarkerClusterer({
         map,
-        radius: 28,
-        opacity: 0.7,
+        algorithmOptions: {
+          radius: 80,
+        },
+        renderer: {
+          render: ({ count, position }) => {
+            const intensity = Math.min(1, count / 100);
+            const color = intensity > 0.7 ? "#dc2626" : intensity > 0.4 ? "#f97316" : "#16a34a";
+            const size = Math.min(40, 20 + Math.log(count) * 3);
+            return new google.maps.Marker({
+              position,
+              label: {
+                text: String(count),
+                color: "#fff",
+                fontSize: "11px",
+                fontWeight: "bold",
+              },
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: size / 2,
+                fillColor: color,
+                fillOpacity: 0.85,
+                strokeColor: "#fff",
+                strokeWeight: 2,
+              },
+            });
+          },
+        },
       });
     }
-    const data = points.map((p) => ({
-      location: new google.maps.LatLng(p.lat, p.lon),
-      weight: Math.max(0.15, (p.weight ?? 1) / 8),
-    }));
-    heatmapRef.current.setData(data);
-  }, [map, visualization, points]);
+
+    // Create markers from heatmap points
+    for (const m of heatmapMarkersRef.current) m.setMap(null);
+    heatmapMarkersRef.current = [];
+
+    const newMarkers = points.map(
+      (p) =>
+        new google.maps.Marker({
+          position: { lat: p.lat, lng: p.lon },
+          title: p.name,
+          opacity: Math.min(1, 0.4 + (p.weight ?? 1) / 10),
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: Math.max(3, (p.weight ?? 1) / 2),
+            fillColor: "#f59e0b",
+            fillOpacity: 0.5,
+            strokeColor: "#d97706",
+            strokeWeight: 1,
+          },
+        }),
+    );
+
+    heatmapMarkersRef.current = newMarkers;
+    clustererRef.current.clearMarkers();
+    clustererRef.current.addMarkers(newMarkers);
+  }, [map, points]);
 
   // Fit to data on first load.
   useEffect(() => {
@@ -100,8 +144,10 @@ function HeatmapAndSelection({
   // Cleanup on unmount.
   useEffect(() => {
     return () => {
-      heatmapRef.current?.setMap(null);
-      heatmapRef.current = null;
+      clustererRef.current?.clearMarkers();
+      clustererRef.current = null;
+      for (const m of heatmapMarkersRef.current) m.setMap(null);
+      heatmapMarkersRef.current = [];
       circleRef.current?.setMap(null);
       circleRef.current = null;
     };
@@ -110,7 +156,7 @@ function HeatmapAndSelection({
   return null;
 }
 
-// ─── Missing-key panel ───────────────────────────────────────────────────────
+// ─── Missing-key panel ──────────────────────────────────────────────────────
 
 function ConfigurePanel() {
   return (
@@ -131,7 +177,7 @@ function ConfigurePanel() {
   );
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────
+// ─── Main component ───────────────────────────────────────────────────────
 
 export default function AnnouncementLocationMap({
   points,
@@ -149,7 +195,7 @@ export default function AnnouncementLocationMap({
 
   return (
     <div className="h-[320px] w-full rounded-xl border border-gray-200 overflow-hidden">
-      <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={["visualization"]}>
+      <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
         <Map
           defaultCenter={{ lat: 37.7749, lng: -122.4194 }}
           defaultZoom={11}
