@@ -210,7 +210,7 @@ export default function RealMap() {
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gray-100">
-      <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={["visualization"]}>
+      <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
         <Map
           defaultCenter={DEFAULT_CENTER}
           defaultZoom={DEFAULT_ZOOM}
