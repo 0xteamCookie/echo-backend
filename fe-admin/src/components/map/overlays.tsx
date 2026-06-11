@@ -3,7 +3,10 @@
 
 import { useEffect, useRef } from "react";
 import { useMap } from "@vis.gl/react-google-maps";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import {
+  MarkerClusterer,
+  SuperClusterAlgorithm,
+} from "@googlemaps/markerclusterer";
 import type { DeviceEntry } from "../../hooks/useRealtimeEvents";
 import { isResolvedStatus, type ClickableEntry, type HeatPoint } from "./types";
 
@@ -21,9 +24,7 @@ export function HeatmapOverlay({ points }: { points: HeatPoint[] }) {
     if (!clustererRef.current) {
       clustererRef.current = new MarkerClusterer({
         map,
-        algorithmOptions: {
-          radius: 100,
-        },
+        algorithm: new SuperClusterAlgorithm({ radius: 100 }),
         renderer: {
           render: ({ count, position }) => {
             const color = count > 50 ? "#dc2626" : count > 20 ? "#f97316" : "#16a34a";

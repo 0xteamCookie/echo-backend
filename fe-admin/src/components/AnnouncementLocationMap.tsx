@@ -7,7 +7,10 @@ import {
   useMap,
   AdvancedMarker,
 } from "@vis.gl/react-google-maps";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import {
+  MarkerClusterer,
+  SuperClusterAlgorithm,
+} from "@googlemaps/markerclusterer";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
@@ -50,9 +53,7 @@ function HeatmapAndSelection({
     if (!clustererRef.current) {
       clustererRef.current = new MarkerClusterer({
         map,
-        algorithmOptions: {
-          radius: 80,
-        },
+        algorithm: new SuperClusterAlgorithm({ radius: 80 }),
         renderer: {
           render: ({ count, position }) => {
             const intensity = Math.min(1, count / 100);
