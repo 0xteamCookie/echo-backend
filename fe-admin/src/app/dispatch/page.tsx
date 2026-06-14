@@ -20,6 +20,7 @@ import {
 import { useAuth } from "../../lib/auth/provider";
 import { apiUrl } from "../../lib/api";
 import { can } from "../../lib/auth/permissions";
+import PageHeader from "../../components/PageHeader";
 
 type DispatchRecommendation = {
   incidentId: string;
@@ -218,23 +219,30 @@ export default function DispatchPage() {
 
   return (
     <>
-      <div className="bg-gradient-to-r from-[#fff4f6] to-[#f6f7ff] border border-[#EBEBEB] rounded-2xl p-5 mb-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-              <BrainCircuit className="text-[#E63946]" size={24} />
-              Agentic Dispatch Console
-            </h1>
-            <p className="text-[13px] text-gray-600 mt-1 max-w-2xl">
-              Unified workflow: AI shortlist -&gt; operator validation -&gt;
-              one-click rescuer credential QR.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+      <PageHeader
+        title="Agentic Dispatch Console"
+        icon={<BrainCircuit size={24} />}
+        subtitle="Unified workflow: AI shortlist → operator validation → one-click rescuer credential QR."
+        info={
+          <>
+            The end-to-end dispatch loop. Echo&apos;s agent ranks responders per
+            incident (with deterministic guardrails and a fallback).{" "}
+            <strong className="text-ink">Step 1</strong> — review and pick a
+            recommendation; that auto-generates a credential.{" "}
+            <strong className="text-ink">Step 2</strong> — validate the choice,
+            issue the QR token, and assign the responder to the incident.{" "}
+            <strong className="text-ink">Step 3</strong> — the field responder
+            scans the QR in their app and begins sending heartbeats. The metric
+            tiles summarize incidents in scope, AI-assisted picks, average ETA,
+            and pending escalations.
+          </>
+        }
+        actions={
+          <>
             <button
               type="button"
               onClick={() => void mutate()}
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[12px] font-medium hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-muted hover:bg-elevated hover:text-ink"
             >
               <RefreshCcw size={14} />
               Refresh
@@ -242,14 +250,16 @@ export default function DispatchPage() {
             <button
               type="button"
               onClick={() => void seedDummyRescuers()}
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[12px] font-medium hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-muted hover:bg-elevated hover:text-ink"
             >
               <UserPlus size={14} />
               Reseed dummy rescuers
             </button>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+          </>
+        }
+      />
+      <div className="mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <MetricCard
             icon={<Radar size={14} />}
             label="Incidents in scope"
@@ -273,19 +283,19 @@ export default function DispatchPage() {
         </div>
       </div>
       {seedMsg && (
-        <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-3 text-[12px] text-gray-700">
+        <div className="mb-4 rounded-xl border border-border bg-elevated p-3 text-[12px] text-muted">
           {seedMsg}
         </div>
       )}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 items-start">
-        <section className="xl:col-span-8 bg-white rounded-2xl border border-gray-200 p-5">
+        <section className="xl:col-span-8 bg-surface rounded-2xl border border-border p-5">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-[16px] font-semibold text-gray-900 flex items-center gap-2">
-                <WandSparkles size={16} className="text-[#E63946]" />
+              <h2 className="text-[16px] font-semibold text-ink flex items-center gap-2">
+                <WandSparkles size={16} className="text-brand" />
                 Step 1: Review Agentic Recommendations
               </h2>
-              <p className="text-[12px] text-gray-500 mt-1">
+              <p className="text-[12px] text-muted mt-1">
                 Pick a recommendation to auto-generate credentials for that
                 responder.
               </p>
@@ -295,7 +305,7 @@ export default function DispatchPage() {
                 value={searchIncident}
                 onChange={(e) => setSearchIncident(e.target.value)}
                 placeholder="Search incident id"
-                className="w-40 rounded-full border border-gray-200 px-3 py-1.5 text-[12px] outline-none focus:ring-2 focus:ring-black/10"
+                className="w-40 rounded-full border border-border bg-elevated px-3 py-1.5 text-[12px] text-ink outline-none placeholder:text-muted focus:ring-2 focus:ring-brand/30"
               />
               {(["all", "medical", "fire", "police"] as const).map((agency) => (
                 <button
@@ -304,8 +314,8 @@ export default function DispatchPage() {
                   onClick={() => setAgencyFilter(agency)}
                   className={`rounded-full px-2.5 py-1 text-[11px] border ${
                     agencyFilter === agency
-                      ? "border-black bg-black text-white"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      ? "border-brand bg-brand text-white"
+                      : "border-border text-muted hover:bg-elevated"
                   }`}
                 >
                   {agency}
@@ -314,17 +324,17 @@ export default function DispatchPage() {
             </div>
           </div>
           {isLoading && (
-            <p className="text-[13px] text-gray-500">
+            <p className="text-[13px] text-muted">
               Loading recommendations...
             </p>
           )}
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+            <div className="rounded-xl border border-danger/40 bg-danger/10 p-3 text-[13px] text-danger">
               {error.message}
             </div>
           )}
           {!isLoading && !error && filtered.length === 0 && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
+            <div className="rounded-xl border border-border bg-elevated p-3 text-[13px] text-muted">
               No dispatch recommendations yet. Seed dummy rescuers and refresh
               to test.
             </div>
@@ -339,38 +349,38 @@ export default function DispatchPage() {
                   disabled={!canIssue || issuing}
                   className={`text-left rounded-xl border p-3 transition-colors disabled:opacity-60 ${
                     selectedRec?.incidentId === rec.incidentId
-                      ? "border-[#E63946] bg-[#fff7f8]"
-                      : "border-gray-200 hover:bg-gray-50"
+                      ? "border-brand bg-brand/10"
+                      : "border-border hover:bg-elevated"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold">
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-elevated text-muted font-semibold">
                         {rec.agency.toUpperCase()}
                       </span>
-                      <span className="text-[11px] text-gray-500">
+                      <span className="text-[11px] text-muted">
                         Incident {rec.incidentId.slice(0, 8)}
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-600">
+                    <span className="text-[11px] text-muted">
                       Confidence {rec.confidenceLevel}/3
                     </span>
                   </div>
-                  <p className="text-[14px] font-semibold text-gray-900 mt-2">
+                  <p className="text-[14px] font-semibold text-ink mt-2">
                     {rec.selectedResponderName}
                   </p>
-                  <p className="text-[12px] text-gray-600 mt-1">
+                  <p className="text-[12px] text-muted mt-1">
                     {rec.selectedResponderSourceSystem} | ETA {rec.etaMinutes}m
                   </p>
-                  <p className="text-[12px] text-gray-600 mt-1">
+                  <p className="text-[12px] text-muted mt-1">
                     {rec.summary}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-[11px]">
-                    <span className="px-2 py-0.5 rounded-full border border-gray-200 text-gray-600">
+                    <span className="px-2 py-0.5 rounded-full border border-border text-muted">
                       Radius {rec.provisioningPreset.radiusM}m
                     </span>
                     {rec.escalate && (
-                      <span className="px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-700">
+                      <span className="px-2 py-0.5 rounded-full border border-warning/30 bg-warning/10 text-warning">
                         Escalate
                       </span>
                     )}
@@ -381,65 +391,65 @@ export default function DispatchPage() {
           )}
         </section>
 
-        <aside className="xl:col-span-4 bg-white rounded-2xl border border-gray-200 p-5 xl:sticky xl:top-4 max-h-[calc(100vh-7.5rem)] overflow-y-auto">
-          <h2 className="text-[15px] font-semibold text-gray-900 flex items-center gap-2">
-            <ShieldCheck size={18} className="text-[#E63946]" />
+        <aside className="xl:col-span-4 bg-surface rounded-2xl border border-border p-5 xl:sticky xl:top-4 max-h-[calc(100vh-7.5rem)] overflow-y-auto">
+          <h2 className="text-[15px] font-semibold text-ink flex items-center gap-2">
+            <ShieldCheck size={18} className="text-brand" />
             Step 2: Validate + Issue Credential
           </h2>
           {selectedRec && (
-            <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
-              <p className="text-[11px] text-gray-500 uppercase">
+            <div className="mt-3 rounded-xl border border-border bg-elevated p-3">
+              <p className="text-[11px] text-muted uppercase">
                 Selected recommendation
               </p>
-              <p className="text-[14px] font-semibold text-gray-900 mt-1">
+              <p className="text-[14px] font-semibold text-ink mt-1">
                 {selectedRec.selectedResponderName}
               </p>
-              <p className="text-[12px] text-gray-600 mt-1">
+              <p className="text-[12px] text-muted mt-1">
                 Incident {selectedRec.incidentId.slice(0, 8)} |{" "}
                 {selectedRec.selectedResponderSourceSystem}
               </p>
-              <p className="text-[12px] text-gray-600 mt-1">
+              <p className="text-[12px] text-muted mt-1">
                 {selectedRec.rationale}
               </p>
             </div>
           )}
           {!canIssue && (
-            <p className="text-[12px] text-amber-700 mt-3">
+            <p className="text-[12px] text-warning mt-3">
               Your role cannot issue provisioning tokens (`provision:issue`
               required).
             </p>
           )}
           {issueError && (
-            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-[12px] text-red-700">
+            <div className="mt-3 rounded-xl border border-danger/40 bg-danger/10 p-3 text-[12px] text-danger">
               {issueError}
             </div>
           )}
           {assignState.errMsg && (
-            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-[12px] text-red-700">
+            <div className="mt-3 rounded-xl border border-danger/40 bg-danger/10 p-3 text-[12px] text-danger">
               {assignState.errMsg}
             </div>
           )}
           {assignState.okMsg && (
-            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[12px] text-emerald-700">
+            <div className="mt-3 rounded-xl border border-success/30 bg-success/10 p-3 text-[12px] text-success">
               {assignState.okMsg}
             </div>
           )}
           {!qrToken && !issueError && (
-            <p className="text-[13px] text-gray-500 mt-4">
+            <p className="text-[13px] text-muted mt-4">
               Click any recommendation to run one-click issuance and render QR.
             </p>
           )}
           {qrToken && (
             <div className="mt-4">
               {selectedRec && (
-                <p className="text-[12px] text-gray-600 mb-3">
+                <p className="text-[12px] text-muted mb-3">
                   Token for{" "}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-ink">
                     {selectedRec.selectedResponderName}
                   </span>
                 </p>
               )}
-              <div className="rounded-xl border border-gray-100 p-3 inline-block bg-white">
+              <div className="rounded-xl border border-border p-3 inline-block bg-white">
                 {qrOk ? (
                   <QRCodeSVG
                     value={qrToken}
@@ -448,13 +458,13 @@ export default function DispatchPage() {
                     includeMargin
                   />
                 ) : (
-                  <p className="text-[12px] text-amber-800">
+                  <p className="text-[12px] text-warning">
                     Token too long for QR. Copy JWT below.
                   </p>
                 )}
               </div>
               {typeof expiresIn === "number" && (
-                <p className="text-[12px] text-gray-500 mt-3">
+                <p className="text-[12px] text-muted mt-3">
                   Expires in {expiresIn}s
                 </p>
               )}
@@ -463,17 +473,17 @@ export default function DispatchPage() {
                   type="button"
                   onClick={() => void assignSelectedRecommendation()}
                   disabled={!selectedRec || assignState.pending}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#E63946] text-white px-3 py-2 text-[12px] font-semibold disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand text-white px-3 py-2 text-[12px] font-semibold hover:bg-brand-hover disabled:opacity-60"
                 >
                   {assignState.pending ? "Assigning..." : "Assign To Incident"}
                 </button>
                 <button
                   type="button"
                   onClick={copyToken}
-                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-[12px] font-medium hover:bg-gray-50"
+                  className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-[12px] font-medium text-muted hover:bg-elevated hover:text-ink"
                 >
                   {copied ? (
-                    <Check size={14} className="text-green-600" />
+                    <Check size={14} className="text-success" />
                   ) : (
                     <Copy size={14} />
                   )}
@@ -485,14 +495,14 @@ export default function DispatchPage() {
                   readOnly
                   value={qrToken}
                   rows={5}
-                  className="w-full mt-3 rounded-xl border border-gray-200 bg-gray-50 p-2 text-[11px] font-mono text-gray-700"
+                  className="w-full mt-3 rounded-xl border border-border bg-elevated p-2 text-[11px] font-mono text-muted"
                 />
               </div>
             </div>
           )}
-          <div className="mt-5 rounded-xl border border-dashed border-gray-300 p-3">
-            <p className="text-[11px] text-gray-500 uppercase">Step 3</p>
-            <p className="text-[12px] text-gray-700 mt-1">
+          <div className="mt-5 rounded-xl border border-dashed border-border p-3">
+            <p className="text-[11px] text-muted uppercase">Step 3</p>
+            <p className="text-[12px] text-muted mt-1">
               Share QR with field responder app, then confirm heartbeat updates
               from the issued `sub`.
             </p>
@@ -513,12 +523,12 @@ function MetricCard({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-3">
-      <div className="text-gray-400">{icon}</div>
-      <p className="text-[11px] text-gray-500 mt-2 uppercase tracking-wide">
+    <div className="rounded-xl border border-border bg-surface p-3">
+      <div className="text-brand">{icon}</div>
+      <p className="text-[11px] text-muted mt-2 uppercase tracking-wide">
         {label}
       </p>
-      <p className="text-[20px] font-semibold text-gray-900 mt-1">{value}</p>
+      <p className="text-[20px] font-semibold text-ink mt-1">{value}</p>
     </div>
   );
 }

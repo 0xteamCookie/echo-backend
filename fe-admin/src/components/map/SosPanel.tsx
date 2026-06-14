@@ -22,7 +22,7 @@ export function SosPanel({ reports, assignedCount, onSelect }: Props) {
 
   return (
     <div
-      className={`pointer-events-auto absolute top-3 right-3 z-10 flex flex-col rounded-xl border border-gray-200 bg-white/95 backdrop-blur shadow-lg transition-all duration-200 ${
+      className={`pointer-events-auto absolute top-3 right-3 z-10 flex flex-col rounded-xl border border-border bg-surface/95 backdrop-blur shadow-lg transition-all duration-200 ${
         collapsed ? "w-auto" : "w-[320px] max-h-[calc(100%-1.5rem)]"
       }`}
     >
@@ -30,21 +30,21 @@ export function SosPanel({ reports, assignedCount, onSelect }: Props) {
       <button
         type="button"
         onClick={() => setCollapsed((c) => !c)}
-        className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-t-xl"
+        className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-elevated rounded-t-xl"
       >
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-danger" />
           </span>
-          <span className="text-[13px] font-semibold text-gray-900">
+          <span className="text-[13px] font-semibold text-ink">
             {collapsed
               ? `${sosCount} SOS · ${reports.length} total`
               : "Recent SOS / Reports"}
           </span>
         </div>
         <svg
-          className={`w-4 h-4 text-gray-500 transition-transform ${
+          className={`w-4 h-4 text-muted transition-transform ${
             collapsed ? "rotate-180" : ""
           }`}
           fill="none"
@@ -70,9 +70,9 @@ export function SosPanel({ reports, assignedCount, onSelect }: Props) {
           </div>
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto border-t border-gray-100 px-2 py-2">
+          <div className="flex-1 overflow-y-auto border-t border-border px-2 py-2">
             {reports.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-[12px] text-gray-600 text-center">
+              <div className="rounded-lg border border-border bg-elevated p-3 text-[12px] text-muted text-center">
                 No SOS calls or reports yet.
               </div>
             ) : (
@@ -104,10 +104,10 @@ function Stat({
 }) {
   const toneCls =
     tone === "red"
-      ? "text-red-700 bg-red-50"
+      ? "text-danger bg-danger/10"
       : tone === "emerald"
-        ? "text-emerald-700 bg-emerald-50"
-        : "text-gray-700 bg-gray-50";
+        ? "text-success bg-success/10"
+        : "text-muted bg-elevated";
   return (
     <div className={`rounded-md px-2 py-1.5 ${toneCls}`}>
       <div className="text-[16px] font-bold leading-none">{value}</div>
@@ -133,14 +133,14 @@ function ReportCard({
       onClick={onClick}
       className={`text-left rounded-lg border p-2.5 transition-colors ${
         sos
-          ? "border-red-300 bg-red-50/60 hover:bg-red-50"
-          : "border-gray-200 hover:bg-gray-50"
+          ? "border-danger/40 bg-danger/10 hover:bg-danger/15"
+          : "border-border hover:bg-elevated"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] font-semibold text-gray-900 flex items-center gap-1.5 min-w-0">
+        <p className="text-[12px] font-semibold text-ink flex items-center gap-1.5 min-w-0">
           {sos && (
-            <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-red-600 text-white shrink-0">
+            <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-danger text-white shrink-0">
               SOS
             </span>
           )}
@@ -151,25 +151,25 @@ function ReportCard({
         </p>
         <span className="flex items-center gap-1.5 shrink-0">
           {resolved && (
-            <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+            <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-success/15 text-success">
               Resolved
             </span>
           )}
-          <span className="text-[10px] text-gray-500">
+          <span className="text-[10px] text-muted">
             {formatRelativeTime(entry.receivedAt || entry.time)}
           </span>
         </span>
       </div>
-      <p className="text-[11px] text-gray-600 mt-1 truncate">
+      <p className="text-[11px] text-muted mt-1 truncate">
         {entry.message?.trim() || `Incident ${entry.id.slice(0, 8)}`}
       </p>
-      <p className="text-[11px] text-gray-500 mt-0.5">
+      <p className="text-[11px] text-muted mt-0.5">
         {entry.gps
           ? `${entry.gps.lat.toFixed(3)}, ${entry.gps.lon.toFixed(3)}`
           : "Unknown location"}
       </p>
       {entry.assignment?.rescuerName && (
-        <p className="text-[11px] text-emerald-700 mt-0.5">
+        <p className="text-[11px] text-success mt-0.5">
           Assigned to {entry.assignment.rescuerName}
         </p>
       )}

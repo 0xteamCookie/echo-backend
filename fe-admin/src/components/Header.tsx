@@ -1,8 +1,25 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, ShieldAlert, ChevronDown } from "lucide-react";
+import { LogOut, Radio, ChevronDown, Sun, Moon } from "lucide-react";
 import { useAuth } from "../lib/auth/provider";
+import { useTheme } from "../lib/theme";
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  const isLight = theme === "light";
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={`Switch to ${isLight ? "dark" : "light"} theme`}
+      title={`Switch to ${isLight ? "dark" : "light"} theme`}
+      className="flex items-center justify-center w-9 h-9 rounded-full border border-border text-muted hover:bg-elevated hover:text-brand transition-colors"
+    >
+      {isLight ? <Moon size={16} /> : <Sun size={16} />}
+    </button>
+  );
+}
 
 function initials(email: string): string {
   if (!email) return "??";
@@ -25,54 +42,55 @@ export default function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between px-8 py-4 bg-white sticky top-0 z-10 w-full mb-6 border-b border-gray-100">
-      <div className="flex items-center gap-3 text-[13px] text-gray-500">
-        <ShieldAlert size={16} className="text-[#E63946]" />
-        <span className="font-medium text-gray-700">DisasterOps</span>
-        <span className="text-gray-300">/</span>
+    <header className="flex items-center justify-between px-8 py-4 bg-background/80 backdrop-blur sticky top-0 z-10 w-full mb-6 border-b border-border">
+      <div className="flex items-center gap-3 text-[13px] text-muted">
+        <Radio size={16} className="text-brand" />
+        <span className="font-medium text-ink">Echo</span>
+        <span className="text-border">/</span>
         <span className="capitalize">{session.role.replace("_", " ")}</span>
         {session.agencies.length > 0 && (
-          <span className="ml-2 px-2 py-0.5 rounded-full bg-gray-100 text-[11px] font-medium text-gray-600">
+          <span className="ml-2 px-2 py-0.5 rounded-full bg-elevated text-[11px] font-medium text-muted">
             {session.agencies.join(" · ")}
           </span>
         )}
       </div>
 
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <div className="relative">
           <button
             onClick={() => setOpen((v) => !v)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-elevated transition-colors"
             aria-haspopup="menu"
             aria-expanded={open}
           >
-            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#E63946]/10 text-[#E63946] font-bold text-[11px]">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-brand/15 text-brand font-bold text-[11px]">
               {initials(session.email ?? "")}
             </span>
-            <span className="text-[13px] text-gray-700 font-medium max-w-[160px] truncate">
+            <span className="text-[13px] text-ink font-medium max-w-[160px] truncate">
               {session.email || "admin"}
             </span>
-            <ChevronDown size={14} className="text-gray-400" />
+            <ChevronDown size={14} className="text-muted" />
           </button>
 
           {open && (
             <div
               role="menu"
-              className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 bg-white shadow-lg py-1.5 text-[13px]"
+              className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-elevated shadow-2xl shadow-black/40 py-1.5 text-[13px]"
               onMouseLeave={() => setOpen(false)}
             >
-              <div className="px-3 py-2 border-b border-gray-100">
-                <div className="font-semibold text-gray-800 truncate">
+              <div className="px-3 py-2 border-b border-border">
+                <div className="font-semibold text-ink truncate">
                   {session.email}
                 </div>
-                <div className="text-[11px] text-gray-500 capitalize">
+                <div className="text-[11px] text-muted capitalize">
                   {session.role.replace("_", " ")}
                 </div>
               </div>
               <button
                 onClick={() => void handleLogout()}
                 role="menuitem"
-                className="w-full flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-50"
+                className="w-full flex items-center gap-2 px-3 py-2 text-muted hover:bg-surface hover:text-ink"
               >
                 <LogOut size={14} /> Sign out
               </button>

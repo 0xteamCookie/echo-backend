@@ -57,7 +57,7 @@ function HeatmapAndSelection({
         renderer: {
           render: ({ count, position }) => {
             const intensity = Math.min(1, count / 100);
-            const color = intensity > 0.7 ? "#dc2626" : intensity > 0.4 ? "#f97316" : "#16a34a";
+            const color = intensity > 0.7 ? "#C84D3A" : intensity > 0.4 ? "#D9A441" : "#4E8F6A";
             const size = Math.min(40, 20 + Math.log(count) * 3);
             return new google.maps.Marker({
               position,
@@ -94,9 +94,9 @@ function HeatmapAndSelection({
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: Math.max(3, (p.weight ?? 1) / 2),
-            fillColor: "#f59e0b",
+            fillColor: "#D96B3D",
             fillOpacity: 0.5,
-            strokeColor: "#d97706",
+            strokeColor: "#BF5A31",
             strokeWeight: 1,
           },
         }),
@@ -131,9 +131,9 @@ function HeatmapAndSelection({
       map,
       center: { lat: selectedPoint.lat, lng: selectedPoint.lon },
       radius: RADIUS_M,
-      strokeColor: "#f97316",
+      strokeColor: "#D96B3D",
       strokeWeight: 2,
-      fillColor: "#f97316",
+      fillColor: "#D96B3D",
       fillOpacity: 0.12,
     });
 
@@ -161,17 +161,17 @@ function HeatmapAndSelection({
 
 function ConfigurePanel() {
   return (
-    <div className="h-[320px] w-full rounded-xl border border-amber-300 bg-amber-50 p-6 flex flex-col items-center justify-center text-center gap-2">
-      <div className="text-amber-700 font-semibold text-sm">
+    <div className="h-[320px] w-full rounded-xl border border-warning/40 bg-warning/10 p-6 flex flex-col items-center justify-center text-center gap-2">
+      <div className="text-warning font-semibold text-sm">
         Google Maps API key is not configured
       </div>
-      <div className="text-amber-800 text-xs max-w-sm">
+      <div className="text-warning text-xs max-w-sm">
         Set{" "}
-        <code className="font-mono bg-amber-100 px-1 rounded">
+        <code className="font-mono bg-warning/15 text-accent px-1 rounded">
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
         </code>{" "}
         in{" "}
-        <code className="font-mono bg-amber-100 px-1 rounded">.env.local</code>{" "}
+        <code className="font-mono bg-warning/15 text-accent px-1 rounded">.env.local</code>{" "}
         to enable the announcement heatmap.
       </div>
     </div>
@@ -195,7 +195,7 @@ export default function AnnouncementLocationMap({
   }
 
   return (
-    <div className="h-[320px] w-full rounded-xl border border-gray-200 overflow-hidden">
+    <div className="h-[320px] w-full rounded-xl border border-border overflow-hidden">
       <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
         <Map
           defaultCenter={{ lat: 37.7749, lng: -122.4194 }}
@@ -214,8 +214,8 @@ export default function AnnouncementLocationMap({
               <div
                 className={
                   p.key === selectedKey
-                    ? "h-4 w-4 rounded-full border-2 border-gray-900 bg-orange-500 shadow"
-                    : "h-3 w-3 rounded-full border border-gray-800 bg-red-500"
+                    ? "h-4 w-4 rounded-full border-2 border-ink bg-brand shadow"
+                    : "h-3 w-3 rounded-full border border-ink bg-danger"
                 }
               />
             </AdvancedMarker>

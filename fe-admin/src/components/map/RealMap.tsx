@@ -32,21 +32,21 @@ const DEFAULT_ZOOM = 11;
 
 function ConfigureKeyPanel() {
   return (
-    <div className="w-full h-full rounded-xl border border-amber-300 bg-amber-50 p-6 flex flex-col items-center justify-center text-center gap-3">
-      <div className="text-amber-700 font-semibold text-base">
+    <div className="w-full h-full rounded-xl border border-warning/40 bg-warning/10 p-6 flex flex-col items-center justify-center text-center gap-3">
+      <div className="text-warning font-semibold text-base">
         Google Maps API key is not configured
       </div>
-      <div className="text-amber-800 text-sm max-w-md">
+      <div className="text-warning text-sm max-w-md">
         Set{" "}
-        <code className="font-mono text-xs bg-amber-100 px-1.5 py-0.5 rounded">
+        <code className="font-mono text-xs bg-warning/15 text-accent px-1.5 py-0.5 rounded">
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
         </code>{" "}
         in{" "}
-        <code className="font-mono text-xs bg-amber-100 px-1.5 py-0.5 rounded">
+        <code className="font-mono text-xs bg-warning/15 text-accent px-1.5 py-0.5 rounded">
           echo-backend/fe-admin/.env.local
         </code>{" "}
         and restart{" "}
-        <code className="font-mono text-xs bg-amber-100 px-1.5 py-0.5 rounded">
+        <code className="font-mono text-xs bg-warning/15 text-accent px-1.5 py-0.5 rounded">
           next dev
         </code>{" "}
         to load the map.
@@ -209,7 +209,7 @@ export default function RealMap() {
   if (!GOOGLE_MAPS_API_KEY) return <ConfigureKeyPanel />;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gray-100">
+    <div className="relative w-full h-full overflow-hidden bg-background">
       <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
         <Map
           defaultCenter={DEFAULT_CENTER}

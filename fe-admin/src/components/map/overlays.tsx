@@ -27,7 +27,7 @@ export function HeatmapOverlay({ points }: { points: HeatPoint[] }) {
         algorithm: new SuperClusterAlgorithm({ radius: 100 }),
         renderer: {
           render: ({ count, position }) => {
-            const color = count > 50 ? "#dc2626" : count > 20 ? "#f97316" : "#16a34a";
+            const color = count > 50 ? "#C84D3A" : count > 20 ? "#D9A441" : "#4E8F6A";
             const size = Math.min(50, 25 + Math.log(count) * 3);
             return new google.maps.Marker({
               position,
@@ -64,9 +64,9 @@ export function HeatmapOverlay({ points }: { points: HeatPoint[] }) {
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: Math.max(2, p.weight / 3),
-            fillColor: "#3b82f6",
+            fillColor: "#6A8FB3",
             fillOpacity: 0.6,
-            strokeColor: "#1e40af",
+            strokeColor: "#3f5d77",
             strokeWeight: 1,
           },
         }),
@@ -115,9 +115,9 @@ export function IncidentMarkers({
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 7,
-          fillColor: resolved ? "#16a34a" : "#E63946",
+          fillColor: resolved ? "#4E8F6A" : "#D96B3D",
           fillOpacity: resolved ? 0.9 : 0.85,
-          strokeColor: assigned ? "#111827" : "#ffffff",
+          strokeColor: assigned ? "#0b0e14" : "#ffffff",
           strokeWeight: assigned ? 2.5 : 1.5,
         },
         label: assigned

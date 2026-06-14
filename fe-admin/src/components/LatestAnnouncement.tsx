@@ -56,11 +56,11 @@ export default function LatestAnnouncement() {
 
   if (isLoading) {
     return (
-      <div className="bg-orange-50 border border-orange-200 text-orange-900 rounded-2xl p-4 flex items-center gap-3 w-full animate-pulse h-[78px]">
-        <div className="bg-orange-200 rounded-full h-10 w-10"></div>
+      <div className="bg-brand/10 border border-brand/30 text-ink rounded-2xl p-4 flex items-center gap-3 w-full animate-pulse h-[78px]">
+        <div className="bg-brand/20 rounded-full h-10 w-10"></div>
         <div className="flex flex-col gap-2 w-full">
-          <div className="h-4 bg-orange-200 rounded w-1/4"></div>
-          <div className="h-3 bg-orange-200 rounded w-1/2"></div>
+          <div className="h-4 bg-brand/20 rounded w-1/4"></div>
+          <div className="h-3 bg-brand/20 rounded w-1/2"></div>
         </div>
       </div>
     );
@@ -73,8 +73,8 @@ export default function LatestAnnouncement() {
     data.announcements.length === 0
   ) {
     return (
-      <div className="bg-orange-50 border border-orange-200 text-orange-900 rounded-2xl p-4 flex items-start gap-4 shadow-sm w-full">
-        <div className="flex-shrink-0 bg-orange-100 p-2 rounded-full text-orange-600 mt-0.5">
+      <div className="bg-brand/10 border border-brand/30 text-ink rounded-2xl p-4 flex items-start gap-4 shadow-sm w-full">
+        <div className="flex-shrink-0 bg-brand/15 p-2 rounded-full text-brand mt-0.5">
           <Megaphone size={20} />
         </div>
         <div className="flex-1 flex flex-col gap-1 min-w-0">
@@ -82,11 +82,11 @@ export default function LatestAnnouncement() {
             <h4 className="font-semibold text-[15px] truncate">
               Latest Public Announcement
             </h4>
-            <span className="text-[12px] font-medium text-orange-700/80 shrink-0 flex items-center gap-1.5 bg-orange-100 px-2.5 py-0.5 rounded-full">
+            <span className="text-[12px] font-medium text-brand shrink-0 flex items-center gap-1.5 bg-brand/15 px-2.5 py-0.5 rounded-full">
               <Clock size={12} />
             </span>
           </div>
-          <p className="text-[14px] text-orange-800 leading-relaxed pr-6 mt-1">
+          <p className="text-[14px] text-accent leading-relaxed pr-6 mt-1">
             Unable to Fetch latest Message
           </p>
         </div>
@@ -101,8 +101,8 @@ export default function LatestAnnouncement() {
   });
 
   return (
-    <div className="bg-orange-50 border border-orange-200 text-orange-900 rounded-2xl p-4 flex items-start gap-4 shadow-sm w-full">
-      <div className="flex-shrink-0 bg-orange-100 p-2 rounded-full text-orange-600 mt-0.5">
+    <div className="bg-brand/10 border border-brand/30 text-ink rounded-2xl p-4 flex items-start gap-4 shadow-sm w-full">
+      <div className="flex-shrink-0 bg-brand/15 p-2 rounded-full text-brand mt-0.5">
         <Megaphone size={20} />
       </div>
       <div className="flex-1 flex flex-col gap-1 min-w-0">
@@ -110,14 +110,14 @@ export default function LatestAnnouncement() {
           <h4 className="font-semibold text-[15px] truncate">
             Latest Public Announcement
           </h4>
-          <span className="text-[12px] font-medium text-orange-700/80 shrink-0 flex items-center gap-1.5 bg-orange-100 px-2.5 py-0.5 rounded-full">
+          <span className="text-[12px] font-medium text-brand shrink-0 flex items-center gap-1.5 bg-brand/15 px-2.5 py-0.5 rounded-full">
             <Clock size={12} /> {timeStr}
           </span>
         </div>
-        <p className="text-[14px] text-orange-800 leading-relaxed pr-6 mt-1">
+        <p className="text-[14px] text-accent leading-relaxed pr-6 mt-1">
           {latest.message}
         </p>
-        <div className="flex items-center gap-1.5 text-[12px] font-medium text-orange-700 mt-2">
+        <div className="flex items-center gap-1.5 text-[12px] font-medium text-muted mt-2">
           <MapPin size={13} />
           {latest.locationName}
         </div>

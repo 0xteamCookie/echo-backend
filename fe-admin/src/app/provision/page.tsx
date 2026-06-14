@@ -11,7 +11,7 @@ export default function ProvisionPage() {
   }, [router]);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 text-[13px] text-gray-600">
+    <div className="rounded-xl border border-border bg-surface p-4 text-[13px] text-muted">
       Redirecting to unified dispatch console...
     </div>
   );

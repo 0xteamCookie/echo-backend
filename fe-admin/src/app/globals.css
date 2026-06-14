@@ -1,14 +1,94 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #101010;
-  --color-border: #fafafa;
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --color-background: #11141b; /* deep charcoal — app background */
+  --color-surface: #171c24; /* blue-black slate — panels */
+  --color-elevated: #1e2530; /* muted graphite — cards / inner tiles */
+
+  /* ── Brand ────────────────────────────────────────────────── */
+  --color-brand: #d96b3d; /* signal orange */
+  --color-brand-hover: #bf5a31; /* burnt orange */
+  --color-accent: #e8d7c3; /* sand */
+  --color-cream: #f6efe7; /* warm surface tint */
+
+  /* ── Status ───────────────────────────────────────────────── */
+  --color-success: #4e8f6a; /* muted rescue green */
+  --color-warning: #d9a441; /* amber */
+  --color-danger: #c84d3a; /* alert red-orange */
+  --color-info: #6a8fb3; /* steel blue */
+
+  /* ── Text & lines ─────────────────────────────────────────── */
+  --color-ink: #f3efe8; /* primary text */
+  --color-muted: #b8b2a8; /* secondary text */
+  --color-border: #2a313d; /* borders */
+}
+
+:root {
+  color-scheme: dark;
+}
+
+/* ── Light ("white") theme ─────────────────────────────────────
+   Re-declares the same tokens the @theme utilities resolve via
+   var(), so toggling the `.light` class on <html> re-skins the
+   whole app. Brand orange is kept identical for continuity. */
+.light {
+  color-scheme: light;
+
+  /* Warm "paper" surfaces — no pure white. The page sits a step deeper so
+     the ivory panels (sidebar, cards) read as raised, with borders for edges. */
+  --color-background: #e4dbc9; /* warm light gray — the base layer */
+  --color-surface: #f7f2e8; /* warm ivory panels — sidebar, cards */
+  --color-elevated: #eee7d8; /* deeper warm tint — inner tiles / inputs */
+
+  --color-accent: #5a4632; /* dark warm brown — readable on tints */
+  --color-cream: #fbf6ef;
+
+  --color-success: #3f7d58;
+  --color-warning: #9a6b17;
+  --color-danger: #b8402e;
+  --color-info: #43708f;
+
+  --color-ink: #1c212b; /* near-charcoal primary text */
+  --color-muted: #6a6e77; /* secondary text */
+  --color-border: #d4c9b3; /* warm border — visible against ivory */
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-ink);
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
   font-family: Inter, Arial, Helvetica, sans-serif;
   letter-spacing: -0.01em;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-brand) 35%, transparent);
+  color: var(--color-ink);
+}
+
+/* Slim, theme-matched scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--color-border) 70%, var(--color-muted));
+  background-clip: content-box;
 }

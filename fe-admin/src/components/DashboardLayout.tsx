@@ -23,15 +23,15 @@ export default function DashboardLayout({
   }, [pathname, ready, session.authenticated, router]);
 
   if (pathname === "/login") {
-    return <div className="min-h-screen bg-white">{children}</div>;
+    return <div className="min-h-screen bg-background">{children}</div>;
   }
 
   // const allowed = canAccessPath(session, pathname);
 
   return (
-    <div className="flex h-screen bg-[#FFFFFF] font-sans overflow-hidden">
+    <div className="flex h-screen bg-background font-sans overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-y-auto w-full bg-[#FFFFFF]">
+      <div className="flex-1 flex flex-col overflow-y-auto w-full bg-background">
         <Header />
         <main className="px-8 pb-12 w-full flex flex-col gap-6 max-w-[1400px] h-full">
           {children}

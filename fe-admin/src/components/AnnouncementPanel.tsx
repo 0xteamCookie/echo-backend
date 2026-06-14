@@ -199,16 +199,16 @@ export default function AnnouncementPanel() {
 
   return (
     <div className="grid grid-cols-12 gap-6 h-full">
-      <section className="col-span-12 lg:col-span-5 rounded-2xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
+      <section className="col-span-12 lg:col-span-5 rounded-2xl border border-border bg-surface p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-semibold text-gray-900 flex items-center gap-2">
-            <BellRing size={17} className="text-[#E63946]" />
+          <h3 className="text-[16px] font-semibold text-ink flex items-center gap-2">
+            <BellRing size={17} className="text-brand" />
             Publish Announcement
           </h3>
           <button
             type="button"
             onClick={() => void refreshHeatmap()}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-[12px] font-medium hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-[12px] font-medium hover:bg-elevated"
           >
             <RefreshCcw size={14} />
             Refresh locations
@@ -217,7 +217,7 @@ export default function AnnouncementPanel() {
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            <p className="text-[12px] font-medium text-gray-700">
+            <p className="text-[12px] font-medium text-muted">
               Select location from heatmap
             </p>
             <AnnouncementLocationMap
@@ -225,29 +225,29 @@ export default function AnnouncementPanel() {
               selectedKey={selectedKey}
               onSelect={handleSelectLocation}
             />
-            <p className="text-[11px] text-gray-500">
+            <p className="text-[11px] text-muted">
               Click a map point to choose location. The orange circle shows the
               1km announcement radius.
             </p>
           </div>
 
           {selectedLocation && (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-[12px] text-gray-700 flex items-center justify-between gap-2">
+            <div className="rounded-lg border border-border bg-elevated p-2.5 text-[12px] text-muted flex items-center justify-between gap-2">
               <span className="flex items-center gap-2">
-                <MapPin size={14} className="text-gray-500" />
+                <MapPin size={14} className="text-muted" />
                 {selectedLocation.name}
               </span>
-              <span className="text-gray-500">
+              <span className="text-muted">
                 {selectedLocation.lat.toFixed(5)},{" "}
                 {selectedLocation.lon.toFixed(5)}
               </span>
             </div>
           )}
 
-          <label className="text-[12px] font-medium text-gray-700">
+          <label className="text-[12px] font-medium text-muted">
             Message
             <textarea
-              className="mt-1 h-32 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#E63946]/25"
+              className="mt-1 h-32 w-full resize-none rounded-lg border border-border bg-elevated text-ink px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-brand/30"
               placeholder="Type public safety announcement..."
               value={message}
               onChange={(e) => {
@@ -259,13 +259,13 @@ export default function AnnouncementPanel() {
           </label>
 
           {heatmapError && (
-            <p className="text-[12px] text-red-700">{heatmapError.message}</p>
+            <p className="text-[12px] text-danger">{heatmapError.message}</p>
           )}
           {submitState.error && (
-            <p className="text-[12px] text-red-700">{submitState.error}</p>
+            <p className="text-[12px] text-danger">{submitState.error}</p>
           )}
           {submitState.success && (
-            <p className="text-[12px] text-emerald-700">
+            <p className="text-[12px] text-success">
               {submitState.success}
             </p>
           )}
@@ -275,29 +275,29 @@ export default function AnnouncementPanel() {
             disabled={
               submitState.pending || !selectedLocation || message.trim() === ""
             }
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#E63946] text-white px-4 py-2 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand text-white px-4 py-2 text-[13px] font-semibold hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send size={14} />
             {submitState.pending ? "Publishing..." : "Publish announcement"}
           </button>
         </form>
         {heatmapLoading && (
-          <p className="text-[12px] text-gray-500">
+          <p className="text-[12px] text-muted">
             Loading heatmap points for location selection...
           </p>
         )}
       </section>
 
-      <section className="col-span-12 lg:col-span-7 rounded-2xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
+      <section className="col-span-12 lg:col-span-7 rounded-2xl border border-border bg-surface p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[16px] font-semibold text-gray-900">
+          <h3 className="text-[16px] font-semibold text-ink">
             Nearby Announcements
           </h3>
           <button
             type="button"
             onClick={() => void refreshNearby()}
             disabled={!selectedLocation}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-[12px] font-medium hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-[12px] font-medium hover:bg-elevated disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RefreshCcw size={14} />
             Refresh
@@ -305,19 +305,19 @@ export default function AnnouncementPanel() {
         </div>
 
         {!selectedLocation && (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
+          <div className="rounded-xl border border-border bg-elevated p-3 text-[13px] text-muted">
             Select a heatmap location to view announcements within 1km.
           </div>
         )}
 
         {selectedLocation && nearbyLoading && (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
+          <div className="rounded-xl border border-border bg-elevated p-3 text-[13px] text-muted">
             Loading nearby announcements...
           </div>
         )}
 
         {selectedLocation && nearbyError && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+          <div className="rounded-xl border border-danger/40 bg-danger/10 p-3 text-[13px] text-danger">
             {nearbyError.message}
           </div>
         )}
@@ -326,7 +326,7 @@ export default function AnnouncementPanel() {
           !nearbyLoading &&
           !nearbyError &&
           (nearbyData?.announcements.length ?? 0) === 0 && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[13px] text-gray-600">
+            <div className="rounded-xl border border-border bg-elevated p-3 text-[13px] text-muted">
               No announcements found in the selected 1km radius.
             </div>
           )}
@@ -339,17 +339,17 @@ export default function AnnouncementPanel() {
               {nearbyData!.announcements.map((item) => (
                 <article
                   key={item.id}
-                  className="rounded-xl border border-gray-200 p-3"
+                  className="rounded-xl border border-border p-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[13px] font-semibold text-gray-900">
+                    <p className="text-[13px] font-semibold text-ink">
                       {item.locationName}
                     </p>
-                    <p className="text-[11px] text-gray-500">
+                    <p className="text-[11px] text-muted">
                       {new Date(item.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <p className="text-[13px] text-gray-700 mt-2">
+                  <p className="text-[13px] text-muted mt-2">
                     {item.message}
                   </p>
                 </article>

@@ -77,14 +77,14 @@ export default function EventTable() {
   const rows = useMemo(() => events.slice(0, 8).map(toRow), [events]);
 
   return (
-    <div className="bg-[#FAFAFA] rounded-2xl p-6 border border-[#FAFAFA] h-full flex flex-col">
+    <div className="bg-surface rounded-2xl p-6 border border-border h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-semibold text-[14px] text-gray-800">
+        <h3 className="font-semibold text-[14px] text-ink">
           Recent Dispatch
         </h3>
         <a
           href="/live-feed"
-          className="text-[12px] font-medium text-gray-500 hover:text-black transition-colors bg-white px-3 py-1 rounded-full shadow-sm"
+          className="text-[12px] font-medium text-muted hover:text-ink transition-colors bg-elevated px-3 py-1 rounded-full shadow-sm"
         >
           View All
         </a>
@@ -92,32 +92,32 @@ export default function EventTable() {
 
       <div className="flex-1">
         {loading && rows.length === 0 ? (
-          <div className="text-[12px] text-gray-400 py-6 text-center">
+          <div className="text-[12px] text-muted py-6 text-center">
             Loading recent incidents...
           </div>
         ) : error && error !== FIRESTORE_NO_CLIENT ? (
-          <div className="text-[12px] text-red-500 py-6 text-center">
+          <div className="text-[12px] text-danger py-6 text-center">
             Unable to load incidents.
           </div>
         ) : rows.length === 0 ? (
-          <div className="text-[12px] text-gray-400 py-6 text-center">
+          <div className="text-[12px] text-muted py-6 text-center">
             No incidents yet.
           </div>
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-200">
+              <tr className="text-[10px] font-semibold text-muted uppercase tracking-wider border-b border-border">
                 <th className="pb-3 font-medium">Type</th>
                 <th className="pb-3 font-medium">ID / Loc</th>
                 <th className="pb-3 font-medium">KPI</th>
                 <th className="pb-3 font-medium text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {rows.map((inc) => (
                 <tr
                   key={inc.id}
-                  className="hover:bg-gray-50 transition-colors group"
+                  className="hover:bg-elevated transition-colors group"
                 >
                   <td className="py-3">
                     <div className="flex items-center gap-2">
@@ -125,10 +125,10 @@ export default function EventTable() {
                         className={cn(
                           "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white",
                           inc.badge === "M"
-                            ? "bg-blue-500"
+                            ? "bg-info"
                             : inc.badge === "F"
-                              ? "bg-orange-500"
-                              : "bg-black",
+                              ? "bg-brand"
+                              : "bg-elevated text-muted",
                         )}
                       >
                         {inc.badge}
@@ -137,20 +137,20 @@ export default function EventTable() {
                   </td>
                   <td className="py-3">
                     <div className="flex flex-col">
-                      <span className="font-bold text-gray-800 text-[12px]">
+                      <span className="font-bold text-ink text-[12px]">
                         {inc.code}
                       </span>
-                      <span className="text-[10px] text-gray-500 truncate max-w-[140px]">
+                      <span className="text-[10px] text-muted truncate max-w-[140px]">
                         {inc.loc}
                       </span>
                     </div>
                   </td>
                   <td className="py-3">
                     <div className="flex gap-2">
-                      <span className="bg-black text-white text-[10px] px-2 py-0.5 rounded-full">
+                      <span className="bg-elevated text-ink text-[10px] px-2 py-0.5 rounded-full">
                         {inc.severity} Sev
                       </span>
-                      <span className="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full">
+                      <span className="bg-elevated text-muted text-[10px] px-2 py-0.5 rounded-full">
                         {inc.time}
                       </span>
                     </div>
@@ -161,10 +161,10 @@ export default function EventTable() {
                         "text-[11px] font-bold",
                         inc.status === "Assigned" ||
                           inc.status === "Dispatching"
-                          ? "text-[#E63946]"
+                          ? "text-brand"
                           : inc.status === "Resolved"
-                            ? "text-emerald-600"
-                            : "text-gray-600",
+                            ? "text-success"
+                            : "text-muted",
                       )}
                     >
                       {inc.status}

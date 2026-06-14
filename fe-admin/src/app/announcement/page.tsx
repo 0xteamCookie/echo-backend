@@ -1,20 +1,23 @@
 import React from "react";
 import AnnouncementPanel from "../../components/AnnouncementPanel";
+import PageHeader from "../../components/PageHeader";
 
 export default function AnnouncementPage() {
   return (
     <>
-      <div className="flex justify-between items-center bg-white mb-2 pb-4">
-        <div>
-          <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">
-            Announcements
-          </h1>
-          <p className="text-[13px] text-gray-500 mt-1">
-            Publish location-specific announcements and monitor messages within
-            a 1km area.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Announcements"
+        subtitle="Publish location-specific announcements and monitor messages within a 1km area."
+        info={
+          <>
+            Broadcast public-safety messages tied to a precise location. Pick a
+            point from the live heatmap on the left — the orange circle shows
+            the <strong className="text-ink">1km delivery radius</strong> — then
+            write and publish. The right panel lists announcements already sent
+            within 1km of the selected point so you can avoid duplicates.
+          </>
+        }
+      />
       <div className="flex-1">
         <AnnouncementPanel />
       </div>

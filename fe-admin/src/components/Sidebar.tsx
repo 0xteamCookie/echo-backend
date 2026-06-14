@@ -9,7 +9,7 @@ import {
   Map,
   Settings,
   LayoutGrid,
-  ShieldAlert,
+  Radio,
 } from "lucide-react";
 import { can } from "../lib/auth/permissions";
 import { useAuth } from "../lib/auth/provider";
@@ -19,17 +19,24 @@ export default function Sidebar() {
   const { session } = useAuth();
 
   return (
-    <aside className="w-[240px] h-screen bg-[#F8F8F8] flex flex-col border-r border-[#EBEBEB]">
+    <aside className="w-[240px] h-screen bg-surface flex flex-col border-r border-border">
       <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white">
-          <ShieldAlert size={18} />
+        <div className="w-8 h-8 bg-brand rounded-full flex items-center justify-center text-white shadow-lg shadow-brand/30">
+          <Radio size={18} />
         </div>
-        <span className="font-bold text-[15px]">DisasterOps</span>
+        <div className="flex flex-col leading-none">
+          <span className="font-bold text-[16px] text-ink tracking-tight">
+            Echo
+          </span>
+          <span className="text-[10px] text-muted uppercase tracking-[0.2em]">
+            Command
+          </span>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-2">
         <div className="mb-6">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase mb-3 px-2 tracking-wider">
+          <p className="text-[11px] font-semibold text-muted uppercase mb-3 px-2 tracking-wider">
             Dashboard
           </p>
           <nav className="flex flex-col gap-0.5">
@@ -102,16 +109,14 @@ function NavItem({
       href={href}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-[14px] ${
         active
-          ? "bg-white shadow-sm font-medium text-black"
-          : "hover:bg-gray-200 text-gray-600 hover:text-black"
+          ? "bg-elevated font-medium text-ink"
+          : "text-muted hover:bg-elevated/60 hover:text-ink"
       }`}
     >
-      <span className={active ? "text-[#E63946]" : "text-gray-400"}>
-        {icon}
-      </span>
+      <span className={active ? "text-brand" : "text-muted"}>{icon}</span>
       <span className="flex-1">{label}</span>
       {badge && (
-        <span className="bg-[#E63946] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+        <span className="bg-brand text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
           {badge}
         </span>
       )}

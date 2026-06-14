@@ -10,9 +10,9 @@ export default function AccessDenied({
   detail: string;
 }) {
   return (
-    <div className="rounded-2xl border border-red-100 bg-red-50 p-6 mt-4">
-      <h2 className="text-[22px] font-semibold text-red-800">{title}</h2>
-      <p className="text-[14px] text-red-700 mt-2">{detail}</p>
+    <div className="rounded-2xl border border-danger/40 bg-danger/10 p-6 mt-4">
+      <h2 className="text-[22px] font-semibold text-danger">{title}</h2>
+      <p className="text-[14px] text-danger mt-2">{detail}</p>
     </div>
   );
 }

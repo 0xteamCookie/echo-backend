@@ -49,10 +49,10 @@ function extractTriage(entry: DeviceEntry): TriageInfo | null {
 }
 
 function agencyBadgeClass(agency?: string): string {
-  if (agency === "medical") return "bg-blue-100 text-blue-700";
-  if (agency === "fire") return "bg-orange-100 text-orange-700";
-  if (agency === "police") return "bg-gray-200 text-gray-800";
-  return "bg-gray-100 text-gray-600";
+  if (agency === "medical") return "bg-info/15 text-info";
+  if (agency === "fire") return "bg-brand/15 text-brand";
+  if (agency === "police") return "bg-elevated text-muted";
+  return "bg-elevated text-muted";
 }
 
 function formatOperationalStatus(status: string | undefined): string | null {
@@ -63,10 +63,10 @@ function formatOperationalStatus(status: string | undefined): string | null {
 
 function statusBadgeClass(status: string | undefined): string {
   const s = typeof status === "string" ? status.trim().toLowerCase() : "";
-  if (s === "resolved") return "bg-emerald-100 text-emerald-800";
-  if (s === "acknowledged") return "bg-slate-200 text-slate-800";
-  if (s === "assigned") return "bg-amber-100 text-amber-900";
-  return "bg-gray-100 text-gray-700";
+  if (s === "resolved") return "bg-success/15 text-success";
+  if (s === "acknowledged") return "bg-elevated text-muted";
+  if (s === "assigned") return "bg-warning/15 text-warning";
+  return "bg-elevated text-muted";
 }
 
 export function TriagedPill({
@@ -76,7 +76,7 @@ export function TriagedPill({
 }) {
   if (!triage || triage.source !== "on-device") return null;
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
+    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success font-semibold">
       <BrainCircuit size={10} />
       Triaged on-device
     </span>
@@ -227,15 +227,15 @@ export default function IncidentDrawer({
       <button
         aria-label="Close incident drawer"
         onClick={onClose}
-        className="fixed inset-0 z-40 bg-black/20"
+        className="fixed inset-0 z-40 bg-black/50"
       />
       <aside
         role="dialog"
         aria-label="Incident detail"
-        className="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-white shadow-2xl border-l border-gray-200 flex flex-col"
+        className="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-surface shadow-2xl border-l border-border flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-gray-100">
+        <div className="flex items-start justify-between p-5 border-b border-border">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span
@@ -252,7 +252,7 @@ export default function IncidentDrawer({
               )}
               <TriagedPill triage={triage} />
             </div>
-            <h2 className="text-[15px] font-semibold text-gray-900">
+            <h2 className="text-[15px] font-semibold text-ink">
               Incident {entry.id.slice(0, 8)}
             </h2>
           </div>
@@ -260,7 +260,7 @@ export default function IncidentDrawer({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="rounded-full p-1.5 hover:bg-gray-100 text-gray-500"
+            className="rounded-full p-1.5 hover:bg-elevated text-muted"
           >
             <X size={16} />
           </button>
@@ -270,15 +270,15 @@ export default function IncidentDrawer({
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
           {/* Triage block */}
           {triage && (
-            <section className="rounded-xl border border-gray-200 bg-[#FAFAFA] p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-[12px] font-semibold text-gray-700 uppercase tracking-wide">
-                <BrainCircuit size={14} className="text-[#E63946]" />
+            <section className="rounded-xl border border-border bg-elevated p-4 flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-muted uppercase tracking-wide">
+                <BrainCircuit size={14} className="text-brand" />
                 Triage summary
               </div>
               {typeof triage.severity === "number" && (
-                <div className="text-[12px] text-gray-600">
+                <div className="text-[12px] text-muted">
                   Severity{" "}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-ink">
                     {triage.severity}/5
                   </span>
                 </div>
@@ -288,7 +288,7 @@ export default function IncidentDrawer({
                   {triage.categories.map((c) => (
                     <span
                       key={c}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-700"
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-surface border border-border text-muted"
                     >
                       {c}
                     </span>
@@ -296,20 +296,20 @@ export default function IncidentDrawer({
                 </div>
               )}
               {triage.summary && (
-                <p className="text-[13px] text-gray-800">{triage.summary}</p>
+                <p className="text-[13px] text-ink">{triage.summary}</p>
               )}
             </section>
           )}
 
           {/* Raw message */}
           <section className="flex flex-col gap-2">
-            <div className="text-[12px] font-semibold text-gray-700 uppercase tracking-wide">
+            <div className="text-[12px] font-semibold text-muted uppercase tracking-wide">
               Message
             </div>
-            <p className="text-[13px] text-gray-900 whitespace-pre-wrap">
-              {entry.message || <span className="text-gray-400">(empty)</span>}
+            <p className="text-[13px] text-ink whitespace-pre-wrap">
+              {entry.message || <span className="text-muted">(empty)</span>}
             </p>
-            <div className="flex items-center gap-3 text-[11px] text-gray-500">
+            <div className="flex items-center gap-3 text-[11px] text-muted">
               <span className="inline-flex items-center gap-1">
                 <User size={11} />
                 {entry.macAddress || "unknown"}
@@ -324,11 +324,11 @@ export default function IncidentDrawer({
           {/* GPS / static map */}
           {gps && (
             <section className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-[12px] font-semibold text-gray-700 uppercase tracking-wide">
-                <MapPin size={14} className="text-[#E63946]" />
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-muted uppercase tracking-wide">
+                <MapPin size={14} className="text-brand" />
                 Location
               </div>
-              <p className="text-[12px] text-gray-600 font-mono">
+              <p className="text-[12px] text-muted font-mono">
                 {gps.lat.toFixed(5)}, {gps.lon.toFixed(5)}
               </p>
               {staticMapUrl && (
@@ -336,7 +336,7 @@ export default function IncidentDrawer({
                 <img
                   src={staticMapUrl}
                   alt="Incident location"
-                  className="rounded-xl border border-gray-200 w-full h-auto"
+                  className="rounded-xl border border-border w-full h-auto"
                 />
               )}
             </section>
@@ -344,22 +344,22 @@ export default function IncidentDrawer({
 
           {/* Responder selector */}
           <section className="flex flex-col gap-2">
-            <div className="text-[12px] font-semibold text-gray-700 uppercase tracking-wide">
+            <div className="text-[12px] font-semibold text-muted uppercase tracking-wide">
               Assign responder
             </div>
             {isResolved && (
-              <p className="text-[12px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+              <p className="text-[12px] text-success bg-success/10 border border-success/30 rounded-lg px-3 py-2">
                 This SOS is marked resolved. Assignment and dispatch actions are
                 disabled.
               </p>
             )}
             {loadingRescuers ? (
-              <div className="inline-flex items-center gap-2 text-[12px] text-gray-500">
+              <div className="inline-flex items-center gap-2 text-[12px] text-muted">
                 <Loader2 size={12} className="animate-spin" />
                 Loading on-duty rescuers…
               </div>
             ) : rescuers.length === 0 ? (
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-[12px] text-gray-600">
+              <div className="rounded-xl border border-border bg-elevated p-3 text-[12px] text-muted">
                 No on-duty rescuers found for this agency.
               </div>
             ) : (
@@ -367,7 +367,7 @@ export default function IncidentDrawer({
                 value={rescuerId}
                 onChange={(e) => setRescuerId(e.target.value)}
                 disabled={isResolved}
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-black/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-xl border border-border bg-elevated text-ink px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-brand/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Select a rescuer…</option>
                 {rescuers.map((r) => (
@@ -386,8 +386,8 @@ export default function IncidentDrawer({
               className={
                 "rounded-xl px-3 py-2 text-[12px] " +
                 (toast.kind === "ok"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "bg-red-50 text-red-700 border border-red-200")
+                  ? "bg-success/10 text-success border border-success/30"
+                  : "bg-danger/10 text-danger border border-danger/40")
               }
             >
               {toast.msg}
@@ -396,12 +396,12 @@ export default function IncidentDrawer({
         </div>
 
         {/* Footer actions */}
-        <div className="border-t border-gray-100 p-4 flex flex-wrap gap-2">
+        <div className="border-t border-border p-4 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => void doAssign()}
             disabled={isResolved || !rescuerId || actionBusy !== ""}
-            className="flex-1 min-w-[110px] rounded-xl bg-[#E63946] text-white py-2 text-[13px] font-medium hover:bg-[#c92d3a] disabled:opacity-50 transition-colors"
+            className="flex-1 min-w-[110px] rounded-xl bg-brand text-white py-2 text-[13px] font-medium hover:bg-brand-hover disabled:opacity-50 transition-colors"
           >
             {actionBusy === "assign" ? "Assigning…" : "Assign"}
           </button>
@@ -409,7 +409,7 @@ export default function IncidentDrawer({
             type="button"
             onClick={() => void setStatus("acknowledged")}
             disabled={isResolved || actionBusy !== ""}
-            className="flex-1 min-w-[110px] rounded-xl bg-black text-white py-2 text-[13px] font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+            className="flex-1 min-w-[110px] rounded-xl bg-brand text-white py-2 text-[13px] font-medium hover:bg-brand-hover disabled:opacity-50 transition-colors"
           >
             {actionBusy === "acknowledged" ? "…" : "Acknowledge"}
           </button>
@@ -417,7 +417,7 @@ export default function IncidentDrawer({
             type="button"
             onClick={() => void setStatus("resolved")}
             disabled={isResolved || actionBusy !== ""}
-            className="flex-1 min-w-[110px] rounded-xl border border-gray-300 bg-white text-gray-800 py-2 text-[13px] font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            className="flex-1 min-w-[110px] rounded-xl border border-border bg-surface text-ink py-2 text-[13px] font-medium hover:bg-elevated disabled:opacity-50 transition-colors"
           >
             {actionBusy === "resolved"
               ? "…"

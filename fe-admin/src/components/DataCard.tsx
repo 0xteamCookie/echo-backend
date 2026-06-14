@@ -23,15 +23,15 @@ export default function DataCard({
   return (
     <div
       className={cn(
-        "p-5 rounded-2xl border border-[#FAFAFA] flex flex-col justify-between shadow-sm min-w-[160px] flex-1",
-        highlighted ? "bg-[#101010] text-white" : "bg-white text-black",
+        "p-5 rounded-2xl border border-border flex flex-col justify-between shadow-sm min-w-[160px] flex-1",
+        highlighted ? "bg-elevated text-ink" : "bg-surface text-ink",
       )}
     >
       <div className="flex justify-between items-start mb-2">
         <h3
           className={cn(
             "text-[13px] font-medium",
-            highlighted ? "text-gray-400" : "text-gray-500",
+            highlighted ? "text-muted" : "text-muted",
           )}
         >
           {title}
@@ -47,10 +47,10 @@ export default function DataCard({
               className={cn(
                 "text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center",
                 highlighted
-                  ? "bg-[#333] text-gray-200"
+                  ? "bg-background text-muted"
                   : trendDir === "up"
-                    ? "bg-[#FFE8EC] text-[#E63946]"
-                    : "bg-[#F0F2F5] text-gray-500",
+                    ? "bg-brand/15 text-brand"
+                    : "bg-elevated text-muted",
               )}
             >
               {trendDir === "up" ? "↑" : "↓"} {trend}
@@ -59,7 +59,7 @@ export default function DataCard({
               <span
                 className={cn(
                   "text-[11px]",
-                  highlighted ? "text-gray-400" : "text-gray-400",
+                  highlighted ? "text-muted" : "text-muted",
                 )}
               >
                 {subtitle}

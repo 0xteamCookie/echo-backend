@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Radio } from "lucide-react";
 import { useAuth } from "../../lib/auth/provider";
 
 function LoginForm() {
@@ -35,49 +36,59 @@ function LoginForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="w-full max-w-md bg-white rounded-2xl border border-gray-200 p-6 flex flex-col gap-4"
+      className="w-full max-w-md bg-surface rounded-2xl border border-border p-6 flex flex-col gap-4 shadow-2xl shadow-black/40"
     >
-      <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">
-        DisasterOps Login
-      </h1>
-      <p className="text-[13px] text-gray-500">
+      <div className="flex items-center gap-3 mb-1">
+        <div className="w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white shadow-lg shadow-brand/30">
+          <Radio size={20} />
+        </div>
+        <div className="flex flex-col leading-none">
+          <h1 className="text-[26px] font-semibold text-ink tracking-tight">
+            Echo
+          </h1>
+          <span className="text-[10px] text-muted uppercase tracking-[0.2em]">
+            Command Console
+          </span>
+        </div>
+      </div>
+      <p className="text-[13px] text-muted">
         Sign in as super admin to access the dashboard.
       </p>
 
       <div>
-        <label className="block text-[12px] font-semibold text-gray-600 mb-1">
+        <label className="block text-[12px] font-semibold text-muted mb-1">
           Email
         </label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-black/10"
+          className="w-full rounded-xl border border-border bg-elevated px-3 py-2 text-[14px] text-ink outline-none placeholder:text-muted focus:ring-2 focus:ring-brand/30"
         />
       </div>
 
       <div>
-        <label className="block text-[12px] font-semibold text-gray-600 mb-1">
+        <label className="block text-[12px] font-semibold text-muted mb-1">
           Password
         </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-black/10"
+          className="w-full rounded-xl border border-border bg-elevated px-3 py-2 text-[14px] text-ink outline-none placeholder:text-muted focus:ring-2 focus:ring-brand/30"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="mt-2 rounded-xl bg-black text-white py-2.5 text-[14px] font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+        className="mt-2 rounded-xl bg-brand text-white py-2.5 text-[14px] font-medium hover:bg-brand-hover disabled:opacity-50 transition-colors"
       >
         {loading ? "Signing in..." : "Sign in"}
       </button>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-800">
+        <div className="rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-[13px] text-danger">
           {error}
         </div>
       )}
@@ -87,7 +98,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F7F7F7] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Suspense>
         <LoginForm />
       </Suspense>

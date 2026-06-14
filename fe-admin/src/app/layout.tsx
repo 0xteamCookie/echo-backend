@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import DashboardLayout from "../components/DashboardLayout";
 import { AuthProvider } from "../lib/auth/provider";
+import { ThemeProvider, themeNoFlashScript } from "../lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DisasterOps Admin",
-  description: "Disaster Response Command Dashboard",
+  title: "Echo — Command Console",
+  description: "Echo · Disaster response command & dispatch dashboard",
 };
 
 export default function RootLayout({
@@ -28,11 +29,17 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeNoFlashScript }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <DashboardLayout>{children}</DashboardLayout>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <DashboardLayout>{children}</DashboardLayout>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

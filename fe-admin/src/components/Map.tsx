@@ -12,14 +12,14 @@ type Props = {
 
 export default function MapHeatmap({ title = "Live Operations Map" }: Props) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
+    <div className="bg-surface rounded-2xl border border-border shadow-sm h-full flex flex-col overflow-hidden">
       {title !== null && (
-        <div className="flex justify-between items-center w-full bg-white px-4 py-3 border-b border-gray-100">
-          <h3 className="font-semibold text-[14px] text-gray-800">{title}</h3>
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+        <div className="flex justify-between items-center w-full bg-surface px-4 py-3 border-b border-border">
+          <h3 className="font-semibold text-[14px] text-ink">{title}</h3>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
             </span>
             Live
           </div>

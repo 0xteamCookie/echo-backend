@@ -25,22 +25,22 @@ export default function StatCard({
   trend,
   trendValue,
   icon: Icon,
-  bgColor = "bg-white",
-  iconBgColor = "bg-gray-100",
-  iconColor = "text-gray-700",
+  bgColor = "bg-surface",
+  iconBgColor = "bg-elevated",
+  iconColor = "text-muted",
   className,
 }: StatCardProps) {
   return (
     <div
       className={cn(
-        "p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-full",
+        "p-5 rounded-2xl border border-border shadow-sm flex flex-col justify-between h-full",
         bgColor,
         className,
       )}
     >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-gray-500 font-medium text-sm mb-1">{title}</h3>
+          <h3 className="text-muted font-medium text-sm mb-1">{title}</h3>
           <p className="text-3xl font-bold tracking-tight">{value}</p>
         </div>
         {Icon && (
@@ -56,8 +56,8 @@ export default function StatCard({
             className={cn(
               "flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded-full w-fit",
               trend === "up"
-                ? "bg-red-100 text-red-600"
-                : "bg-green-100 text-green-600",
+                ? "bg-brand/15 text-brand"
+                : "bg-success/15 text-success",
             )}
           >
             {trend === "up" ? (
@@ -67,7 +67,7 @@ export default function StatCard({
             )}
             <span>{trendValue}</span>
           </div>
-          <span className="text-xs text-gray-400 font-medium">
+          <span className="text-xs text-muted font-medium">
             vs last hour
           </span>
         </div>
