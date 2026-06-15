@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Echo — Command Console",
+  title: "Echo - Operator Console",
   description: "Echo · Disaster response command & dispatch dashboard",
 };
 
