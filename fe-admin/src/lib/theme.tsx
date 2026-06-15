@@ -23,14 +23,16 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 /**
  * Inline, render-blocking snippet that applies the persisted theme to
  * <html> before React hydrates — prevents a flash of the wrong theme.
- * Dark is the default (no class); light adds the `light` class.
+ * Light is the default; dark is only used when explicitly persisted.
  */
 export const themeNoFlashScript = `(() => {
   try {
-    if (localStorage.getItem(${JSON.stringify(STORAGE_KEY)}) === "light") {
+    if (localStorage.getItem(${JSON.stringify(STORAGE_KEY)}) !== "dark") {
       document.documentElement.classList.add("light");
     }
-  } catch (e) {}
+  } catch (e) {
+    document.documentElement.classList.add("light");
+  }
 })();`;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -42,7 +44,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         ? "light"
         : "dark";
     }
-    return "dark";
+    return "light";
   });
 
   useEffect(() => {
