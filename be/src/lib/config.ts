@@ -88,7 +88,7 @@ export const config = {
       : isProd,
   translationTargetLangs: (
     process.env.TRANSLATION_TARGET_LANGS?.trim() ||
-    "en,es,fr,de,zh,hi,ar,pt,ja,ko"
+    "en,hi,bn,ta,te,mr,gu,kn,ml,pa"
   )
     .split(",")
     .map((s) => s.trim())
