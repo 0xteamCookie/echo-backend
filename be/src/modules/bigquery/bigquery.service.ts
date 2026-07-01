@@ -2,6 +2,7 @@
 // Fire-and-forget; any error is swallowed so BQ outages don't block ingest.
 import { BigQuery } from "@google-cloud/bigquery";
 import { config } from "../../lib/config";
+import { getGcpClientOptions } from "../../lib/firebase";
 import { log } from "../../lib/logger";
 import type { DeviceData } from "../data/data.schema";
 
@@ -9,11 +10,9 @@ let client: BigQuery | null = null;
 
 function getClient(): BigQuery {
   if (!client) {
-    client = new BigQuery(
-      config.googleCloudProjectId
-        ? { projectId: config.googleCloudProjectId }
-        : {},
-    );
+    // Use the shared SA credentials (falls back to projectId-only/ADC) so this
+    // client authenticates the same way as Firestore/Auth — see getGcpClientOptions.
+    client = new BigQuery(getGcpClientOptions());
   }
   return client;
 }
