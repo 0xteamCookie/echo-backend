@@ -26,7 +26,7 @@ function resolveProjectId(sa?: ServiceAccount): string | undefined {
  * - Service account JSON in `FIREBASE_SERVICE_ACCOUNT_JSON`
  * - Application Default Credentials (`GOOGLE_APPLICATION_CREDENTIALS`, GCE, etc.)
  */
-function ensureFirebaseApp(): void {
+export function ensureFirebaseApp(): void {
   if (getApps().length > 0) return;
 
   const envProjectId = resolveProjectId();
