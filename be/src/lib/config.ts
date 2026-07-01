@@ -23,7 +23,7 @@ export const config = {
   port: Number(process.env.PORT) || 3000,
   nodeEnv,
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() ?? "",
-  geminiModel: process.env.GEMINI_MODEL?.trim() || "gemini-3.1-flash-lite-preview",
+  geminiModel: process.env.GEMINI_MODEL?.trim() || "gemini-3.1-flash-lite",
   /** Set `TRIAGE_ENABLED=false` to skip Gemini on ingest (faster dummy seeding). */
   triageEnabled: process.env.TRIAGE_ENABLED !== "false",
   triageNearbyRadiusM: Number(process.env.TRIAGE_NEARBY_RADIUS_M) || 500,
