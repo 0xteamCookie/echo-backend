@@ -130,3 +130,63 @@ export const config = {
       : isProd,
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY?.trim() ?? "",
 } as const;
+
+/**
+ * Boot-time sanity checks for the Google Cloud stack. Logs LOUD warnings for the
+ * silent-failure traps the deep-dive surfaced, so a misconfigured prod deploy is
+ * visible at startup instead of silently no-op'ing mid-request.
+ *
+ * Call once from index.ts after the server starts.
+ */
+export function validateGoogleConfig(): void {
+  const warn = (msg: string) =>
+    console.warn(`[config] ${msg}`);
+
+  // ADC-dependent services (BigQuery/Pub/Sub/Translation) need a project id.
+  // With FIREBASE_SERVICE_ACCOUNT_JSON present, getGcpClientOptions() supplies
+  // credentials, but projectId is still required to target the right project.
+  const adcServicesOn =
+    config.bigqueryEnabled || config.pubsubEnabled || config.translationEnabled;
+  if (adcServicesOn && !config.googleCloudProjectId) {
+    warn(
+      "GOOGLE_CLOUD_PROJECT (or GCLOUD_PROJECT/FIREBASE_PROJECT_ID) is not set, " +
+        "but BigQuery/Pub/Sub/Translation are enabled. These will fail silently. " +
+        "Set the project id before relying on them.",
+    );
+  }
+
+  // Pub/Sub async triage without a push token => the push endpoint 503s and
+  // triage silently never runs.
+  if (config.triageAsync && config.pubsubPushToken === "") {
+    warn(
+      "TRIAGE_ASYNC=true but PUBSUB_PUSH_TOKEN is empty: the /api/pubsub/triage-push " +
+        "endpoint will 503 and triage will NOT run. Set PUBSUB_PUSH_TOKEN and create the " +
+        "push subscription, or set TRIAGE_ASYNC=false.",
+    );
+  }
+
+  // App Check enabled while the mobile client cannot attach a token => 401s all
+  // real mobile ingest.
+  if (config.appCheckEnabled) {
+    warn(
+      "APP_CHECK_ENABLED is on. Ensure the mobile client attaches an " +
+        "X-Firebase-AppCheck token, or real ingest will be rejected with 401.",
+    );
+  }
+
+  // Distance Matrix on without a key => silent haversine fallback.
+  if (config.distanceMatrixEnabled && config.googleMapsApiKey === "") {
+    warn(
+      "DISTANCE_MATRIX_ENABLED is on but GOOGLE_MAPS_API_KEY is empty: dispatch " +
+        "ETAs will silently use haversine straight-line distance.",
+    );
+  }
+
+  // Gemini enabled without a key => triage errors / dispatch all-fallback.
+  if (config.triageEnabled && config.geminiApiKey === "") {
+    warn(
+      "TRIAGE_ENABLED is on but GEMINI_API_KEY is empty: triage will error and " +
+        "dispatch will use the non-AI fallback.",
+    );
+  }
+}
