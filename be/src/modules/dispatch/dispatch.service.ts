@@ -275,6 +275,59 @@ function haversineEtaMinutes(
   return Math.max(1, Math.round(m / 450));
 }
 
+// P2-10 cost control: Distance Matrix is billed per origin-destination element,
+// and the dashboard polls /recommendations frequently. Cache drive-time results
+// per (incident location + rescuer set) for a short TTL so repeated polls reuse
+// the same answer instead of re-billing every few seconds.
+const DM_CACHE_TTL_MS = 60_000;
+const dmCache = new Map<string, { at: number; etas: Array<number | null> }>();
+
+/** Round coords so tiny GPS jitter still hits the same cache key. */
+function roundCoord(n: number): number {
+  return Math.round(n * 1000) / 1000; // ~110m grid
+}
+
+function dmCacheKey(
+  incident: CandidateIncident,
+  responders: DbRescuer[],
+): string {
+  const dest = `${roundCoord(incident.location.lat)},${roundCoord(incident.location.lon)}`;
+  const origins = responders
+    .map(
+      (r) =>
+        `${r.id}:${roundCoord(r.currentLocation.lat)},${roundCoord(r.currentLocation.lng)}`,
+    )
+    .sort()
+    .join("|");
+  return `${dest}=>${origins}`;
+}
+
+/**
+ * Cached wrapper around the Distance Matrix call. Uses a monotonic clock so it
+ * cannot be affected by wall-clock changes, and prunes stale entries lazily.
+ */
+async function driveTimesCached(
+  incident: CandidateIncident,
+  responders: DbRescuer[],
+): Promise<Array<number | null>> {
+  if (responders.length === 0) return [];
+  const key = dmCacheKey(incident, responders);
+  const now = Date.now();
+  const hit = dmCache.get(key);
+  if (hit && now - hit.at < DM_CACHE_TTL_MS) {
+    return hit.etas;
+  }
+  const etas = await driveTimesViaDistanceMatrix(incident, responders);
+  dmCache.set(key, { at: now, etas });
+  // Opportunistic prune so the map can't grow unbounded.
+  if (dmCache.size > 500) {
+    for (const [k, v] of dmCache) {
+      if (now - v.at >= DM_CACHE_TTL_MS) dmCache.delete(k);
+    }
+  }
+  return etas;
+}
+
 /**
  * Query Distance Matrix for drive-time seconds from every rescuer origin to a
  * single incident destination. Returns `null` entries on per-row errors so the
@@ -601,7 +654,7 @@ export const dispatchService = {
         if (agencyPool.length === 0) return null;
 
         const dmEtas = useDm
-          ? await driveTimesViaDistanceMatrix(incident, agencyPool)
+          ? await driveTimesCached(incident, agencyPool)
           : agencyPool.map(() => null);
 
         const scored = agencyPool
