@@ -19,19 +19,6 @@ type AnnouncementsPayload = {
   error?: string;
 };
 
-const dummyData: AnnouncementsPayload = {
-  announcements: [
-    {
-      id: "1",
-      message:
-        "Water supply will be temporarily unavailable from 2 PM to 4 PM due to maintenance work.",
-      locationName: "Building A - Main Campus",
-      createdAt: new Date().toISOString(),
-    },
-  ],
-  fetchedAt: new Date().toISOString(),
-};
-
 export default function LatestAnnouncement() {
   const { authHeader } = useAuth();
   const authValue = authHeader.Authorization ?? "";

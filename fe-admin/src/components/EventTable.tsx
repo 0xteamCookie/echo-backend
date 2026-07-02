@@ -7,6 +7,7 @@ import {
   FIRESTORE_NO_CLIENT,
   type DeviceEntry,
 } from "../hooks/useRealtimeEvents";
+import { readSeverity } from "./map/types";
 
 type Row = {
   id: string;
@@ -22,16 +23,6 @@ function agencyBadge(agency: DeviceEntry["agency"]): Row["badge"] {
   if (agency === "fire") return "F";
   if (agency === "police") return "P";
   return "M";
-}
-
-function readSeverity(entry: DeviceEntry): number {
-  const t = entry.meta?.triage;
-  if (t && typeof t === "object" && !Array.isArray(t)) {
-    const sev = (t as Record<string, unknown>).severity;
-    if (typeof sev === "number" && Number.isFinite(sev))
-      return Math.min(5, Math.max(1, Math.round(sev)));
-  }
-  return 1;
 }
 
 function readStatus(entry: DeviceEntry): string {

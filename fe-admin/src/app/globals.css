@@ -37,9 +37,9 @@
 
   /* Warm "paper" surfaces — no pure white. The page sits a step deeper so
      the ivory panels (sidebar, cards) read as raised, with borders for edges. */
-  --color-background: #e4dbc9; /* warm light gray — the base layer */
-  --color-surface: #f7f2e8; /* warm ivory panels — sidebar, cards */
-  --color-elevated: #eee7d8; /* deeper warm tint — inner tiles / inputs */
+  --color-background: #f3eee3; /* soft warm paper — the base layer */
+  --color-surface: #fdfbf6; /* near-white ivory panels — sidebar, cards */
+  --color-elevated: #f0e9db; /* deeper warm tint — inner tiles / inputs */
 
   --color-accent: #5a4632; /* dark warm brown — readable on tints */
   --color-cream: #fbf6ef;
@@ -51,7 +51,7 @@
 
   --color-ink: #1c212b; /* near-charcoal primary text */
   --color-muted: #6a6e77; /* secondary text */
-  --color-border: #d4c9b3; /* warm border — visible against ivory */
+  --color-border: #e0d6c2; /* warm border — visible against ivory */
 }
 
 html,

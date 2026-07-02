@@ -7,7 +7,6 @@ import {
   BrainCircuit,
   Check,
   Copy,
-  QrCode,
   RefreshCcw,
   UserPlus,
   Sparkles,
