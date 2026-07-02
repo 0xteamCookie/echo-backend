@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { getAppCheck } from "firebase-admin/app-check";
 import { config } from "../lib/config";
+import { ensureFirebaseApp } from "../lib/firebase";
 
 /**
  * P2-4: Firebase App Check verification for mobile ingest routes.
@@ -9,8 +10,8 @@ import { config } from "../lib/config";
  * header. Dashboard JWT routes do NOT require App Check; this middleware is
  * only chained onto `/api/data` + `/api/data/batch` (the mobile ingest path).
  *
- * TODO(mobile): wire the Flutter app to attach `X-Firebase-AppCheck` — see
- *   `echo/lib/online/sync.dart` (HTTP client construction for ingest).
+ * The Flutter app attaches `X-Firebase-AppCheck` from its ingest HTTP client —
+ * see `echo/lib/online/sync.dart` (_ingestHeaders).
  *
  * When `config.appCheckEnabled === false` (default in dev) the middleware is
  * a pass-through so local harnesses without a real Firebase project still
@@ -28,6 +29,10 @@ export const requireAppCheck: RequestHandler = async (req, res, next) => {
     return;
   }
   try {
+    // Ensure the default Firebase app is initialized before getAppCheck().
+    // A token-bearing ingest request may never have touched Firestore/Auth, so
+    // the default app could otherwise be uninitialized here.
+    ensureFirebaseApp();
     await getAppCheck().verifyToken(token);
     next();
   } catch {

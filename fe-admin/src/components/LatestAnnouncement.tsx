@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import useSWR from "swr";
 import { Megaphone, MapPin, Clock } from "lucide-react";
 import { useAuth } from "../lib/auth/provider";
 import { apiUrl } from "../lib/api";
+import { ANNOUNCEMENT_LANGUAGES } from "../lib/languages";
 
 type Announcement = {
   id: string;
@@ -22,9 +23,17 @@ type AnnouncementsPayload = {
 export default function LatestAnnouncement() {
   const { authHeader } = useAuth();
   const authValue = authHeader.Authorization ?? "";
+  const [lang, setLang] = useState("");
 
   const queryKey = authValue
-    ? ([apiUrl("/api/announcement?limit=1"), authValue] as const)
+    ? ([
+        apiUrl(
+          `/api/announcement?limit=1${
+            lang ? `&lang=${encodeURIComponent(lang)}` : ""
+          }`,
+        ),
+        authValue,
+      ] as const)
     : null;
 
   const { data, error, isLoading } = useSWR<AnnouncementsPayload>(
@@ -97,9 +106,23 @@ export default function LatestAnnouncement() {
           <h4 className="font-semibold text-[15px] truncate">
             Latest Public Announcement
           </h4>
-          <span className="text-[12px] font-medium text-brand shrink-0 flex items-center gap-1.5 bg-brand/15 px-2.5 py-0.5 rounded-full">
-            <Clock size={12} /> {timeStr}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              title="Translate (Google Cloud Translation)"
+              className="rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand outline-none"
+            >
+              {ANNOUNCEMENT_LANGUAGES.map((l) => (
+                <option key={l.code || "original"} value={l.code}>
+                  {l.code ? `🌐 ${l.label}` : l.label}
+                </option>
+              ))}
+            </select>
+            <span className="text-[12px] font-medium text-brand flex items-center gap-1.5 bg-brand/15 px-2.5 py-0.5 rounded-full">
+              <Clock size={12} /> {timeStr}
+            </span>
+          </div>
         </div>
         <p className="text-[14px] text-accent leading-relaxed pr-6 mt-1">
           {latest.message}

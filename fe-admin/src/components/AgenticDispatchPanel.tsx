@@ -65,7 +65,9 @@ export default function AgenticDispatchPanel() {
       }
       return data;
     },
-    { refreshInterval: 12000, revalidateOnFocus: false },
+    // 60s poll: each refresh can trigger billable Distance Matrix + Gemini work
+    // server-side, so we poll conservatively (was 12s).
+    { refreshInterval: 60000, revalidateOnFocus: false },
   );
 
   const top = useMemo(

@@ -3,17 +3,15 @@
 // map of `{lang: translatedText}` for every successfully translated target.
 import { v2 as TranslateV2 } from "@google-cloud/translate";
 import { config } from "../../lib/config";
+import { getGcpClientOptions } from "../../lib/firebase";
 import { log } from "../../lib/logger";
 
 let client: TranslateV2.Translate | null = null;
 
 function getClient(): TranslateV2.Translate {
   if (!client) {
-    client = new TranslateV2.Translate(
-      config.googleCloudProjectId
-        ? { projectId: config.googleCloudProjectId }
-        : {},
-    );
+    // Shared SA credentials (or projectId-only/ADC fallback) — see getGcpClientOptions.
+    client = new TranslateV2.Translate(getGcpClientOptions());
   }
   return client;
 }

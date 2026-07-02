@@ -3,6 +3,7 @@
 // a Cloud Run worker subscribed to `beacon-ingest` performs triage/BigQuery/etc.
 import { PubSub } from "@google-cloud/pubsub";
 import { config } from "../../lib/config";
+import { getGcpClientOptions } from "../../lib/firebase";
 import { log } from "../../lib/logger";
 import type { DeviceData } from "../data/data.schema";
 
@@ -10,11 +11,8 @@ let client: PubSub | null = null;
 
 function getClient(): PubSub {
   if (!client) {
-    client = new PubSub(
-      config.googleCloudProjectId
-        ? { projectId: config.googleCloudProjectId }
-        : {},
-    );
+    // Shared SA credentials (or projectId-only/ADC fallback) — see getGcpClientOptions.
+    client = new PubSub(getGcpClientOptions());
   }
   return client;
 }

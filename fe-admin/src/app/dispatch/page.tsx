@@ -105,7 +105,9 @@ export default function DispatchPage() {
         throw new Error(out.error ?? "Failed to load recommendations");
       return out;
     },
-    { refreshInterval: 12000, revalidateOnFocus: false },
+    // 60s poll: each refresh can trigger billable Distance Matrix + Gemini work
+    // server-side, so we poll conservatively (was 12s).
+    { refreshInterval: 60000, revalidateOnFocus: false },
   );
 
   async function generateQrFromRecommendation(rec: DispatchRecommendation) {

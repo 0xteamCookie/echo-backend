@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { BellRing, MapPin, RefreshCcw, Send } from "lucide-react";
 import { useAuth } from "../lib/auth/provider";
 import { apiUrl } from "../lib/api";
+import { ANNOUNCEMENT_LANGUAGES } from "../lib/languages";
 import AnnouncementLocationMap from "./AnnouncementLocationMap";
 
 type HeatmapPoint = {
@@ -51,6 +52,7 @@ export default function AnnouncementPanel() {
   const authValue = authHeader.Authorization ?? "";
   const [message, setMessage] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
+  const [lang, setLang] = useState("");
   const [submitState, setSubmitState] = useState<{
     pending: boolean;
     error: string;
@@ -121,7 +123,9 @@ export default function AnnouncementPanel() {
     authValue && selectedLocation
       ? ([
           apiUrl(
-            `/api/announcement?lat=${selectedLocation.lat}&long=${selectedLocation.lon}&limit=50`,
+            `/api/announcement?lat=${selectedLocation.lat}&long=${selectedLocation.lon}&limit=50${
+              lang ? `&lang=${encodeURIComponent(lang)}` : ""
+            }`,
           ),
           authValue,
         ] as const)
@@ -293,15 +297,33 @@ export default function AnnouncementPanel() {
           <h3 className="text-[16px] font-semibold text-ink">
             Nearby Announcements
           </h3>
-          <button
-            type="button"
-            onClick={() => void refreshNearby()}
-            disabled={!selectedLocation}
-            className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-[12px] font-medium hover:bg-elevated disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCcw size={14} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <label className="sr-only" htmlFor="announcement-lang">
+              Translate announcements
+            </label>
+            <select
+              id="announcement-lang"
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              title="Translate announcements (Google Cloud Translation)"
+              className="rounded-full border border-border bg-elevated px-3 py-1.5 text-[12px] font-medium text-ink outline-none focus:ring-2 focus:ring-brand/30"
+            >
+              {ANNOUNCEMENT_LANGUAGES.map((l) => (
+                <option key={l.code || "original"} value={l.code}>
+                  {l.code ? `🌐 ${l.label}` : l.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => void refreshNearby()}
+              disabled={!selectedLocation}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-[12px] font-medium hover:bg-elevated disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCcw size={14} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {!selectedLocation && (
@@ -352,6 +374,11 @@ export default function AnnouncementPanel() {
                   <p className="text-[13px] text-muted mt-2">
                     {item.message}
                   </p>
+                  {lang && (
+                    <p className="text-[10px] text-brand mt-1.5 uppercase tracking-wide">
+                      🌐 Translated · {lang}
+                    </p>
+                  )}
                 </article>
               ))}
             </div>
